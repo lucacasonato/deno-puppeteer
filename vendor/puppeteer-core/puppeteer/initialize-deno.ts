@@ -1,16 +1,14 @@
 import { PuppeteerDeno } from "./deno/Puppeteer.ts";
 import { PUPPETEER_REVISIONS } from "./revisions.js";
-import { Product } from "./common/Product.js";
 
 export const initializePuppeteerDeno = (): PuppeteerDeno => {
-  const puppeteerRootDirectory = Deno.cwd();
+  const productName = Deno.env.get("PUPPETEER_PRODUCT");
 
-  const preferredRevision = PUPPETEER_REVISIONS.chromium;
+  let preferredRevision = PUPPETEER_REVISIONS.chromium;
+  if (productName == "firefox") preferredRevision = PUPPETEER_REVISIONS.firefox;
 
   return new PuppeteerDeno({
-    projectRoot: puppeteerRootDirectory,
     preferredRevision,
-    isPuppeteerCore: true,
     productName: undefined,
   });
 };

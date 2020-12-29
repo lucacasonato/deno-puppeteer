@@ -36,9 +36,8 @@ export class Puppeteer {
   /**
      * @internal
      */
-  constructor(settings) {
+  constructor() {
     this._changedProduct = false;
-    this._isPuppeteerCore = settings.isPuppeteerCore;
   }
   /**
      * This method attaches Puppeteer to an existing browser instance.

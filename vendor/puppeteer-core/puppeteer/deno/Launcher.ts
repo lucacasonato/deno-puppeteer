@@ -21,6 +21,7 @@ import { ChromeArgOptions, LaunchOptions } from "./LaunchOptions.ts";
 import { BrowserOptions } from "../common/BrowserConnector.js";
 import { Product } from "../common/Product.js";
 import { existsSync, pathJoin, pathResolve } from "../../vendor/std.ts";
+import { BrowserFetcher } from "./BrowserFetcher.ts";
 
 /**
  * Describes a launcher - a class that is able to create and launch a browser instance.
@@ -37,18 +38,10 @@ export interface ProductLauncher {
  * @internal
  */
 class ChromeLauncher implements ProductLauncher {
-  _projectRoot: string;
   _preferredRevision: string;
-  _isPuppeteerCore: boolean;
 
-  constructor(
-    projectRoot: string,
-    preferredRevision: string,
-    isPuppeteerCore: boolean
-  ) {
-    this._projectRoot = projectRoot;
+  constructor(preferredRevision: string) {
     this._preferredRevision = preferredRevision;
-    this._isPuppeteerCore = isPuppeteerCore;
   }
 
   async launch(
@@ -97,7 +90,7 @@ class ChromeLauncher implements ProductLauncher {
     if ((Deno.build.arch as string) === "arm64") {
       chromeExecutable = "/usr/bin/chromium-browser";
     } else if (!executablePath) {
-      const { missingText, executablePath } = resolveExecutablePath(this);
+      const { missingText, executablePath } = await resolveExecutablePath(this);
       if (missingText) throw new Error(missingText);
       chromeExecutable = executablePath;
     }
@@ -197,18 +190,10 @@ class ChromeLauncher implements ProductLauncher {
  * @internal
  */
 class FirefoxLauncher implements ProductLauncher {
-  _projectRoot: string;
   _preferredRevision: string;
-  _isPuppeteerCore: boolean;
 
-  constructor(
-    projectRoot: string,
-    preferredRevision: string,
-    isPuppeteerCore: boolean
-  ) {
-    this._projectRoot = projectRoot;
+  constructor(preferredRevision: string) {
     this._preferredRevision = preferredRevision;
-    this._isPuppeteerCore = isPuppeteerCore;
   }
 
   async launch(
@@ -304,12 +289,11 @@ class FirefoxLauncher implements ProductLauncher {
   async _updateRevision(): Promise<void> {
     // replace 'latest' placeholder with actual downloaded revision
     if (this._preferredRevision === "latest") {
-      throw new Error("browser downloader not implemented yet");
-      // const browserFetcher = new BrowserFetcher(this._projectRoot, {
-      //   product: this.product,
-      // });
-      // const localRevisions = await browserFetcher.localRevisions();
-      // if (localRevisions[0]) this._preferredRevision = localRevisions[0];
+      const browserFetcher = new BrowserFetcher({
+        product: this.product,
+      });
+      const localRevisions = await browserFetcher.localRevisions();
+      if (localRevisions[0]) this._preferredRevision = localRevisions[0];
     }
   }
 
@@ -574,47 +558,46 @@ function resolveExecutablePath(
     return { executablePath, missingText };
   }
   const downloadPath = Deno.env.get("PUPPETEER_DOWNLOAD_PATH");
-  throw new Error("browser downloader not implemented yet");
-  // const browserFetcher = new BrowserFetcher(launcher._projectRoot, {
-  //   product: launcher.product,
-  //   path: downloadPath,
-  // });
-  // if (!launcher._isPuppeteerCore && launcher.product === "chrome") {
-  //   const revision = Deno.env.get("PUPPETEER_CHROMIUM_REVISION");
-  //   if (revision) {
-  //     const revisionInfo = browserFetcher.revisionInfo(revision);
-  //     const missingText = !revisionInfo.local
-  //       ? "Tried to use PUPPETEER_CHROMIUM_REVISION env variable to launch browser but did not find executable at: " +
-  //         revisionInfo.executablePath
-  //       : undefined;
-  //     return { executablePath: revisionInfo.executablePath, missingText };
-  //   }
-  // }
-  // const revisionInfo = browserFetcher.revisionInfo(launcher._preferredRevision);
-  // const missingText = !revisionInfo.local
-  //   ? `Could not find browser revision ${launcher._preferredRevision}. Run "PUPPETEER_PRODUCT=firefox npm install" or "PUPPETEER_PRODUCT=firefox yarn install" to download a supported Firefox browser binary.`
-  //   : undefined;
-  // return { executablePath: revisionInfo.executablePath, missingText };
+  const browserFetcher = new BrowserFetcher({
+    product: launcher.product,
+    path: downloadPath,
+  });
+  if (launcher.product === "chrome") {
+    const revision = Deno.env.get("PUPPETEER_CHROMIUM_REVISION");
+    if (revision) {
+      const revisionInfo = browserFetcher.revisionInfo(revision);
+      const missingText = !revisionInfo.local
+        ? "Tried to use PUPPETEER_CHROMIUM_REVISION env variable to launch browser but did not find executable at: " +
+          revisionInfo.executablePath
+        : undefined;
+      return { executablePath: revisionInfo.executablePath, missingText };
+    }
+  }
+
+  const revisionInfo = browserFetcher.revisionInfo(launcher._preferredRevision);
+  const missingText = !revisionInfo.local
+    ? `Could not find browser revision ${
+        launcher._preferredRevision
+      }. Run "PUPPETEER_PRODUCT=${launcher.product} deno run -A --unstable ${new URL(
+        "../../../../install.ts",
+        import.meta.url
+      )}" to download a supported browser binary.`
+    : undefined;
+  return { executablePath: revisionInfo.executablePath, missingText };
 }
 
 /**
  * @internal
  */
 export default function Launcher(
-  projectRoot: string,
   preferredRevision: string,
-  isPuppeteerCore: boolean,
   product?: string
 ): ProductLauncher {
   // puppeteer-core doesn't take into account PUPPETEER_* env variables.
-  if (!product && !isPuppeteerCore) product = Deno.env.get("PUPPETEER_PRODUCT");
+  if (!product) product = Deno.env.get("PUPPETEER_PRODUCT");
   switch (product) {
     case "firefox":
-      return new FirefoxLauncher(
-        projectRoot,
-        preferredRevision,
-        isPuppeteerCore
-      );
+      return new FirefoxLauncher(preferredRevision);
     case "chrome":
     default:
       if (typeof product !== "undefined" && product !== "chrome") {
@@ -626,10 +609,6 @@ export default function Launcher(
           `Warning: unknown product name ${product}. Falling back to chrome.`
         );
       }
-      return new ChromeLauncher(
-        projectRoot,
-        preferredRevision,
-        isPuppeteerCore
-      );
+      return new ChromeLauncher(preferredRevision);
   }
 }

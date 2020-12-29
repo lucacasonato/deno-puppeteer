@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  Puppeteer,
-  CommonPuppeteerSettings,
-  ConnectOptions,
-} from "../common/Puppeteer.js";
-// import { BrowserFetcher, BrowserFetcherOptions } from "./BrowserFetcher.ts";
+import { Puppeteer, ConnectOptions } from "../common/Puppeteer.js";
+import { BrowserFetcher, BrowserFetcherOptions } from "./BrowserFetcher.ts";
 import { LaunchOptions, ChromeArgOptions } from "./LaunchOptions.ts";
 import { BrowserOptions } from "../common/BrowserConnector.js";
 import { Browser } from "../common/Browser.js";
@@ -64,7 +60,6 @@ import { Product } from "../common/Product.js";
  */
 export class PuppeteerDeno extends Puppeteer {
   private _lazyLauncher!: ProductLauncher;
-  private _projectRoot: string;
   private __productName?: Product;
   /**
    * @internal
@@ -74,21 +69,9 @@ export class PuppeteerDeno extends Puppeteer {
   /**
    * @internal
    */
-  constructor(
-    settings: {
-      projectRoot: string;
-      preferredRevision: string;
-      productName?: Product;
-    } & CommonPuppeteerSettings
-  ) {
-    const {
-      projectRoot,
-      preferredRevision,
-      productName,
-      ...commonSettings
-    } = settings;
-    super(commonSettings);
-    this._projectRoot = projectRoot;
+  constructor(settings: { preferredRevision: string; productName?: Product }) {
+    const { preferredRevision, productName } = settings;
+    super();
     this.__productName = productName;
     this._preferredRevision = preferredRevision;
   }
@@ -188,12 +171,7 @@ export class PuppeteerDeno extends Puppeteer {
           this._preferredRevision = PUPPETEER_REVISIONS.chromium;
       }
       this._changedProduct = false;
-      this._lazyLauncher = Launcher(
-        this._projectRoot,
-        this._preferredRevision,
-        this._isPuppeteerCore,
-        this._productName
-      );
+      this._lazyLauncher = Launcher(this._preferredRevision, this._productName);
     }
     return this._lazyLauncher;
   }
@@ -219,12 +197,12 @@ export class PuppeteerDeno extends Puppeteer {
     return this._launcher.defaultArgs(options);
   }
 
-  // /**
-  //  * @param options - Set of configurable options to specify the settings
-  //  * of the BrowserFetcher.
-  //  * @returns A new BrowserFetcher instance.
-  //  */
-  // createBrowserFetcher(options: BrowserFetcherOptions): BrowserFetcher {
-  //   return new BrowserFetcher(this._projectRoot, options);
-  // }
+  /**
+   * @param options - Set of configurable options to specify the settings
+   * of the BrowserFetcher.
+   * @returns A new BrowserFetcher instance.
+   */
+  createBrowserFetcher(options: BrowserFetcherOptions): BrowserFetcher {
+    return new BrowserFetcher(options);
+  }
 }
