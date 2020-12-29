@@ -41,5 +41,5 @@ export declare class Tracing {
      * Stops a trace started with the `start` method.
      * @returns Promise which resolves to buffer with trace data.
      */
-  stop(): Promise<Buffer>;
+  stop(): Promise<Uint8Array>;
 }

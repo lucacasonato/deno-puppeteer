@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { isNode } from "../environment.js";
 /* Use the global version if we're in the browser, else load the node-fetch module. */
 export const getFetch = async () => {
-  return isNode ? await import("node-fetch") : globalThis.fetch;
+  return  globalThis.fetch;
 };

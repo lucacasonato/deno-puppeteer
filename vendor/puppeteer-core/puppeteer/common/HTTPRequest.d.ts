@@ -38,7 +38,7 @@ export interface ResponseForRequest {
   status: number;
   headers: Record<string, string>;
   contentType: string;
-  body: string | Buffer;
+  body: string | Uint8Array;
 }
 /**
  *

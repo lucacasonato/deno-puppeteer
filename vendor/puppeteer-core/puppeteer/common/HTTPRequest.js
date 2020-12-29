@@ -1,6 +1,7 @@
 /// <reference types="./HTTPRequest.d.ts" />
 import { assert } from "./assert.js";
 import { debugError, helper } from "./helper.js";
+import { base64Encode } from "../../vendor/std.ts";
 /**
  *
  * Represents an HTTP request sent by a page.
@@ -225,9 +226,7 @@ export class HTTPRequest {
     assert(!this._interceptionHandled, "Request is already handled!");
     const { url, method, postData, headers } = overrides;
     this._interceptionHandled = true;
-    const postDataBinaryBase64 = postData
-      ? Buffer.from(postData).toString("base64")
-      : undefined;
+    const postDataBinaryBase64 = postData ? base64Encode(postData) : undefined;
     await this._client
       .send("Fetch.continueRequest", {
         requestId: this._interceptionId,
@@ -280,7 +279,7 @@ export class HTTPRequest {
     assert(!this._interceptionHandled, "Request is already handled!");
     this._interceptionHandled = true;
     const responseBody = response.body && helper.isString(response.body)
-      ? Buffer.from(response.body)
+      ? new TextEncoder().encode(response.body)
       : response.body || null;
     const responseHeaders = {};
     if (response.headers) {
@@ -293,7 +292,7 @@ export class HTTPRequest {
     }
     if (responseBody && !("content-length" in responseHeaders)) {
       responseHeaders["content-length"] = String(
-        Buffer.byteLength(responseBody),
+        responseBody.byteLength,
       );
     }
     await this._client
@@ -302,7 +301,7 @@ export class HTTPRequest {
         responseCode: response.status || 200,
         responsePhrase: STATUS_TEXTS[response.status || 200],
         responseHeaders: headersArray(responseHeaders),
-        body: responseBody ? responseBody.toString("base64") : undefined,
+        body: responseBody ? base64Encode(responseBody) : undefined,
       })
       .catch((error) => {
         // In certain cases, protocol will return error if the request was

@@ -19,12 +19,9 @@ import { assert } from "./assert.js";
 import { debugError } from "../common/helper.js";
 import { Connection } from "./Connection.js";
 import { getFetch } from "./fetch.js";
-import { isNode } from "../environment.js";
-const getWebSocketTransportClass = async () => {
-  return isNode
-    ? (await import("../node/NodeWebSocketTransport.js")).NodeWebSocketTransport
-    : (await import("./BrowserWebSocketTransport.js"))
-      .BrowserWebSocketTransport;
+import { BrowserWebSocketTransport } from "./BrowserWebSocketTransport.js";
+const getWebSocketTransportClass = () => {
+  return Promise.resolve(BrowserWebSocketTransport);
 };
 /**
  * Users should never call this directly; it's called when calling

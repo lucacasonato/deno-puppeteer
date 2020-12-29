@@ -19,7 +19,6 @@ import { debugError, helper } from "./helper.js";
 import { LifecycleWatcher } from "./LifecycleWatcher.js";
 import { TimeoutError } from "./Errors.js";
 import { getQueryHandlerAndSelector } from "./QueryHandler.js";
-import { isNode } from "../environment.js";
 /**
  * @internal
  */
@@ -190,13 +189,7 @@ export class DOMWorld {
       }
     }
     if (path !== null) {
-      if (!isNode) {
-        throw new Error(
-          "Cannot pass a filepath to addScriptTag in the browser environment.",
-        );
-      }
-      const fs = await helper.importFSModule();
-      let contents = await fs.promises.readFile(path, "utf8");
+      let contents = await Deno.readTextFile(path);
       contents += "//# sourceURL=" + path.replace(/\n/g, "");
       const context = await this.executionContext();
       return (await context.evaluateHandle(addScriptContent, contents, type))
@@ -258,13 +251,7 @@ export class DOMWorld {
       }
     }
     if (path !== null) {
-      if (!isNode) {
-        throw new Error(
-          "Cannot pass a filepath to addStyleTag in the browser environment.",
-        );
-      }
-      const fs = await helper.importFSModule();
-      let contents = await fs.promises.readFile(path, "utf8");
+      let contents = await Deno.readTextFile(path);
       contents += "/*# sourceURL=" + path.replace(/\n/g, "") + "*/";
       const context = await this.executionContext();
       return (await context.evaluateHandle(addStyleContent, contents))

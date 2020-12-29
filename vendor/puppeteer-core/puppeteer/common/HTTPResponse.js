@@ -1,4 +1,5 @@
 /// <reference types="./HTTPResponse.d.ts" />
+import { base64Decode } from "../../vendor/std.ts";
 import { SecurityDetails } from "./SecurityDetails.js";
 /**
  * The HTTPResponse class represents responses which are received by the
@@ -88,9 +89,9 @@ export class HTTPResponse {
     return this._securityDetails;
   }
   /**
-     * @returns Promise which resolves to a buffer with response body.
+     * @returns Promise which resolves to an array buffer with response body.
      */
-  buffer() {
+  arrayBuffer() {
     if (!this._contentPromise) {
       this._contentPromise = this._bodyLoadedPromise.then(async (error) => {
         if (error) {
@@ -99,10 +100,9 @@ export class HTTPResponse {
         const response = await this._client.send("Network.getResponseBody", {
           requestId: this._request._requestId,
         });
-        return Buffer.from(
-          response.body,
-          response.base64Encoded ? "base64" : "utf8",
-        );
+        return response.base64Encoded
+          ? base64Decode(response.body)
+          : new TextEncoder().encode(response.body);
       });
     }
     return this._contentPromise;
@@ -111,8 +111,8 @@ export class HTTPResponse {
      * @returns Promise which resolves to a text representation of response body.
      */
   async text() {
-    const content = await this.buffer();
-    return content.toString("utf8");
+    const content = await this.arrayBuffer();
+    return new TextDecoder().decode(content);
   }
   /**
      *

@@ -90,9 +90,9 @@ export declare class HTTPResponse {
      */
   securityDetails(): SecurityDetails | null;
   /**
-     * @returns Promise which resolves to a buffer with response body.
+     * @returns Promise which resolves to an array buffer with response body.
      */
-  buffer(): Promise<Buffer>;
+  arrayBuffer(): Promise<ArrayBuffer>;
   /**
      * @returns Promise which resolves to a text representation of response body.
      */

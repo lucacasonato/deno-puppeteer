@@ -840,7 +840,7 @@ export declare class Page extends EventEmitter {
     ...args: unknown[]
   ): Promise<void>;
   setCacheEnabled(enabled?: boolean): Promise<void>;
-  screenshot(options?: ScreenshotOptions): Promise<Buffer | string | void>;
+  screenshot(options?: ScreenshotOptions): Promise<Uint8Array | string | void>;
   private _screenshotTask;
   /**
      * Generatees a PDF of the page with the `print` CSS media type.
@@ -860,7 +860,7 @@ export declare class Page extends EventEmitter {
      *
      * @param options - options for generating the PDF.
      */
-  pdf(options?: PDFOptions): Promise<Buffer>;
+  pdf(options?: PDFOptions): Promise<Uint8Array>;
   title(): Promise<string>;
   close(options?: {
     runBeforeUnload?: boolean;

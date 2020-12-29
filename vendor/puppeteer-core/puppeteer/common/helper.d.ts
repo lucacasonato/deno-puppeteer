@@ -72,20 +72,7 @@ declare function readProtocolStream(
   client: CDPSession,
   handle: string,
   path?: string,
-): Promise<Buffer>;
-/**
- * Loads the Node fs promises API. Needed because on Node 10.17 and below,
- * fs.promises is experimental, and therefore not marked as enumerable. That
- * means when TypeScript compiles an `import('fs')`, its helper doesn't spot the
- * promises declaration and therefore on Node <10.17 you get an error as
- * fs.promises is undefined in compiled TypeScript land.
- *
- * See https://github.com/puppeteer/puppeteer/issues/6548 for more details.
- *
- * Once Node 10 is no longer supported (April 2021) we can remove this and use
- * `(await import('fs')).promises`.
- */
-declare function importFSModule(): Promise<typeof import("fs")>;
+): Promise<Uint8Array>;
 export declare const helper: {
   evaluationString: typeof evaluationString;
   pageBindingInitString: typeof pageBindingInitString;
@@ -98,7 +85,6 @@ export declare const helper: {
   waitForEvent: typeof waitForEvent;
   isString: typeof isString;
   isNumber: typeof isNumber;
-  importFSModule: typeof importFSModule;
   addEventListener: typeof addEventListener;
   removeEventListeners: typeof removeEventListeners;
   valueFromRemoteObject: typeof valueFromRemoteObject;

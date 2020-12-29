@@ -17,7 +17,7 @@
 import { assert } from "./assert.js";
 import { debugError, helper } from "./helper.js";
 import { getQueryHandlerAndSelector } from "./QueryHandler.js";
-import { isNode } from "../environment.js";
+import { pathResolve } from "../../vendor/std.ts";
 /**
  * @internal
  */
@@ -447,22 +447,13 @@ export class ElementHandle extends JSHandle {
       filePaths.length <= 1 || isMultiple,
       "Multiple file uploads only work with <input type=file multiple>",
     );
-    if (!isNode) {
-      throw new Error(
-        `JSHandle#uploadFile can only be used in Node environments.`,
-      );
-    }
-    // This import is only needed for `uploadFile`, so keep it scoped here to avoid paying
-    // the cost unnecessarily.
-    const path = await import("path");
-    const fs = await helper.importFSModule();
     // Locate all files and confirm that they exist.
     const files = await Promise.all(filePaths.map(async (filePath) => {
-      const resolvedPath = path.resolve(filePath);
+      const resolvedPath = pathResolve(filePath);
       try {
-        await fs.promises.access(resolvedPath, fs.constants.R_OK);
+        await Deno.stat(filePath);
       } catch (error) {
-        if (error.code === "ENOENT") {
+        if (error instanceof Deno.errors.NotFound) {
           throw new Error(`${filePath} does not exist or is not readable`);
         }
       }

@@ -366,7 +366,7 @@ export declare class ElementHandle<ElementType extends any = any>
      * {@link Page.screenshot} to take a screenshot of the element.
      * If the element is detached from DOM, the method throws an error.
      */
-  screenshot(options?: {}): Promise<string | Buffer | void>;
+  screenshot(options?: {}): Promise<string | Uint8Array | void>;
   /**
      * Runs `element.querySelector` within the page. If no element matches the selector,
      * the return value resolves to `null`.

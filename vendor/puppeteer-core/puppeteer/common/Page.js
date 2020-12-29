@@ -32,7 +32,7 @@ import { TimeoutSettings } from "./TimeoutSettings.js";
 import { FileChooser } from "./FileChooser.js";
 import { ConsoleMessage } from "./ConsoleMessage.js";
 import { paperFormats } from "./PDFOptions.js";
-import { isNode } from "../environment.js";
+import { base64Decode } from "../../vendor/std.ts";
 class ScreenshotTaskQueue {
   constructor() {
     this._chain = Promise.resolve(undefined);
@@ -1291,19 +1291,13 @@ export class Page extends EventEmitter {
     if (options.fullPage && this._viewport) {
       await this.setViewport(this._viewport);
     }
-    const buffer = options.encoding === "base64"
+    const data = options.encoding === "base64"
       ? result.data
-      : Buffer.from(result.data, "base64");
-    if (!isNode && options.path) {
-      throw new Error(
-        "Screenshots can only be written to a file path in a Node environment.",
-      );
-    }
-    const fs = await helper.importFSModule();
+      : base64Decode(result.data);
     if (options.path) {
-      await fs.promises.writeFile(options.path, buffer);
+      await Deno.writeFile(options.path, base64Decode(result.data));
     }
-    return buffer;
+    return data;
     function processClip(clip) {
       const x = Math.round(clip.x);
       const y = Math.round(clip.y);
