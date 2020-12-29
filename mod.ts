@@ -1,0 +1,2 @@
+import puppeteer from "./vendor/puppeteer-core/puppeteer/mod.ts";
+export { puppeteer };

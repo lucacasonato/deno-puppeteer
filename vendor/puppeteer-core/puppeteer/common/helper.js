@@ -246,15 +246,15 @@ async function readProtocolStream(client, handle, path) {
   let eof = false;
   let fileHandle;
   if (path) {
-    fileHandle = await Deno.open(path, { write: true });
+    fileHandle = await Deno.open(path, { create: true, write: true });
   }
   const arrs = [];
   while (!eof) {
     const response = await client.send("IO.read", { handle });
     eof = response.eof;
     const arr = response.base64Encoded
-      ? base64Decode(response.body)
-      : new TextEncoder().encode(response.body);
+      ? base64Decode(response.data)
+      : new TextEncoder().encode(response.data);
     arrs.push(arr);
     if (path) {
       await Deno.writeAll(fileHandle, arr);

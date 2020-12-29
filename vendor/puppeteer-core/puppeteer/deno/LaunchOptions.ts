@@ -1,4 +1,3 @@
-/// <reference types="./web.d.ts" />
 /**
  * Copyright 2020 Google Inc. All rights reserved.
  *
@@ -14,5 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { initializePuppeteerWeb } from "./initialize-web.js";
-export default initializePuppeteerWeb("puppeteer");
+/**
+ * Launcher options that only apply to Chrome.
+ *
+ * @public
+ */
+export interface ChromeArgOptions {
+  headless?: boolean;
+  args?: string[];
+  userDataDir?: string;
+  devtools?: boolean;
+}
+
+/**
+ * Generic launch options that can be passed when launching any browser.
+ * @public
+ */
+export interface LaunchOptions {
+  executablePath?: string;
+  ignoreDefaultArgs?: boolean | string[];
+  timeout?: number;
+  env?: Record<string, string>;
+}

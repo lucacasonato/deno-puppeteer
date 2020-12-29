@@ -17,8 +17,6 @@ import { Target } from "./Target.js";
 import { EventEmitter } from "./EventEmitter.js";
 import { Connection } from "./Connection.js";
 import { Page } from "./Page.js";
-/** ChildProcess is not supported in Deno. Please ignore. */
-type ChildProcess = void;
 import { Viewport } from "./PuppeteerViewport.js";
 declare type BrowserCloseCallback = () => Promise<void> | void;
 /**
@@ -130,7 +128,7 @@ export declare class Browser extends EventEmitter {
     contextIds: string[],
     ignoreHTTPSErrors: boolean,
     defaultViewport?: Viewport,
-    process?: ChildProcess,
+    process?: Deno.Process,
     closeCallback?: BrowserCloseCallback,
   ): Promise<Browser>;
   private _ignoreHTTPSErrors;
@@ -153,14 +151,14 @@ export declare class Browser extends EventEmitter {
     contextIds: string[],
     ignoreHTTPSErrors: boolean,
     defaultViewport?: Viewport,
-    process?: ChildProcess,
+    process?: Deno.Process,
     closeCallback?: BrowserCloseCallback,
   );
   /**
      * The spawned browser process. Returns `null` if the browser instance was created with
      * {@link Puppeteer.connect}.
      */
-  process(): ChildProcess | null;
+  process(): Deno.Process | null;
   /**
      * Creates a new incognito browser context. This won't share cookies/cache with other
      * browser contexts.
