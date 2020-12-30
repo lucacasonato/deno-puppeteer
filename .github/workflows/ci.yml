@@ -26,7 +26,7 @@ jobs:
           deno-version: ${{ matrix.deno }}
 
       - name: Cache Dependencies
-        run: deno cache mod.ts
+        run: deno cache --unstable mod.ts
 
       - name: Install Chromium
         run: deno run -A --unstable install.ts
