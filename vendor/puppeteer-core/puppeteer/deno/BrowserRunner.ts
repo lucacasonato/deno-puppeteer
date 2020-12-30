@@ -145,6 +145,8 @@ export class BrowserRunner {
       timeout,
       preferredRevision
     );
+    Deno.copy(this.proc!.stdout!, Deno.stdout);
+    Deno.copy(this.proc!.stderr!, Deno.stderr);
     const transport = await BrowserWebSocketTransport.create(browserWSEndpoint);
     this.connection = new Connection(browserWSEndpoint, transport, slowMo);
     return this.connection;
