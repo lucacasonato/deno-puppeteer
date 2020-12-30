@@ -125,6 +125,6 @@ deno run --A --unstable get-dimensions.js
 
 `deno-puppeteer` effectively runs a regular version of Puppeteer, except for some minor changes to make it compatible with Deno.
 
-The most noticable difference is likely that instead of some methods taking / returning Node `Buffer`, the take / return `Uint8Array`.
+The most noticable difference is likely that instead of some methods taking / returning Node `Buffer`, they take / return `Uint8Array`.
 
 Other than this, the documentation on https://pptr.dev generally applies.
