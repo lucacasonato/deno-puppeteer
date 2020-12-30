@@ -58,7 +58,7 @@ await browser.close();
 Execute script on the command line
 
 ```bash
-deno run --A --unstable example.js
+deno run -A --unstable example.js
 ```
 
 Puppeteer sets an initial page size to 800×600px, which defines the screenshot size. The page size can be customized with [`Page.setViewport()`](https://github.com/puppeteer/puppeteer/blob/v5.5.0/docs/api.md#pagesetviewportviewport).
@@ -83,7 +83,7 @@ await browser.close();
 Execute script on the command line
 
 ```bash
-deno run --A --unstable hn.js
+deno run -A --unstable hn.js
 ```
 
 See [`Page.pdf()`](https://github.com/puppeteer/puppeteer/blob/v5.5.0/docs/api.md#pagepdfoptions) for more information about creating pdfs.
@@ -116,7 +116,7 @@ await browser.close();
 Execute script on the command line
 
 ```bash
-deno run --A --unstable get-dimensions.js
+deno run -A --unstable get-dimensions.js
 ```
 
 ## FAQ
