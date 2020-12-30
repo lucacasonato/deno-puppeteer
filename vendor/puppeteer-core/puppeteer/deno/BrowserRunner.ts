@@ -70,9 +70,9 @@ export class BrowserRunner {
       this._closed = true;
       try {
         if (this.proc) {
-          if (status.success) {
-            const err = await this.proc.stderrOutput();
-            console.error(err);
+          if (!status.success) {
+            await Deno.copy(this.proc.stdout!, Deno.stdout);
+            await Deno.copy(this.proc.stderr!, Deno.stderr);
           }
           this.proc.stdin!.close();
           this.proc.stdout!.close();
