@@ -1,4 +1,4 @@
-import { puppeteer } from "./mod.ts";
+import puppeteer from "./mod.ts";
 import { PUPPETEER_REVISIONS } from "./vendor/puppeteer-core/puppeteer/revisions.js";
 import ProgressBar from "https://deno.land/x/progress@v1.1.4/mod.ts";
 

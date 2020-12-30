@@ -329,7 +329,7 @@ class FirefoxLauncher implements ProductLauncher {
       await Deno.makeTempDir(),
       "puppeteer_dev_firefox_profile-"
     );
-    await Deno.mkdir(profilePath);
+    await Deno.mkdir(profilePath, { recursive: true });
     const prefsJS: string[] = [];
     const userJS = [];
     const server = "dummy.test";
@@ -578,7 +578,9 @@ function resolveExecutablePath(
   const missingText = !revisionInfo.local
     ? `Could not find browser revision ${
         launcher._preferredRevision
-      }. Run "PUPPETEER_PRODUCT=${launcher.product} deno run -A --unstable ${new URL(
+      }. Run "PUPPETEER_PRODUCT=${
+        launcher.product
+      } deno run -A --unstable ${new URL(
         "../../../../install.ts",
         import.meta.url
       )}" to download a supported browser binary.`

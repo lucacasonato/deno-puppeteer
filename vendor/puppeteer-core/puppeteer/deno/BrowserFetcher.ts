@@ -470,18 +470,20 @@ async function extractZip(zipPath: string, folderPath: string): Promise<void> {
  * @internal
  */
 async function extractTar(tarPath: string, folderPath: string): Promise<void> {
+  console.log(folderPath);
   await Deno.mkdir(folderPath, { recursive: true });
 
   const bzcat = Deno.run({
     cmd: ["bzcat", tarPath],
     stdout: "piped",
   });
+  const tmp = await Deno.makeTempFile();
+  const file = await Deno.create(tmp);
+  await Deno.copy(bzcat.stdout, file);
   assert((await bzcat.status()).success, "failed bzcat");
 
   const untar = Deno.run({
-    cmd: ["untar", "-zxf", "-c", folderPath, "-"],
-    // @ts-ignore rid
-    stdin: bzcat.stdout.rid,
+    cmd: ["tar", "-C", folderPath, "-xvf", tmp],
   });
   assert((await untar.status()).success, "failed untar");
 }

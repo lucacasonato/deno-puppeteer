@@ -1,4 +1,4 @@
-import { puppeteer } from "../mod.ts";
+import puppeteer from "../mod.ts";
 
 const browser = await puppeteer.launch();
 const page = await browser.newPage();
