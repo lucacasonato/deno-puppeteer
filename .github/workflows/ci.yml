@@ -15,6 +15,7 @@ jobs:
       matrix:
         deno: ["v1.x", "nightly"]
         os: [macOS-latest, windows-latest, ubuntu-latest]
+      fail-fast: false
 
     steps:
       - name: Setup repo
