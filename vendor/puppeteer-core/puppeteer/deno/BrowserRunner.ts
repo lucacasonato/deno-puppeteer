@@ -70,6 +70,10 @@ export class BrowserRunner {
       this._closed = true;
       try {
         if (this.proc) {
+          if (status.success) {
+            const err = await this.proc.stderrOutput();
+            console.error(err);
+          }
           this.proc.stdin!.close();
           this.proc.stdout!.close();
           this.proc.stderr!.close();
