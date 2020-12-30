@@ -15,7 +15,8 @@ export class BrowserWebSocketTransport {
     // Silently ignore all errors - we don't know what to do with them.
     this._ws.addEventListener(
       "error",
-      (err) => console.log("BrowserWebSocketTransport error:", err),
+      () => {},
+      // (err) => console.log("BrowserWebSocketTransport error:", err),
     );
     this.onmessage = null;
     this.onclose = null;
