@@ -21,5 +21,5 @@ export declare class BrowserWebSocketTransport implements ConnectionTransport {
   onclose?: () => void;
   constructor(ws: WebSocket);
   send(message: string): void;
-  close(): void;
+  close(): Promise<void>;
 }

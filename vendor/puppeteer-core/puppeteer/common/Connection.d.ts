@@ -42,7 +42,7 @@ export declare class Connection extends EventEmitter {
   _rawSend(message: Record<string, unknown>): number;
   _onMessage(message: string): Promise<void>;
   _onClose(): void;
-  dispose(): void;
+  dispose(): Promise<void>;
   /**
      * @param {Protocol.Target.TargetInfo} targetInfo
      * @returns {!Promise<!CDPSession>}

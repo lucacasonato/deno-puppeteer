@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 export interface ConnectionTransport {
-  send(string: any): any;
-  close(): any;
+  send(string: any): void;
+  close(): Promise<void>;
   onmessage?: (message: string) => void;
   onclose?: () => void;
 }

@@ -374,16 +374,16 @@ export class Browser extends EventEmitter {
      * itself is considered to be disposed and cannot be used anymore.
      */
   async close() {
+    await this.disconnect();
     await this._closeCallback.call(null);
-    this.disconnect();
   }
   /**
      * Disconnects Puppeteer from the browser, but leaves the Chromium process running.
      * After calling `disconnect`, the {@link Browser} object is considered disposed and
      * cannot be used anymore.
      */
-  disconnect() {
-    this._connection.dispose();
+  async disconnect() {
+    await this._connection.dispose();
   }
   /**
      * Indicates that the browser is connected.

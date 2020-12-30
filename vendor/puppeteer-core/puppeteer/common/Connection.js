@@ -143,9 +143,9 @@ export class Connection extends EventEmitter {
     this._sessions.clear();
     this.emit(ConnectionEmittedEvents.Disconnected);
   }
-  dispose() {
+  async dispose() {
     this._onClose();
-    this._transport.close();
+    await this._transport.close();
   }
   /**
      * @param {Protocol.Target.TargetInfo} targetInfo

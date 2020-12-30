@@ -68,6 +68,18 @@ export class BrowserRunner {
     this._closed = false;
     this._processClosing = this.proc.status().then(async (status) => {
       this._closed = true;
+      try {
+        if (this.proc) {
+          this.proc.stdin!.close();
+          this.proc.stdout!.close();
+          this.proc.stderr!.close();
+          this.proc.close();
+        }
+      } catch (err) {
+        if (!(err instanceof Deno.errors.BadResource)) {
+          throw err;
+        }
+      }
       if (this._tempDirectory) {
         await Deno.remove(this._tempDirectory, {
           recursive: true,

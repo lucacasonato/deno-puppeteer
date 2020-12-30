@@ -31,6 +31,10 @@ export class BrowserWebSocketTransport {
     this._ws.send(message);
   }
   close() {
-    this._ws.close();
+    return new Promise((resolve, reject) => {
+      this._ws.addEventListener("close", () => resolve());
+      this._ws.addEventListener("error", (err) => reject(err));
+      this._ws.close();
+    });
   }
 }

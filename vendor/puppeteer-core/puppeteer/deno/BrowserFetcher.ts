@@ -481,11 +481,13 @@ async function extractTar(tarPath: string, folderPath: string): Promise<void> {
   const file = await Deno.create(tmp);
   await Deno.copy(bzcat.stdout, file);
   assert((await bzcat.status()).success, "failed bzcat");
+  bzcat.close();
 
   const untar = Deno.run({
     cmd: ["tar", "-C", folderPath, "-xvf", tmp],
   });
   assert((await untar.status()).success, "failed untar");
+  untar.close();
 }
 
 /**
@@ -498,6 +500,7 @@ async function installDMG(dmgPath: string, folderPath: string): Promise<void> {
       cmd: ["hdiutil", "attach", "-nobrowse", "-noautoopen", dmgPath],
     });
     const stdout = new TextDecoder().decode(await proc.output());
+    proc.close();
     const volumes = stdout.match(/\/Volumes\/(.*)/m);
     if (!volumes) throw new Error(`Could not find volume path in ${stdout}`);
     mountPath = volumes[0];
@@ -518,6 +521,7 @@ async function installDMG(dmgPath: string, folderPath: string): Promise<void> {
       });
       debugFetcher(`Unmounting ${mountPath}`);
       const status = await proc.status();
+      proc.close();
       assert(status.success, "unmounting failed");
     }
   }

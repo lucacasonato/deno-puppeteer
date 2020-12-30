@@ -166,3 +166,4 @@ const cmd = Deno.run({
   ],
 });
 await cmd.status();
+cmd.close();
