@@ -286,7 +286,8 @@ export class BrowserFetcher {
         await Deno.remove(archivePath, { recursive: true });
     }
     const revisionInfo = this.revisionInfo(revision);
-    if (revisionInfo) await Deno.chmod(revisionInfo.executablePath, 0o755);
+    if (revisionInfo && Deno.build.os !== "windows")
+      await Deno.chmod(revisionInfo.executablePath, 0o755);
     return revisionInfo;
   }
 

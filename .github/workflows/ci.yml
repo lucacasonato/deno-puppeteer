@@ -14,19 +14,20 @@ jobs:
     strategy:
       matrix:
         deno: ["v1.x", "nightly"]
-        os: [macOS-latest, windows-latest, ubuntu-latest]
+        os: [windows-latest, ubuntu-latest] # Can't run on macOS because headless isn't working there.
+      fail-fast: false
 
     steps:
       - name: Setup repo
         uses: actions/checkout@v2
 
       - name: Setup Deno
-        uses: denolib/setup-deno@v2.3
+        uses: denolib/setup-deno@v2.3.0
         with:
           deno-version: ${{ matrix.deno }}
 
       - name: Cache Dependencies
-        run: deno cache mod.ts
+        run: deno cache --unstable mod.ts
 
       - name: Install Chromium
         run: deno run -A --unstable install.ts

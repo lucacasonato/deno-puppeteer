@@ -70,6 +70,10 @@ export class BrowserRunner {
       this._closed = true;
       try {
         if (this.proc) {
+          if (!status.success) {
+            await Deno.copy(this.proc.stdout!, Deno.stdout);
+            await Deno.copy(this.proc.stderr!, Deno.stderr);
+          }
           this.proc.stdin!.close();
           this.proc.stdout!.close();
           this.proc.stderr!.close();
@@ -141,6 +145,8 @@ export class BrowserRunner {
       timeout,
       preferredRevision
     );
+    Deno.copy(this.proc!.stdout!, Deno.stdout);
+    Deno.copy(this.proc!.stderr!, Deno.stderr);
     const transport = await BrowserWebSocketTransport.create(browserWSEndpoint);
     this.connection = new Connection(browserWSEndpoint, transport, slowMo);
     return this.connection;

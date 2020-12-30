@@ -11,7 +11,9 @@ function browserTest(
   Deno.test(name, async () => {
     let browser: Browser | undefined = undefined;
     try {
-      browser = await puppeteer.launch();
+      browser = await puppeteer.launch({
+        headless: true,
+      });
       await fn(browser);
     } finally {
       if (browser) await browser.close();
