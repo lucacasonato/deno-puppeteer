@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Setup Deno
-        uses: denolib/setup-deno@v2.3
+        uses: denolib/setup-deno@v2.3.0
         with:
           deno-version: ${{ matrix.deno }}
 
