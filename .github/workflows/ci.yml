@@ -27,6 +27,7 @@ jobs:
           deno-version: ${{ matrix.deno }}
 
       - name: Formatting
+        if: contains(runner.os, 'ubuntu')
         run: deno fmt --check
 
       - name: Cache Dependencies
