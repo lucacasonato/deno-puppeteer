@@ -443,7 +443,8 @@ async function downloadFile(
 
   const file = await Deno.create(destinationPath);
 
-  for await (const chunk of response.body!.getIterator()) {
+  // @ts-ignore because in lib.dom ReadableStream is not an async iterator yet
+  for await (const chunk of response.body!) {
     downloadedBytes += chunk.length;
     progressCallback?.(downloadedBytes, totalBytes);
     await Deno.writeAll(file, chunk);
