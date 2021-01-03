@@ -105,7 +105,7 @@ export interface JSZipObject {
    */
   async<T extends OutputType>(
     type: T,
-    onUpdate?: OnUpdateCallback
+    onUpdate?: OnUpdateCallback,
   ): Promise<OutputByType[T]>;
 
   // nodeStream(

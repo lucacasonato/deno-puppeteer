@@ -6,7 +6,7 @@ import { endsWith } from "https://deno.land/std@0.82.0/bytes/mod.ts";
 const version = Deno.args[0];
 
 const tarballReq = await fetch(
-  `https://registry.npmjs.org/puppeteer-core/-/puppeteer-core-${version}.tgz`
+  `https://registry.npmjs.org/puppeteer-core/-/puppeteer-core-${version}.tgz`,
 );
 const tarballData = gzipDecode(new Uint8Array(await tarballReq.arrayBuffer()));
 const tarballReader = new Deno.Buffer(tarballData);
@@ -23,18 +23,18 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 const protocolReq = await fetch(
-  "https://unpkg.com/devtools-protocol@0.0.818844/types/protocol.d.ts"
+  "https://unpkg.com/devtools-protocol@0.0.818844/types/protocol.d.ts",
 );
 const protocolMapping = await fetch(
-  "https://unpkg.com/devtools-protocol@0.0.818844/types/protocol-mapping.d.ts"
+  "https://unpkg.com/devtools-protocol@0.0.818844/types/protocol-mapping.d.ts",
 );
 const files: Record<string, Uint8Array> = {
   LICENSE: originalFiles.LICENSE,
   "vendor/devtools-protocol/types/protocol.d.ts": new Uint8Array(
-    await protocolReq.arrayBuffer()
+    await protocolReq.arrayBuffer(),
   ),
   "vendor/devtools-protocol/types/protocol-mapping.d.ts": encoder.encode(
-    (await protocolMapping.text()).replace(`'./protocol'`, `'./protocol.d.ts'`)
+    (await protocolMapping.text()).replace(`'./protocol'`, `'./protocol.d.ts'`),
   ),
 };
 
@@ -63,8 +63,8 @@ for (const fileName in files) {
       `/// <reference types="./${base}.d.ts" />\n` +
         src.replaceAll(
           "'devtools-protocol'",
-          "'../../vendor/devtools-protocol/types/protocol.d.ts'"
-        )
+          "'../../vendor/devtools-protocol/types/protocol.d.ts'",
+        ),
     );
   }
   if (fileName.endsWith(".d.ts")) {
@@ -76,11 +76,11 @@ for (const fileName in files) {
         .replace(`/// <reference types="node" />\n`, "")
         .replaceAll(
           "'devtools-protocol'",
-          "'../../vendor/devtools-protocol/types/protocol.d.ts'"
+          "'../../vendor/devtools-protocol/types/protocol.d.ts'",
         )
         .replaceAll(
           "'devtools-protocol/types/protocol-mapping.js'",
-          "'../../vendor/devtools-protocol/types/protocol-mapping.d.ts'"
+          "'../../vendor/devtools-protocol/types/protocol-mapping.d.ts'",
         )
         .replaceAll(" Element ", " any ")
         .replaceAll(" Element ", " any ")
@@ -89,7 +89,7 @@ for (const fileName in files) {
         .replaceAll("Element>", "any>")
         .replaceAll("| Document", "")
         .replaceAll("| NodeListOf<any>", "")
-        .replaceAll("NodeJS.Timeout", "number")
+        .replaceAll("NodeJS.Timeout", "number"),
     );
   }
 }
@@ -104,8 +104,8 @@ for (const fileName in files) {
       .join("\n")
       .replace(
         "'devtools-protocol/types/protocol'",
-        "'../vendor/devtools-protocol/types/protocol.d.ts'"
-      )
+        "'../vendor/devtools-protocol/types/protocol.d.ts'",
+      ),
   );
 }
 {
@@ -118,8 +118,8 @@ for (const fileName in files) {
       .join("\n")
       .replace(
         "'devtools-protocol/types/protocol'",
-        "'../vendor/devtools-protocol/types/protocol.d.ts'"
-      )
+        "'../vendor/devtools-protocol/types/protocol.d.ts'",
+      ),
   );
 }
 
@@ -129,8 +129,8 @@ for (const fileName in files) {
   files[fileName] = encoder.encode(
     src.replace(
       `import { ChildProcess } from 'child_process';\n`,
-      `/** ChildProcess is not supported in Deno. Please ignore. */\ntype ChildProcess = void;\n`
-    )
+      `/** ChildProcess is not supported in Deno. Please ignore. */\ntype ChildProcess = void;\n`,
+    ),
   );
 }
 

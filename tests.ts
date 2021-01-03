@@ -6,7 +6,7 @@ import puppeteer, { Browser } from "./mod.ts";
 
 function browserTest(
   name: string,
-  fn: (browser: Browser) => void | Promise<void>
+  fn: (browser: Browser) => void | Promise<void>,
 ) {
   Deno.test(name, async () => {
     let browser: Browser | undefined = undefined;

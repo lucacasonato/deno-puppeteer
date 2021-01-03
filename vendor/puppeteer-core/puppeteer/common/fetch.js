@@ -16,5 +16,5 @@
  */
 /* Use the global version if we're in the browser, else load the node-fetch module. */
 export const getFetch = async () => {
-  return  globalThis.fetch;
+  return globalThis.fetch;
 };

@@ -19,12 +19,10 @@ import { debug } from "../common/Debug.js";
 import { assert } from "../common/assert.js";
 import {
   copyDir,
-  pathJoin,
-  sprintf,
-  Untar,
   exists,
   existsSync,
-  pathBasename,
+  pathJoin,
+  sprintf,
 } from "../../vendor/std.ts";
 import { readZip } from "../../vendor/zip/mod.ts";
 import { cachedir } from "../../vendor/cache.ts";
@@ -67,7 +65,7 @@ export type Platform = "linux" | "mac" | "win32" | "win64";
 function archiveName(
   product: Product,
   platform: Platform,
-  revision: string
+  revision: string,
 ): string {
   if (product === "chrome") {
     if (platform === "linux") return "chrome-linux";
@@ -89,13 +87,13 @@ function downloadURL(
   product: Product,
   platform: Platform,
   host: string,
-  revision: string
+  revision: string,
 ): string {
   const url = sprintf(
     downloadURLs[product][platform],
     host,
     revision,
-    archiveName(product, platform, revision)
+    archiveName(product, platform, revision),
   );
   return url;
 }
@@ -171,21 +169,20 @@ export class BrowserFetcher {
     this._product = (options.product || "chrome").toLowerCase() as Product;
     assert(
       this._product === "chrome" || this._product === "firefox",
-      `Unknown product: "${options.product}"`
+      `Unknown product: "${options.product}"`,
     );
 
-    this._downloadsFolder =
-      options.path ||
+    this._downloadsFolder = options.path ||
       pathJoin(
         cachedir(),
         "deno_puppeteer",
-        browserConfig[this._product].destination
+        browserConfig[this._product].destination,
       );
     this._downloadHost = options.host || browserConfig[this._product].host;
     this.setPlatform(options.platform);
     assert(
       downloadURLs[this._product][this._platform],
-      "Unsupported platform: " + this._platform
+      "Unsupported platform: " + this._platform,
     );
   }
 
@@ -198,9 +195,9 @@ export class BrowserFetcher {
     const platform = Deno.build.os;
     if (platform === "darwin") this._platform = "mac";
     else if (platform === "linux") this._platform = "linux";
-    else if (platform === "windows")
+    else if (platform === "windows") {
       this._platform = Deno.build.arch === "x86_64" ? "win64" : "win32";
-    else assert(this._platform, "Unsupported platform: " + Deno.build.os);
+    } else assert(this._platform, "Unsupported platform: " + Deno.build.os);
   }
 
   /**
@@ -237,7 +234,7 @@ export class BrowserFetcher {
       this._product,
       this._platform,
       this._downloadHost,
-      revision
+      revision,
     );
     const req = await fetch(url, { method: "head" });
     return req.status == 200;
@@ -255,26 +252,27 @@ export class BrowserFetcher {
    */
   async download(
     revision: string,
-    progressCallback: (x: number, y: number) => void = (): void => {}
+    progressCallback: (x: number, y: number) => void = (): void => {},
   ): Promise<BrowserFetcherRevisionInfo> {
     const url = downloadURL(
       this._product,
       this._platform,
       this._downloadHost,
-      revision
+      revision,
     );
     const fileName = url.split("/").pop()!;
     const archivePath = pathJoin(this._downloadsFolder, fileName);
     const outputPath = this._getFolderPath(revision);
     if (await exists(outputPath)) return this.revisionInfo(revision);
-    if (!(await exists(this._downloadsFolder)))
+    if (!(await exists(this._downloadsFolder))) {
       await Deno.mkdir(this._downloadsFolder, { recursive: true });
+    }
     if ((Deno.build.arch as string) === "arm64") {
       // handleArm64();
       // return;
       console.error("arm64 downloads not supported.");
       console.error(
-        "Use PUPPETEER_EXECUTABLE_PATH to specify an executable path."
+        "Use PUPPETEER_EXECUTABLE_PATH to specify an executable path.",
       );
       throw new Error();
     }
@@ -282,12 +280,14 @@ export class BrowserFetcher {
       await downloadFile(url, archivePath, progressCallback);
       await install(archivePath, outputPath);
     } finally {
-      if (await exists(archivePath))
+      if (await exists(archivePath)) {
         await Deno.remove(archivePath, { recursive: true });
+      }
     }
     const revisionInfo = this.revisionInfo(revision);
-    if (revisionInfo && Deno.build.os !== "windows")
+    if (revisionInfo && Deno.build.os !== "windows") {
       await Deno.chmod(revisionInfo.executablePath, 0o755);
+    }
     return revisionInfo;
   }
 
@@ -320,7 +320,7 @@ export class BrowserFetcher {
     const folderPath = this._getFolderPath(revision);
     assert(
       await exists(folderPath),
-      `Failed to remove: revision ${revision} is not downloaded`
+      `Failed to remove: revision ${revision} is not downloaded`,
     );
     await Deno.remove(folderPath, { recursive: true });
   }
@@ -333,42 +333,42 @@ export class BrowserFetcher {
     const folderPath = this._getFolderPath(revision);
     let executablePath = "";
     if (this._product === "chrome") {
-      if (this._platform === "mac")
+      if (this._platform === "mac") {
         executablePath = pathJoin(
           folderPath,
           archiveName(this._product, this._platform, revision),
           "Chromium.app",
           "Contents",
           "MacOS",
-          "Chromium"
+          "Chromium",
         );
-      else if (this._platform === "linux")
+      } else if (this._platform === "linux") {
         executablePath = pathJoin(
           folderPath,
           archiveName(this._product, this._platform, revision),
-          "chrome"
+          "chrome",
         );
-      else if (this._platform === "win32" || this._platform === "win64")
+      } else if (this._platform === "win32" || this._platform === "win64") {
         executablePath = pathJoin(
           folderPath,
           archiveName(this._product, this._platform, revision),
-          "chrome.exe"
+          "chrome.exe",
         );
-      else throw new Error("Unsupported platform: " + this._platform);
+      } else throw new Error("Unsupported platform: " + this._platform);
     } else if (this._product === "firefox") {
-      if (this._platform === "mac")
+      if (this._platform === "mac") {
         executablePath = pathJoin(
           folderPath,
           "Firefox Nightly.app",
           "Contents",
           "MacOS",
-          "firefox"
+          "firefox",
         );
-      else if (this._platform === "linux")
+      } else if (this._platform === "linux") {
         executablePath = pathJoin(folderPath, "firefox", "firefox");
-      else if (this._platform === "win32" || this._platform === "win64")
+      } else if (this._platform === "win32" || this._platform === "win64") {
         executablePath = pathJoin(folderPath, "firefox", "firefox.exe");
-      else throw new Error("Unsupported platform: " + this._platform);
+      } else throw new Error("Unsupported platform: " + this._platform);
     } else {
       throw new Error("Unsupported product: " + this._product);
     }
@@ -376,7 +376,7 @@ export class BrowserFetcher {
       this._product,
       this._platform,
       this._downloadHost,
-      revision
+      revision,
     );
     const local = existsSync(folderPath);
     debugFetcher({
@@ -407,7 +407,7 @@ export class BrowserFetcher {
 
 function parseName(
   product: Product,
-  name: string
+  name: string,
 ): { product: string; platform: string; revision: string } | null {
   const splits = name.split("-");
   if (splits.length !== 2) return null;
@@ -422,7 +422,7 @@ function parseName(
 async function downloadFile(
   url: string,
   destinationPath: string,
-  progressCallback: (x: number, y: number) => void
+  progressCallback: (x: number, y: number) => void,
 ): Promise<void> {
   debugFetcher(`Downloading binary from ${url}`);
 
@@ -430,7 +430,7 @@ async function downloadFile(
 
   if (response.status !== 200) {
     const error = new Error(
-      `Download failed: server returned code ${response.status}. URL: ${url}`
+      `Download failed: server returned code ${response.status}. URL: ${url}`,
     );
 
     // consume response data to free up memory
@@ -454,13 +454,13 @@ async function downloadFile(
 function install(archivePath: string, folderPath: string): Promise<unknown> {
   debugFetcher(`Installing ${archivePath} to ${folderPath}`);
   if (archivePath.endsWith(".zip")) return extractZip(archivePath, folderPath);
-  else if (archivePath.endsWith(".tar.bz2"))
+  else if (archivePath.endsWith(".tar.bz2")) {
     return extractTar(archivePath, folderPath);
-  else if (archivePath.endsWith(".dmg"))
+  } else if (archivePath.endsWith(".dmg")) {
     return Deno.mkdir(folderPath, { recursive: true }).then(() =>
       installDMG(archivePath, folderPath)
     );
-  else throw new Error(`Unsupported archive format: ${archivePath}`);
+  } else throw new Error(`Unsupported archive format: ${archivePath}`);
 }
 
 async function extractZip(zipPath: string, folderPath: string): Promise<void> {

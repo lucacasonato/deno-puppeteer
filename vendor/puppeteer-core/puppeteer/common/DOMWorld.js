@@ -472,14 +472,13 @@ export class DOMWorld {
     const polling = waitForVisible || waitForHidden ? "raf" : "mutation";
     const title = `XPath \`${xpath}\`${waitForHidden ? " to be hidden" : ""}`;
     function predicate(xpath, waitForVisible, waitForHidden) {
-      const node =
-        document.evaluate(
-          xpath,
-          document,
-          null,
-          XPathResult.FIRST_ORDERED_NODE_TYPE,
-          null,
-        ).singleNodeValue;
+      const node = document.evaluate(
+        xpath,
+        document,
+        null,
+        XPathResult.FIRST_ORDERED_NODE_TYPE,
+        null,
+      ).singleNodeValue;
       return checkWaitForOptions(node, waitForVisible, waitForHidden);
     }
     const waitTaskOptions = {

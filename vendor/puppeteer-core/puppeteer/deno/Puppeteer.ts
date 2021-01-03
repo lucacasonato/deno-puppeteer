@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { Puppeteer, ConnectOptions } from "../common/Puppeteer.js";
+import { ConnectOptions, Puppeteer } from "../common/Puppeteer.js";
 import { BrowserFetcher, BrowserFetcherOptions } from "./BrowserFetcher.ts";
-import { LaunchOptions, ChromeArgOptions } from "./LaunchOptions.ts";
+import { ChromeArgOptions, LaunchOptions } from "./LaunchOptions.ts";
 import { BrowserOptions } from "../common/BrowserConnector.js";
 import { Browser } from "../common/Browser.js";
 import Launcher, { ProductLauncher } from "./Launcher.ts";
@@ -128,12 +128,14 @@ export class PuppeteerDeno extends Puppeteer {
    * @returns Promise which resolves to browser instance.
    */
   launch(
-    options: LaunchOptions &
-      ChromeArgOptions &
-      BrowserOptions & {
+    options:
+      & LaunchOptions
+      & ChromeArgOptions
+      & BrowserOptions
+      & {
         product?: Product;
         extraPrefsFirefox?: Record<string, unknown>;
-      } = {}
+      } = {},
   ): Promise<Browser> {
     if (options.product) this._productName = options.product;
     return this._launcher.launch(options);
