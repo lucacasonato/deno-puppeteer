@@ -20,5 +20,5 @@
  */
 export declare const assert: (
   value: unknown,
-  message?: string
+  message?: string,
 ) => asserts value;

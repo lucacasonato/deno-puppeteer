@@ -1,6 +1,6 @@
 import _JSZip from "https://dev.jspm.io/jszip@3.5.0";
-import { WalkOptions, walk } from "https://deno.land/std@0.82.0/fs/walk.ts";
-import { SEP, join } from "https://deno.land/std@0.82.0/path/mod.ts";
+import { walk, WalkOptions } from "https://deno.land/std@0.82.0/fs/walk.ts";
+import { join, SEP } from "https://deno.land/std@0.82.0/path/mod.ts";
 import {
   InputFileFormat,
   JSZipFileOptions,
@@ -31,7 +31,7 @@ export async function readZip(path: string): Promise<JSZip> {
  */
 export async function zipDir(
   dir: string,
-  options?: WalkOptions
+  options?: WalkOptions,
 ): Promise<JSZip> {
   const z = new JSZip();
   const cwd = Deno.cwd();
@@ -107,7 +107,7 @@ export class JSZip {
   addFile(
     path: string,
     content?: string | Uint8Array,
-    options?: JSZipFileOptions
+    options?: JSZipFileOptions,
   ): JSZipObject {
     // @ts-ignores
     const f = this._z.file(path, content, options);
@@ -128,7 +128,7 @@ export class JSZip {
    * @return The serialized archive
    */
   async generateAsync<T extends keyof OutputByType>(
-    options?: JSZipGeneratorOptions<T>
+    options?: JSZipGeneratorOptions<T>,
   ): Promise<OutputByType[T]> {
     // @ts-ignores
     return await this._z.generateAsync(options);
@@ -141,7 +141,7 @@ export class JSZip {
    * @return Array of matched elements
    */
   filter(
-    predicate: (relativePath: string, file: JSZipObject) => boolean
+    predicate: (relativePath: string, file: JSZipObject) => boolean,
   ): JSZipObject[] {
     // @ts-ignores
     return this._z.filter(predicate);
@@ -167,7 +167,7 @@ export class JSZip {
    */
   async loadAsync(
     data: InputFileFormat,
-    options?: JSZipLoadOptions
+    options?: JSZipLoadOptions,
   ): Promise<JSZip> {
     return this._z.loadAsync(data, options);
   }

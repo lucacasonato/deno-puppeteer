@@ -115,7 +115,7 @@ export declare class Puppeteer {
    */
   registerCustomQueryHandler(
     name: string,
-    queryHandler: CustomQueryHandler
+    queryHandler: CustomQueryHandler,
   ): void;
   /**
    * @param name - The name of the query handler to unregistered.

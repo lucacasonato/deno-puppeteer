@@ -12,12 +12,12 @@ if (product != "chrome" && product != "firefox") {
 const fetcher = puppeteer.createBrowserFetcher({ product });
 let revision;
 if (product == "chrome") {
-  revision =
-    Deno.env.get("PUPPETEER_CHROMIUM_REVISION") || PUPPETEER_REVISIONS.chromium;
+  revision = Deno.env.get("PUPPETEER_CHROMIUM_REVISION") ||
+    PUPPETEER_REVISIONS.chromium;
 } else if (product == "firefox") {
   puppeteer._preferredRevision = PUPPETEER_REVISIONS.firefox;
   const req = await fetch(
-    "https://product-details.mozilla.org/1.0/firefox_versions.json"
+    "https://product-details.mozilla.org/1.0/firefox_versions.json",
   );
   const versions = await req.json();
   revision = versions.FIREFOX_NIGHTLY;
@@ -44,9 +44,9 @@ if (revisionInfo.local) {
       } else {
         console.log("Done downloading. Installing now.");
       }
-    }
+    },
   );
   console.log(
-    `Downloaded ${newRevisionInfo.product} ${newRevisionInfo.revision} to ${newRevisionInfo.executablePath} from ${newRevisionInfo.url}`
+    `Downloaded ${newRevisionInfo.product} ${newRevisionInfo.revision} to ${newRevisionInfo.executablePath} from ${newRevisionInfo.url}`,
   );
 }

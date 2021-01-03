@@ -26,6 +26,9 @@ jobs:
         with:
           deno-version: ${{ matrix.deno }}
 
+      - name: Formatting
+        run: deno fmt --check
+
       - name: Cache Dependencies
         run: deno cache --unstable mod.ts
 
