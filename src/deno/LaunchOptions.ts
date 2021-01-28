@@ -34,4 +34,5 @@ export interface LaunchOptions {
   ignoreDefaultArgs?: boolean | string[];
   timeout?: number;
   env?: Record<string, string>;
+  dumpio?: boolean;
 }
