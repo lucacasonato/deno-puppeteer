@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         deno: ["v1.x", "nightly"]
-        os: [windows-latest, ubuntu-latest] # Can't run on macOS because headless isn't working there.
+        os: [windows-latest, ubuntu-latest, macos-latest]
       fail-fast: false
 
     steps:

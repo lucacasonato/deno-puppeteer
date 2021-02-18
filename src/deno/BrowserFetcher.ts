@@ -22,6 +22,7 @@ import {
   exists,
   existsSync,
   pathJoin,
+  pathResolve,
   sprintf,
 } from "../../vendor/puppeteer-core/vendor/std.ts";
 import { readZip } from "../../vendor/puppeteer-core/vendor/zip/mod.ts";
@@ -288,6 +289,9 @@ export class BrowserFetcher {
     const revisionInfo = this.revisionInfo(revision);
     if (revisionInfo && Deno.build.os !== "windows") {
       await Deno.chmod(revisionInfo.executablePath, 0o755);
+      if (Deno.build.os === "darwin" && this._product === "chrome") {
+        await macOSMakeChromiumHelpersExecutable(revisionInfo.executablePath);
+      }
     }
     return revisionInfo;
   }
@@ -527,5 +531,42 @@ async function installDMG(dmgPath: string, folderPath: string): Promise<void> {
       proc.close();
       assert(status.success, "unmounting failed");
     }
+  }
+}
+
+/**
+ * @internal
+ */
+async function macOSMakeChromiumHelpersExecutable(executablePath: string) {
+  const helperApps = [
+    "Chromium Helper",
+    "Chromium Helper (GPU)",
+    "Chromium Helper (Plugin)",
+    "Chromium Helper (Renderer)",
+  ];
+
+  const frameworkPath = pathResolve(
+    executablePath,
+    pathJoin("..", "..", "Frameworks", "Chromium Framework.framework", "Versions"),
+  );
+  const versionPath = pathJoin(frameworkPath, "Current");
+
+  try {
+    const version = await Deno.readTextFile(versionPath);
+
+    for (const helperApp of helperApps) {
+      const helperAppPath = pathJoin(
+        frameworkPath,
+        version,
+        "Helpers",
+        helperApp + ".app",
+        "Contents",
+        "MacOS",
+        helperApp,
+      );
+      await Deno.chmod(helperAppPath, 0o755);
+    }
+  } catch (err) {
+    console.error('Failed to make Chromium Helpers executable', String(err));
   }
 }
