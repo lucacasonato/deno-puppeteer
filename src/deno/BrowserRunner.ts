@@ -55,7 +55,7 @@ export class BrowserRunner {
   }
 
   start(options: LaunchOptions): void {
-    const { env } = options;
+    const { env, dumpio } = options;
     assert(!this.proc, "This process has previously been started.");
     debugLauncher(
       `Calling ${this._executablePath} ${this._processArguments.join(" ")}`
@@ -72,7 +72,7 @@ export class BrowserRunner {
       this._closed = true;
       try {
         if (this.proc) {
-          if (!status.success) {
+          if (!status.success && dumpio) {
             await Deno.copy(this.proc.stdout!, Deno.stdout);
             await Deno.copy(this.proc.stderr!, Deno.stderr);
           }

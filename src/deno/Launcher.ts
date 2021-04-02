@@ -59,6 +59,7 @@ class ChromeLauncher implements ProductLauncher {
       defaultViewport = { width: 800, height: 600 },
       slowMo = 0,
       timeout = 30000,
+      dumpio = false,
     } = options;
 
     const profilePath = pathJoin(
@@ -106,6 +107,7 @@ class ChromeLauncher implements ProductLauncher {
     );
     runner.start({
       env,
+      dumpio,
     });
 
     try {
