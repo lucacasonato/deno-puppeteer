@@ -82,7 +82,7 @@ export declare class DOMWorld {
     pageFunction: T,
     ...args: SerializableOrJSHandle[]
   ): Promise<UnwrapPromiseLike<EvaluateFnReturnType<T>>>;
-  $(selector: string): Promise<ElementHandle | null>;
+  $<T extends any = any>(selector: string): Promise<ElementHandle<T> | null>;
   _document(): Promise<ElementHandle>;
   $x(expression: string): Promise<ElementHandle[]>;
   $eval<ReturnType>(
@@ -101,7 +101,7 @@ export declare class DOMWorld {
     ) => ReturnType | Promise<ReturnType>,
     ...args: SerializableOrJSHandle[]
   ): Promise<WrapElementHandle<ReturnType>>;
-  $$(selector: string): Promise<ElementHandle[]>;
+  $$<T extends any = any>(selector: string): Promise<Array<ElementHandle<T>>>;
   content(): Promise<string>;
   setContent(html: string, options?: {
     timeout?: number;

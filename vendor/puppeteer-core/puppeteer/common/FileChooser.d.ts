@@ -31,6 +31,7 @@ import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
  * **NOTE** In browsers, only one file chooser can be opened at a time.
  * All file choosers must be accepted or canceled. Not doing so will prevent
  * subsequent file choosers from appearing.
+ * @public
  */
 export declare class FileChooser {
   private _element;
@@ -56,5 +57,5 @@ export declare class FileChooser {
   /**
      * Closes the file chooser without selecting any files.
      */
-  cancel(): Promise<void>;
+  cancel(): void;
 }

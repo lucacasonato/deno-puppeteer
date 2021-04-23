@@ -18,7 +18,30 @@ import { EventEmitter } from "./EventEmitter.js";
 import { Connection } from "./Connection.js";
 import { Page } from "./Page.js";
 import { Viewport } from "./PuppeteerViewport.js";
-declare type BrowserCloseCallback = () => Promise<void> | void;
+/**
+ * @internal
+ */
+export declare type BrowserCloseCallback = () => Promise<void> | void;
+/**
+ * @public
+ */
+export declare type Permission =
+  | "geolocation"
+  | "midi"
+  | "notifications"
+  | "camera"
+  | "microphone"
+  | "background-sync"
+  | "ambient-light-sensor"
+  | "accelerometer"
+  | "gyroscope"
+  | "magnetometer"
+  | "accessibility-events"
+  | "clipboard-read"
+  | "clipboard-write"
+  | "payment-handler"
+  | "idle-detection"
+  | "midi-sysex";
 /**
  * @public
  */
@@ -127,7 +150,7 @@ export declare class Browser extends EventEmitter {
     connection: Connection,
     contextIds: string[],
     ignoreHTTPSErrors: boolean,
-    defaultViewport?: Viewport,
+    defaultViewport?: Viewport | null,
     process?: Deno.Process,
     closeCallback?: BrowserCloseCallback,
   ): Promise<Browser>;
@@ -150,7 +173,7 @@ export declare class Browser extends EventEmitter {
     connection: Connection,
     contextIds: string[],
     ignoreHTTPSErrors: boolean,
-    defaultViewport?: Viewport,
+    defaultViewport?: Viewport | null,
     process?: Deno.Process,
     closeCallback?: BrowserCloseCallback,
   );
@@ -284,13 +307,16 @@ export declare class Browser extends EventEmitter {
      * After calling `disconnect`, the {@link Browser} object is considered disposed and
      * cannot be used anymore.
      */
-  disconnect(): void;
+  disconnect(): Promise<void>;
   /**
      * Indicates that the browser is connected.
      */
   isConnected(): boolean;
   private _getVersion;
 }
+/**
+ * @public
+ */
 export declare const enum BrowserContextEmittedEvents {
   /**
      * Emitted when the url of a target inside the browser context changes.
@@ -342,6 +368,7 @@ export declare const enum BrowserContextEmittedEvents {
  * // Dispose context once it's no longer needed.
  * await context.close();
  * ```
+ * @public
  */
 export declare class BrowserContext extends EventEmitter {
   private _connection;
@@ -402,7 +429,7 @@ export declare class BrowserContext extends EventEmitter {
      * @param permissions - An array of permissions to grant.
      * All permissions that are not listed here will be automatically denied.
      */
-  overridePermissions(origin: string, permissions: string[]): Promise<void>;
+  overridePermissions(origin: string, permissions: Permission[]): Promise<void>;
   /**
      * Clears all permission overrides for the browser context.
      *
@@ -432,4 +459,3 @@ export declare class BrowserContext extends EventEmitter {
      */
   close(): Promise<void>;
 }
-export {};

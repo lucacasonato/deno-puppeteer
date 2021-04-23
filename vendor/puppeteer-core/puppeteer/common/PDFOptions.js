@@ -30,3 +30,4 @@ export const paperFormats = {
   a5: { width: 5.83, height: 8.27 },
   a6: { width: 4.13, height: 5.83 },
 };
+//# sourceMappingURL=PDFOptions.js.map

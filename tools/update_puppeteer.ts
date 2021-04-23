@@ -48,7 +48,10 @@ for (const fileName in files) {
     fileName.startsWith("puppeteer/node") ||
     fileName.endsWith(".map") ||
     fileName.endsWith(".tsbuildinfo") ||
-    fileName == "puppeteer/initialize-node.js"
+    fileName.includes("/initialize-") ||
+    fileName.includes("/web.") ||
+    fileName.includes("/node.") ||
+    fileName.includes("/environment.")
   ) {
     delete files[fileName];
   }
@@ -129,20 +132,13 @@ for (const fileName in files) {
   files[fileName] = encoder.encode(
     src.replace(
       `import { ChildProcess } from 'child_process';\n`,
-      `/** ChildProcess is not supported in Deno. Please ignore. */\ntype ChildProcess = void;\n`,
+      ``,
+    ).replace(
+      `ChildProcess;\n`,
+      `Deno.Process`,
     ),
   );
 }
-
-[
-  "puppeteer/common/Product.js",
-  "puppeteer/common/PuppeteerViewport.js",
-  "puppeteer/common/EvalTypes.js",
-  "puppeteer/common/ConnectionTransport.js",
-].forEach((fileName) => {
-  const src = decoder.decode(files[fileName]);
-  files[fileName] = encoder.encode(src + "\nexport {};");
-});
 
 const output = `./vendor/puppeteer-core`;
 

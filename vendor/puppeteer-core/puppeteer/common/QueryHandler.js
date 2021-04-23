@@ -172,3 +172,4 @@ export function getQueryHandlerAndSelector(selector) {
     queryHandler,
   };
 }
+//# sourceMappingURL=QueryHandler.js.map

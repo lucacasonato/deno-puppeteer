@@ -14,7 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* Use the global version if we're in the browser, else load the node-fetch module. */
+/* Use the global version. */
 export const getFetch = async () => {
   return globalThis.fetch;
 };
+//# sourceMappingURL=fetch.js.map

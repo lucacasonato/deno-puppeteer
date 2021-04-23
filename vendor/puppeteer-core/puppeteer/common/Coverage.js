@@ -101,7 +101,10 @@ export class Coverage {
     return await this._cssCoverage.stop();
   }
 }
-class JSCoverage {
+/**
+ * @public
+ */
+export class JSCoverage {
   constructor(client) {
     this._enabled = false;
     this._scriptURLs = new Map();
@@ -200,7 +203,10 @@ class JSCoverage {
     return coverage;
   }
 }
-class CSSCoverage {
+/**
+ * @public
+ */
+export class CSSCoverage {
   constructor(client) {
     this._enabled = false;
     this._stylesheetURLs = new Map();
@@ -348,3 +354,4 @@ function convertToDisjointRanges(nestedRanges) {
   // Filter out empty ranges.
   return results.filter((range) => range.end - range.start > 1);
 }
+//# sourceMappingURL=Coverage.js.map

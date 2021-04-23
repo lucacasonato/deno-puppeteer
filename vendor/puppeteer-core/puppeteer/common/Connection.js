@@ -47,8 +47,8 @@ export class Connection extends EventEmitter {
     return session._connection;
   }
   /**
-     * @param {string} sessionId
-     * @returns {?CDPSession}
+     * @param sessionId - The session id
+     * @returns The current CDP session if it exists
      */
   session(sessionId) {
     return this._sessions.get(sessionId) || null;
@@ -148,8 +148,8 @@ export class Connection extends EventEmitter {
     await this._transport.close();
   }
   /**
-     * @param {Protocol.Target.TargetInfo} targetInfo
-     * @returns {!Promise<!CDPSession>}
+     * @param targetInfo - The target info
+     * @returns The CDP session that is created
      */
   async createSession(targetInfo) {
     const { sessionId } = await this.send("Target.attachToTarget", {
@@ -298,3 +298,4 @@ function rewriteError(error, message) {
   error.message = message;
   return error;
 }
+//# sourceMappingURL=Connection.js.map

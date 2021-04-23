@@ -12,6 +12,9 @@ declare function releaseObject(
   client: CDPSession,
   remoteObject: Protocol.Runtime.RemoteObject,
 ): Promise<void>;
+/**
+ * @public
+ */
 export interface PuppeteerEventListener {
   emitter: CommonEventEmitter;
   eventName: string | symbol;
@@ -34,7 +37,7 @@ declare function isNumber(obj: unknown): obj is number;
 declare function waitForEvent<T extends any>(
   emitter: CommonEventEmitter,
   eventName: string | symbol,
-  predicate: (event: T) => boolean,
+  predicate: (event: T) => Promise<boolean> | boolean,
   timeout: number,
   abortPromise: Promise<Error>,
 ): Promise<T>;

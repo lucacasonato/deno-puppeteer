@@ -131,3 +131,4 @@ export class WebWorker extends EventEmitter {
     );
   }
 }
+//# sourceMappingURL=WebWorker.js.map

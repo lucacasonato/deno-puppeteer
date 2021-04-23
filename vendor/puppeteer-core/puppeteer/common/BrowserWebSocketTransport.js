@@ -13,10 +13,7 @@ export class BrowserWebSocketTransport {
       }
     });
     // Silently ignore all errors - we don't know what to do with them.
-    this._ws.addEventListener(
-      "error",
-      () => {},
-    );
+    this._ws.addEventListener("error", () => {});
     this.onmessage = null;
     this.onclose = null;
   }
@@ -41,3 +38,4 @@ export class BrowserWebSocketTransport {
     });
   }
 }
+//# sourceMappingURL=BrowserWebSocketTransport.js.map

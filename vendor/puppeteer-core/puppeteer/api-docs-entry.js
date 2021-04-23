@@ -28,6 +28,7 @@
  */
 export * from "./common/Accessibility.js";
 export * from "./common/Browser.js";
+export * from "./common/Coverage.js";
 export * from "./common/Connection.js";
 export * from "./common/ConsoleMessage.js";
 export * from "./common/Coverage.js";
@@ -39,6 +40,7 @@ export * from "./common/ExecutionContext.js";
 export * from "./common/EventEmitter.js";
 export * from "./common/FileChooser.js";
 export * from "./common/FrameManager.js";
+export * from "./common/PuppeteerViewport.js";
 export * from "./common/Input.js";
 export * from "./common/Page.js";
 export * from "./common/Product.js";
@@ -58,3 +60,18 @@ export * from "./common/PDFOptions.js";
 export * from "./common/TimeoutSettings.js";
 export * from "./common/LifecycleWatcher.js";
 export * from "./common/QueryHandler.js";
+export * from "./common/NetworkConditions.js";
+/**
+ * @public
+ * {@inheritDoc Puppeteer.devices}
+ */
+export let devices;
+/**
+ * @public
+ */
+export let errors;
+/**
+ * @public
+ */
+export let networkConditions;
+//# sourceMappingURL=api-docs-entry.js.map

@@ -35,6 +35,7 @@ import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
  *   page.evaluate(() => alert('1'));
  * })();
  * ```
+ * @public
  */
 export declare class Dialog {
   private _client;
