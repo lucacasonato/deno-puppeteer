@@ -49,7 +49,7 @@ export declare class Connection extends EventEmitter {
   _rawSend(message: Record<string, unknown>): number;
   _onMessage(message: string): Promise<void>;
   _onClose(): void;
-  dispose(): void;
+  dispose(): Promise<void>;
   /**
      * @param targetInfo - The target info
      * @returns The CDP session that is created
