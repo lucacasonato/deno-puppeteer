@@ -27,6 +27,9 @@ import {
   UnwrapPromiseLike,
   WrapElementHandle,
 } from "./EvalTypes.js";
+/**
+ * @public
+ */
 export interface BoxModel {
   content: Array<{
     x: number;
@@ -185,7 +188,7 @@ export declare class JSHandle {
      * on the object in page and consequent {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse | JSON.parse} in puppeteer.
      * **NOTE** The method throws if the referenced object is not stringifiable.
      */
-  jsonValue(): Promise<Record<string, unknown>>;
+  jsonValue<T = unknown>(): Promise<T>;
   /**
      * Returns either `null` or the object handle itself, if the object handle is
      * an instance of {@link ElementHandle}.
@@ -371,12 +374,12 @@ export declare class ElementHandle<ElementType extends any = any>
      * Runs `element.querySelector` within the page. If no element matches the selector,
      * the return value resolves to `null`.
      */
-  $(selector: string): Promise<ElementHandle | null>;
+  $<T extends any = any>(selector: string): Promise<ElementHandle<T> | null>;
   /**
      * Runs `element.querySelectorAll` within the page. If no elements match the selector,
      * the return value resolves to `[]`.
      */
-  $$(selector: string): Promise<ElementHandle[]>;
+  $$<T extends any = any>(selector: string): Promise<Array<ElementHandle<T>>>;
   /**
      * This method runs `document.querySelector` within the element and passes it as
      * the first argument to `pageFunction`. If there's no element matching `selector`,

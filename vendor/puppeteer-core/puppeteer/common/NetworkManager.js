@@ -27,6 +27,7 @@ import { HTTPResponse } from "./HTTPResponse.js";
  */
 export const NetworkManagerEmittedEvents = {
   Request: Symbol("NetworkManager.Request"),
+  RequestServedFromCache: Symbol("NetworkManager.RequestServedFromCache"),
   Response: Symbol("NetworkManager.Response"),
   RequestFailed: Symbol("NetworkManager.RequestFailed"),
   RequestFinished: Symbol("NetworkManager.RequestFinished"),
@@ -40,13 +41,19 @@ export class NetworkManager extends EventEmitter {
     this._requestIdToRequest = new Map();
     this._requestIdToRequestWillBeSentEvent = new Map();
     this._extraHTTPHeaders = {};
-    this._offline = false;
     this._credentials = null;
     this._attemptedAuthentications = new Set();
     this._userRequestInterceptionEnabled = false;
+    this._userRequestInterceptionCacheSafe = false;
     this._protocolRequestInterceptionEnabled = false;
     this._userCacheDisabled = false;
     this._requestIdToInterceptionId = new Map();
+    this._emulatedNetworkConditions = {
+      offline: false,
+      upload: -1,
+      download: -1,
+      latency: 0,
+    };
     this._client = client;
     this._ignoreHTTPSErrors = ignoreHTTPSErrors;
     this._frameManager = frameManager;
@@ -100,16 +107,27 @@ export class NetworkManager extends EventEmitter {
     return Object.assign({}, this._extraHTTPHeaders);
   }
   async setOfflineMode(value) {
-    if (this._offline === value) {
-      return;
-    }
-    this._offline = value;
+    this._emulatedNetworkConditions.offline = value;
+    await this._updateNetworkConditions();
+  }
+  async emulateNetworkConditions(networkConditions) {
+    this._emulatedNetworkConditions.upload = networkConditions
+      ? networkConditions.upload
+      : -1;
+    this._emulatedNetworkConditions.download = networkConditions
+      ? networkConditions.download
+      : -1;
+    this._emulatedNetworkConditions.latency = networkConditions
+      ? networkConditions.latency
+      : 0;
+    await this._updateNetworkConditions();
+  }
+  async _updateNetworkConditions() {
     await this._client.send("Network.emulateNetworkConditions", {
-      offline: this._offline,
-      // values of 0 remove any active throttling. crbug.com/456324#c9
-      latency: 0,
-      downloadThroughput: -1,
-      uploadThroughput: -1,
+      offline: this._emulatedNetworkConditions.offline,
+      latency: this._emulatedNetworkConditions.latency,
+      uploadThroughput: this._emulatedNetworkConditions.upload,
+      downloadThroughput: this._emulatedNetworkConditions.download,
     });
   }
   async setUserAgent(userAgent) {
@@ -119,8 +137,9 @@ export class NetworkManager extends EventEmitter {
     this._userCacheDisabled = !enabled;
     await this._updateProtocolCacheDisabled();
   }
-  async setRequestInterception(value) {
+  async setRequestInterception(value, cacheSafe = false) {
     this._userRequestInterceptionEnabled = value;
+    this._userRequestInterceptionCacheSafe = cacheSafe;
     await this._updateProtocolRequestInterception();
   }
   async _updateProtocolRequestInterception() {
@@ -147,13 +166,14 @@ export class NetworkManager extends EventEmitter {
   async _updateProtocolCacheDisabled() {
     await this._client.send("Network.setCacheDisabled", {
       cacheDisabled: this._userCacheDisabled ||
-        this._protocolRequestInterceptionEnabled,
+        (this._userRequestInterceptionEnabled &&
+          !this._userRequestInterceptionCacheSafe),
     });
   }
   _onRequestWillBeSent(event) {
     // Request interception doesn't happen for data URLs with Network Service.
     if (
-      this._protocolRequestInterceptionEnabled &&
+      this._userRequestInterceptionEnabled &&
       !event.request.url.startsWith("data:")
     ) {
       const requestId = event.requestId;
@@ -239,6 +259,7 @@ export class NetworkManager extends EventEmitter {
     if (request) {
       request._fromMemoryCache = true;
     }
+    this.emit(NetworkManagerEmittedEvents.RequestServedFromCache, request);
   }
   _handleRequestRedirect(request, responsePayload) {
     const response = new HTTPResponse(this._client, request, responsePayload);
@@ -295,3 +316,4 @@ export class NetworkManager extends EventEmitter {
     this.emit(NetworkManagerEmittedEvents.RequestFailed, request);
   }
 }
+//# sourceMappingURL=NetworkManager.js.map

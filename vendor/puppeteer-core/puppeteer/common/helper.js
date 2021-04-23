@@ -102,8 +102,8 @@ async function waitForEvent(
     resolveCallback = resolve;
     rejectCallback = reject;
   });
-  const listener = addEventListener(emitter, eventName, (event) => {
-    if (!predicate(event)) {
+  const listener = addEventListener(emitter, eventName, async (event) => {
+    if (!(await predicate(event))) {
       return;
     }
     resolveCallback(event);
@@ -289,3 +289,4 @@ export const helper = {
   getExceptionMessage,
   releaseObject,
 };
+//# sourceMappingURL=helper.js.map

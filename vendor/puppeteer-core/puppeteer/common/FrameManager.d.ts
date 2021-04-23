@@ -368,7 +368,7 @@ export declare class Frame {
      * @returns A promise which resolves to an `ElementHandle` pointing at the
      * element, or `null` if it was not found.
      */
-  $(selector: string): Promise<ElementHandle | null>;
+  $<T extends any = any>(selector: string): Promise<ElementHandle<T> | null>;
   /**
      * This method evaluates the given XPath expression and returns the results.
      *
@@ -435,7 +435,7 @@ export declare class Frame {
      * @param selector - a selector to search for
      * @returns An array of element handles pointing to the found frame elements.
      */
-  $$(selector: string): Promise<ElementHandle[]>;
+  $$<T extends any = any>(selector: string): Promise<Array<ElementHandle<T>>>;
   /**
      * @returns the full HTML contents of the frame, including the doctype.
      */

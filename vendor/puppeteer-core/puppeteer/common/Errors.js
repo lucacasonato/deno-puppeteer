@@ -14,7 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-class CustomError extends Error {
+/**
+ * @public
+ */
+export class CustomError extends Error {
   constructor(message) {
     super(message);
     this.name = this.constructor.name;
@@ -33,6 +36,10 @@ class CustomError extends Error {
  */
 export class TimeoutError extends CustomError {
 }
+/**
+ * @public
+ */
 export const puppeteerErrors = {
   TimeoutError,
 };
+//# sourceMappingURL=Errors.js.map

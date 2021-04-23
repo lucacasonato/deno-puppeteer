@@ -8,15 +8,14 @@ export class BrowserWebSocketTransport {
       }
     });
     this._ws.addEventListener("close", () => {
+      this._closed = true;
       if (this.onclose) {
         this.onclose.call(null);
       }
     });
     // Silently ignore all errors - we don't know what to do with them.
-    this._ws.addEventListener(
-      "error",
-      () => {},
-    );
+    this._ws.addEventListener("error", () => {});
+    this._closed = false;
     this.onmessage = null;
     this.onclose = null;
   }
@@ -38,6 +37,8 @@ export class BrowserWebSocketTransport {
       this._ws.addEventListener("close", () => resolve());
       this._ws.addEventListener("error", (err) => reject(err));
       this._ws.close();
+      if (this._closed) resolve();
     });
   }
 }
+//# sourceMappingURL=BrowserWebSocketTransport.js.map

@@ -1,5 +1,6 @@
+/// <reference types="./NetworkConditions.d.ts" />
 /**
- * Copyright 2017 Google Inc. All rights reserved.
+ * Copyright 2021 Google Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +17,16 @@
 /**
  * @public
  */
-export interface Device {
-  name: string;
-  userAgent: string;
-  viewport: {
-    width: number;
-    height: number;
-    deviceScaleFactor: number;
-    isMobile: boolean;
-    hasTouch: boolean;
-    isLandscape: boolean;
-  };
-}
-/**
- * @public
- */
-export declare type DevicesMap = {
-  [name: string]: Device;
+export const networkConditions = {
+  "Slow 3G": {
+    download: ((500 * 1000) / 8) * 0.8,
+    upload: ((500 * 1000) / 8) * 0.8,
+    latency: 400 * 5,
+  },
+  "Fast 3G": {
+    download: ((1.6 * 1000 * 1000) / 8) * 0.9,
+    upload: ((750 * 1000) / 8) * 0.9,
+    latency: 150 * 3.75,
+  },
 };
-/**
- * @internal
- */
-export declare const devicesMap: DevicesMap;
+//# sourceMappingURL=NetworkConditions.js.map

@@ -18,7 +18,4 @@
  * @param value
  * @param message - the error message to throw if the value is not truthy.
  */
-export declare const assert: (
-  value: unknown,
-  message?: string,
-) => asserts value;
+export declare const assert: (value: unknown, message?: string) => void;

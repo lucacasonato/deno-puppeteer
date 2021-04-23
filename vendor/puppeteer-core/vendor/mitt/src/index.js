@@ -56,3 +56,4 @@ export default function mitt(all) {
     },
   };
 }
+//# sourceMappingURL=index.js.map

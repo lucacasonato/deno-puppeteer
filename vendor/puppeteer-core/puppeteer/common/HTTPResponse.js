@@ -1,5 +1,4 @@
 /// <reference types="./HTTPResponse.d.ts" />
-import { base64Decode } from "../../vendor/std.ts";
 import { SecurityDetails } from "./SecurityDetails.js";
 /**
  * The HTTPResponse class represents responses which are received by the
@@ -89,7 +88,7 @@ export class HTTPResponse {
     return this._securityDetails;
   }
   /**
-     * @returns Promise which resolves to an array buffer with response body.
+     * @returns Promise which resolves to an arraybuffer with response body.
      */
   arrayBuffer() {
     if (!this._contentPromise) {
@@ -154,3 +153,4 @@ export class HTTPResponse {
     return this._request.frame();
   }
 }
+//# sourceMappingURL=HTTPResponse.js.map

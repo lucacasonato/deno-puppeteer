@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * @public
+ */
 export interface ConnectionTransport {
-  send(string: any): void;
-  close(): Promise<void>;
+  send(string: any): any;
+  close(): any;
   onmessage?: (message: string) => void;
   onclose?: () => void;
 }

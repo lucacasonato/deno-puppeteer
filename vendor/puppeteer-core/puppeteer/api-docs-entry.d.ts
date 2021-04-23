@@ -13,8 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { BrowserConnectOptions } from "./common/BrowserConnector.js";
+import { Product } from "./common/Product.js";
+import { Browser } from "./common/Browser.js";
+import { ConnectOptions } from "./common/Puppeteer.js";
+import { DevicesMap } from "./common/DeviceDescriptors.js";
+import { PuppeteerErrors } from "./common/Errors.js";
+import { PredefinedNetworkConditions } from "./common/NetworkConditions.js";
+import { CustomQueryHandler } from "./common/QueryHandler.js";
+import { LaunchOptions } from "../../../src/deno/LaunchOptions.ts";
 export * from "./common/Accessibility.js";
 export * from "./common/Browser.js";
+export * from "./common/Coverage.js";
 export * from "./common/Connection.js";
 export * from "./common/ConsoleMessage.js";
 export * from "./common/Coverage.js";
@@ -26,6 +36,7 @@ export * from "./common/ExecutionContext.js";
 export * from "./common/EventEmitter.js";
 export * from "./common/FileChooser.js";
 export * from "./common/FrameManager.js";
+export * from "./common/PuppeteerViewport.js";
 export * from "./common/Input.js";
 export * from "./common/Page.js";
 export * from "./common/Product.js";
@@ -45,4 +56,60 @@ export * from "./common/PDFOptions.js";
 export * from "./common/TimeoutSettings.js";
 export * from "./common/LifecycleWatcher.js";
 export * from "./common/QueryHandler.js";
+export * from "./common/NetworkConditions.js";
 export * from "../vendor/devtools-protocol/types/protocol.d.ts";
+export * from "../../../src/deno/LaunchOptions.ts";
+/**
+ * @public
+ * {@inheritDoc PuppeteerNode.launch}
+ */
+export declare function launch(
+  options?:
+    & LaunchOptions
+    & BrowserConnectOptions
+    & {
+      product?: Product;
+      extraPrefsFirefox?: Record<string, unknown>;
+    },
+): Promise<Browser>;
+/**
+ * @public
+ * {@inheritDoc PuppeteerNode.connect}
+ */
+export declare function connect(options: ConnectOptions): Promise<Browser>;
+/**
+ * @public
+ * {@inheritDoc Puppeteer.devices}
+ */
+export declare let devices: DevicesMap;
+/**
+ * @public
+ */
+export declare let errors: PuppeteerErrors;
+/**
+ * @public
+ */
+export declare let networkConditions: PredefinedNetworkConditions;
+/**
+ * @public
+ * {@inheritDoc Puppeteer.registerCustomQueryHandler}
+ */
+export declare function registerCustomQueryHandler(
+  name: string,
+  queryHandler: CustomQueryHandler,
+): void;
+/**
+ * @public
+ * {@inheritDoc Puppeteer.unregisterCustomQueryHandler}
+ */
+export declare function unregisterCustomQueryHandler(name: string): void;
+/**
+ * @public
+ * {@inheritDoc Puppeteer.customQueryHandlerNames}
+ */
+export declare function customQueryHandlerNames(): string[];
+/**
+ * @public
+ * {@inheritDoc Puppeteer.clearCustomQueryHandlers}
+ */
+export declare function clearCustomQueryHandlers(): void;

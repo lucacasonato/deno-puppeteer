@@ -20,7 +20,7 @@ import {
 } from "../../vendor/puppeteer-core/puppeteer/common/Puppeteer.js";
 import { BrowserFetcher, BrowserFetcherOptions } from "./BrowserFetcher.ts";
 import { ChromeArgOptions, LaunchOptions } from "./LaunchOptions.ts";
-import { BrowserOptions } from "../../vendor/puppeteer-core/puppeteer/common/BrowserConnector.js";
+import { BrowserConnectOptions } from "../../vendor/puppeteer-core/puppeteer/common/BrowserConnector.js";
 import { Browser } from "../../vendor/puppeteer-core/puppeteer/common/Browser.js";
 import Launcher, { ProductLauncher } from "./Launcher.ts";
 import { PUPPETEER_REVISIONS } from "../../vendor/puppeteer-core/puppeteer/revisions.js";
@@ -133,7 +133,7 @@ export class PuppeteerDeno extends Puppeteer {
   launch(
     options: LaunchOptions &
       ChromeArgOptions &
-      BrowserOptions & {
+      BrowserConnectOptions & {
         product?: Product;
         extraPrefsFirefox?: Record<string, unknown>;
       } = {}

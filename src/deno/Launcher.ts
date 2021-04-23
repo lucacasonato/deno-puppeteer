@@ -17,7 +17,7 @@
 import { Browser } from "../../vendor/puppeteer-core/puppeteer/common/Browser.js";
 import { BrowserRunner } from "./BrowserRunner.ts";
 import { ChromeArgOptions, LaunchOptions } from "./LaunchOptions.ts";
-import { BrowserOptions } from "../../vendor/puppeteer-core/puppeteer/common/BrowserConnector.js";
+import { BrowserConnectOptions } from "../../vendor/puppeteer-core/puppeteer/common/BrowserConnector.js";
 import { Product } from "../../vendor/puppeteer-core/puppeteer/common/Product.js";
 import {
   existsSync,
@@ -31,7 +31,7 @@ import { BrowserFetcher } from "./BrowserFetcher.ts";
  * @public
  */
 export interface ProductLauncher {
-  launch(object: LaunchOptions & BrowserOptions): Promise<Browser>;
+  launch(object: LaunchOptions & BrowserConnectOptions): Promise<Browser>;
   executablePath: () => string;
   defaultArgs(object: {}): string[];
   product: Product;
@@ -48,7 +48,7 @@ class ChromeLauncher implements ProductLauncher {
   }
 
   async launch(
-    options: LaunchOptions & ChromeArgOptions & BrowserOptions = {}
+    options: LaunchOptions & ChromeArgOptions & BrowserConnectOptions = {},
   ): Promise<Browser> {
     const {
       ignoreDefaultArgs = false,
@@ -64,7 +64,7 @@ class ChromeLauncher implements ProductLauncher {
 
     const profilePath = pathJoin(
       await Deno.makeTempDir(),
-      "puppeteer_dev_chrome_profile-"
+      "puppeteer_dev_chrome_profile-",
     );
     await Deno.mkdir(profilePath, { recursive: true });
     const chromeArguments = [];
@@ -72,8 +72,8 @@ class ChromeLauncher implements ProductLauncher {
     else if (Array.isArray(ignoreDefaultArgs)) {
       chromeArguments.push(
         ...this.defaultArgs(options).filter(
-          (arg) => !ignoreDefaultArgs.includes(arg)
-        )
+          (arg) => !ignoreDefaultArgs.includes(arg),
+        ),
       );
     } else chromeArguments.push(...args);
 
@@ -103,7 +103,7 @@ class ChromeLauncher implements ProductLauncher {
     const runner = new BrowserRunner(
       chromeExecutable!,
       chromeArguments,
-      temporaryUserDataDir
+      temporaryUserDataDir,
     );
     runner.start({
       env,
@@ -122,7 +122,7 @@ class ChromeLauncher implements ProductLauncher {
         ignoreHTTPSErrors,
         defaultViewport,
         runner.proc,
-        runner.close.bind(runner)
+        runner.close.bind(runner),
       );
       await browser.waitForTarget((t) => t.type() === "page");
       return browser;
@@ -205,11 +205,13 @@ class FirefoxLauncher implements ProductLauncher {
   }
 
   async launch(
-    options: LaunchOptions &
-      ChromeArgOptions &
-      BrowserOptions & {
+    options:
+      & LaunchOptions
+      & ChromeArgOptions
+      & BrowserConnectOptions
+      & {
         extraPrefsFirefox?: { [x: string]: unknown };
-      } = {}
+      } = {},
   ): Promise<Browser> {
     const {
       ignoreDefaultArgs = false,
@@ -228,8 +230,8 @@ class FirefoxLauncher implements ProductLauncher {
     else if (Array.isArray(ignoreDefaultArgs)) {
       firefoxArguments.push(
         ...this.defaultArgs(options).filter(
-          (arg) => !ignoreDefaultArgs.includes(arg)
-        )
+          (arg) => !ignoreDefaultArgs.includes(arg),
+        ),
       );
     } else firefoxArguments.push(...args);
 
@@ -263,7 +265,7 @@ class FirefoxLauncher implements ProductLauncher {
     const runner = new BrowserRunner(
       firefoxExecutable!,
       firefoxArguments,
-      temporaryUserDataDir
+      temporaryUserDataDir,
     );
     runner.start({
       env,
@@ -281,7 +283,7 @@ class FirefoxLauncher implements ProductLauncher {
         ignoreHTTPSErrors,
         defaultViewport,
         runner.proc,
-        runner.close.bind(runner)
+        runner.close.bind(runner),
       );
       await browser.waitForTarget((t) => t.type() === "page");
       return browser;
@@ -337,7 +339,7 @@ class FirefoxLauncher implements ProductLauncher {
   async _createProfile(extraPrefs: { [x: string]: unknown }): Promise<string> {
     const profilePath = pathJoin(
       await Deno.makeTempDir(),
-      "puppeteer_dev_firefox_profile-"
+      "puppeteer_dev_firefox_profile-",
     );
     await Deno.mkdir(profilePath, { recursive: true });
     const prefsJS: string[] = [];
@@ -412,7 +414,8 @@ class FirefoxLauncher implements ProductLauncher {
       "browser.warnOnQuit": false,
 
       // Defensively disable data reporting systems
-      "datareporting.healthreport.documentServerURI": `http://${server}/dummy/healthreport/`,
+      "datareporting.healthreport.documentServerURI":
+        `http://${server}/dummy/healthreport/`,
       "datareporting.healthreport.logging.consoleEnabled": false,
       "datareporting.healthreport.service.enabled": false,
       "datareporting.healthreport.service.firstRun": false,
@@ -461,7 +464,8 @@ class FirefoxLauncher implements ProductLauncher {
       "extensions.update.notifyUser": false,
 
       // Make sure opening about:addons will not hit the network
-      "extensions.webservice.discoverURL": `http://${server}/dummy/discoveryURL`,
+      "extensions.webservice.discoverURL":
+        `http://${server}/dummy/discoveryURL`,
 
       // Force disable Fission until the Remote Agent is compatible
       "fission.autostart": false,
@@ -542,23 +546,23 @@ class FirefoxLauncher implements ProductLauncher {
     Object.assign(defaultPreferences, extraPrefs);
     for (const [key, value] of Object.entries(defaultPreferences)) {
       userJS.push(
-        `user_pref(${JSON.stringify(key)}, ${JSON.stringify(value)});`
+        `user_pref(${JSON.stringify(key)}, ${JSON.stringify(value)});`,
       );
     }
     await Deno.writeTextFile(
       pathJoin(profilePath, "user.js"),
-      userJS.join("\n")
+      userJS.join("\n"),
     );
     await Deno.writeTextFile(
       pathJoin(profilePath, "prefs.js"),
-      prefsJS.join("\n")
+      prefsJS.join("\n"),
     );
     return profilePath;
   }
 }
 
 function resolveExecutablePath(
-  launcher: ChromeLauncher | FirefoxLauncher
+  launcher: ChromeLauncher | FirefoxLauncher,
 ): { executablePath: string; missingText?: string } {
   const executablePath = Deno.env.get("PUPPETEER_EXECUTABLE_PATH");
   if (executablePath) {
@@ -587,14 +591,10 @@ function resolveExecutablePath(
 
   const revisionInfo = browserFetcher.revisionInfo(launcher._preferredRevision);
   const missingText = !revisionInfo.local
-    ? `Could not find browser revision ${
-        launcher._preferredRevision
-      }. Run "PUPPETEER_PRODUCT=${
-        launcher.product
-      } deno run -A --unstable ${new URL(
-        "../../vendor/puppeteer-core/puppeteer/../../../install.ts",
-        import.meta.url
-      )}" to download a supported browser binary.`
+    ? `Could not find browser revision ${launcher._preferredRevision}. Run "PUPPETEER_PRODUCT=${launcher.product} deno run -A --unstable ${new URL(
+      "../../vendor/puppeteer-core/puppeteer/../../../install.ts",
+      import.meta.url,
+    )}" to download a supported browser binary.`
     : undefined;
   return { executablePath: revisionInfo.executablePath, missingText };
 }
@@ -604,7 +604,7 @@ function resolveExecutablePath(
  */
 export default function Launcher(
   preferredRevision: string,
-  product?: string
+  product?: string,
 ): ProductLauncher {
   // puppeteer-core doesn't take into account PUPPETEER_* env variables.
   if (!product) product = Deno.env.get("PUPPETEER_PRODUCT");
@@ -619,7 +619,7 @@ export default function Launcher(
          * to let the user know (they've probably typoed).
          */
         console.warn(
-          `Warning: unknown product name ${product}. Falling back to chrome.`
+          `Warning: unknown product name ${product}. Falling back to chrome.`,
         );
       }
       return new ChromeLauncher(preferredRevision);

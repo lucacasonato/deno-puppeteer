@@ -56,6 +56,7 @@ export class DOMWorld {
   }
   async _setContext(context) {
     if (context) {
+      this._ctxBindings.clear();
       this._contextResolveCallback.call(null, context);
       this._contextResolveCallback = null;
       for (const waitTask of this._waitTasks) {
@@ -352,9 +353,12 @@ export class DOMWorld {
     const bind = async (name) => {
       const expression = helper.pageBindingInitString("internal", name);
       try {
+        // TODO: In theory, it would be enough to call this just once
         await context._client.send("Runtime.addBinding", {
           name,
-          executionContextId: context._contextId,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore The protocol definition is not up to date.
+          executionContextName: context._contextName,
         });
         await context.evaluate(expression);
       } catch (error) {
@@ -472,13 +476,14 @@ export class DOMWorld {
     const polling = waitForVisible || waitForHidden ? "raf" : "mutation";
     const title = `XPath \`${xpath}\`${waitForHidden ? " to be hidden" : ""}`;
     function predicate(xpath, waitForVisible, waitForHidden) {
-      const node = document.evaluate(
-        xpath,
-        document,
-        null,
-        XPathResult.FIRST_ORDERED_NODE_TYPE,
-        null,
-      ).singleNodeValue;
+      const node =
+        document.evaluate(
+          xpath,
+          document,
+          null,
+          XPathResult.FIRST_ORDERED_NODE_TYPE,
+          null,
+        ).singleNodeValue;
       return checkWaitForOptions(node, waitForVisible, waitForHidden);
     }
     const waitTaskOptions = {
@@ -743,3 +748,4 @@ async function waitForPredicatePageFunction(
     }
   }
 }
+//# sourceMappingURL=DOMWorld.js.map

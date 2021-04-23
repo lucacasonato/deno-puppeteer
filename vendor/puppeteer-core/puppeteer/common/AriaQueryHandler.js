@@ -28,15 +28,13 @@ function parseAriaSelector(selector) {
   const knownAttributes = new Set(["name", "role"]);
   const queryOptions = {};
   const attributeRegexp =
-    /\[\s*(?<attribute>\w+)\s*=\s*"(?<value>\\.|[^"\\]*)"\s*\]/;
+    /\[\s*(?<attribute>\w+)\s*=\s*"(?<value>\\.|[^"\\]*)"\s*\]/g;
   const defaultName = selector.replace(
     attributeRegexp,
     (_, attribute, value) => {
       attribute = attribute.trim();
       if (!knownAttributes.has(attribute)) {
-        throw new Error(
-          'Unkown aria attribute "${groups.attribute}" in selector',
-        );
+        throw new Error(`Unknown aria attribute "${attribute}" in selector`);
       }
       queryOptions[attribute] = normalize(value);
       return "";
@@ -98,3 +96,4 @@ export const ariaHandler = {
   queryAll,
   queryAllArray,
 };
+//# sourceMappingURL=AriaQueryHandler.js.map

@@ -274,18 +274,19 @@ export class FrameManager extends EventEmitter {
     await this._client.send("Page.addScriptToEvaluateOnNewDocument", {
       source: `//# sourceURL=${EVALUATION_SCRIPT_URL}`,
       worldName: name,
-    }),
-      await Promise.all(
-        this.frames().map((frame) =>
-          this._client
-            .send("Page.createIsolatedWorld", {
-              frameId: frame._id,
-              grantUniveralAccess: true,
-              worldName: name,
-            })
-            .catch(debugError)
-        ),
-      ); // frames might be removed before we send this
+    });
+    // Frames might be removed before we send this.
+    await Promise.all(
+      this.frames().map((frame) =>
+        this._client
+          .send("Page.createIsolatedWorld", {
+            frameId: frame._id,
+            worldName: name,
+            grantUniveralAccess: true,
+          })
+          .catch(debugError)
+      ),
+    );
   }
   _onFrameNavigatedWithinDocument(frameId, url) {
     const frame = this._frames.get(frameId);
@@ -319,11 +320,6 @@ export class FrameManager extends EventEmitter {
         // We can use either.
         world = frame._secondaryWorld;
       }
-    }
-    if (
-      contextPayload.auxData && contextPayload.auxData["type"] === "isolated"
-    ) {
-      this._isolatedWorlds.add(contextPayload.name);
     }
     const context = new ExecutionContext(this._client, contextPayload, world);
     if (world) {
@@ -1065,3 +1061,4 @@ function assertNoLegacyNavigationOptions(options) {
     'ERROR: "networkidle" option is no longer supported. Use "networkidle2" instead',
   );
 }
+//# sourceMappingURL=FrameManager.js.map

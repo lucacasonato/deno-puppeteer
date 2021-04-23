@@ -45,3 +45,4 @@ export class TimeoutSettings {
     return DEFAULT_TIMEOUT;
   }
 }
+//# sourceMappingURL=TimeoutSettings.js.map

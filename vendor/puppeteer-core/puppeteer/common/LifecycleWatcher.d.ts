@@ -18,12 +18,18 @@ import { TimeoutError } from "./Errors.js";
 import { Frame, FrameManager } from "./FrameManager.js";
 import { HTTPRequest } from "./HTTPRequest.js";
 import { HTTPResponse } from "./HTTPResponse.js";
+/**
+ * @public
+ */
 export declare type PuppeteerLifeCycleEvent =
   | "load"
   | "domcontentloaded"
   | "networkidle0"
   | "networkidle2";
-declare type ProtocolLifeCycleEvent =
+/**
+ * @public
+ */
+export declare type ProtocolLifeCycleEvent =
   | "load"
   | "DOMContentLoaded"
   | "networkIdle"
@@ -69,4 +75,3 @@ export declare class LifecycleWatcher {
   _checkLifecycleComplete(): void;
   dispose(): void;
 }
-export {};

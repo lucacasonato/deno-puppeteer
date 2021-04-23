@@ -26,6 +26,20 @@ export interface Credentials {
   password: string;
 }
 /**
+ * @public
+ */
+export interface NetworkConditions {
+  download: number;
+  upload: number;
+  latency: number;
+}
+/**
+ * @public
+ */
+export interface InternalNetworkConditions extends NetworkConditions {
+  offline: boolean;
+}
+/**
  * We use symbols to prevent any external parties listening to these events.
  * They are internal to Puppeteer.
  *
@@ -33,6 +47,7 @@ export interface Credentials {
  */
 export declare const NetworkManagerEmittedEvents: {
   readonly Request: symbol;
+  readonly RequestServedFromCache: symbol;
   readonly Response: symbol;
   readonly RequestFailed: symbol;
   readonly RequestFinished: symbol;
@@ -50,13 +65,14 @@ export declare class NetworkManager extends EventEmitter {
     Protocol.Network.RequestWillBeSentEvent
   >;
   _extraHTTPHeaders: Record<string, string>;
-  _offline: boolean;
   _credentials?: Credentials;
   _attemptedAuthentications: Set<string>;
   _userRequestInterceptionEnabled: boolean;
+  _userRequestInterceptionCacheSafe: boolean;
   _protocolRequestInterceptionEnabled: boolean;
   _userCacheDisabled: boolean;
   _requestIdToInterceptionId: Map<string, string>;
+  _emulatedNetworkConditions: InternalNetworkConditions;
   constructor(
     client: CDPSession,
     ignoreHTTPSErrors: boolean,
@@ -67,9 +83,13 @@ export declare class NetworkManager extends EventEmitter {
   setExtraHTTPHeaders(extraHTTPHeaders: Record<string, string>): Promise<void>;
   extraHTTPHeaders(): Record<string, string>;
   setOfflineMode(value: boolean): Promise<void>;
+  emulateNetworkConditions(
+    networkConditions: NetworkConditions | null,
+  ): Promise<void>;
+  _updateNetworkConditions(): Promise<void>;
   setUserAgent(userAgent: string): Promise<void>;
   setCacheEnabled(enabled: boolean): Promise<void>;
-  setRequestInterception(value: boolean): Promise<void>;
+  setRequestInterception(value: boolean, cacheSafe?: boolean): Promise<void>;
   _updateProtocolRequestInterception(): Promise<void>;
   _updateProtocolCacheDisabled(): Promise<void>;
   _onRequestWillBeSent(event: Protocol.Network.RequestWillBeSentEvent): void;

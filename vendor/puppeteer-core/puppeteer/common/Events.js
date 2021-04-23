@@ -88,3 +88,4 @@ export const Events = {
     Disconnected: Symbol("Events.CDPSession.Disconnected"),
   },
 };
+//# sourceMappingURL=Events.js.map

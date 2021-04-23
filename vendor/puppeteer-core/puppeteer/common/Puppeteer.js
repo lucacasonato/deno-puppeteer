@@ -23,6 +23,7 @@ import {
   unregisterCustomQueryHandler,
 } from "./QueryHandler.js";
 import { connectToBrowser } from "./BrowserConnector.js";
+import { networkConditions } from "./NetworkConditions.js";
 /**
  * The main Puppeteer class.
  *
@@ -100,6 +101,30 @@ export class Puppeteer {
     return puppeteerErrors;
   }
   /**
+     * @remarks
+     * Returns a list of network conditions to be used with `page.emulateNetworkConditions(networkConditions)`. Actual list of predefined conditions can be found in {@link https://github.com/puppeteer/puppeteer/blob/main/src/common/NetworkConditions.ts | src/common/NetworkConditions.ts}.
+     *
+     * @example
+     *
+     * ```js
+     * const puppeteer = require('puppeteer');
+     * const slow3G = puppeteer.networkConditions['Slow 3G'];
+     *
+     * (async () => {
+     *   const browser = await puppeteer.launch();
+     *   const page = await browser.newPage();
+     *   await page.emulateNetworkConditions(slow3G);
+     *   await page.goto('https://www.google.com');
+     *   // other actions...
+     *   await browser.close();
+     * })();
+     * ```
+     *
+     */
+  get networkConditions() {
+    return networkConditions;
+  }
+  /**
      * Registers a {@link CustomQueryHandler | custom query handler}. After
      * registration, the handler can be used everywhere where a selector is
      * expected by prepending the selection string with `<name>/`. The name is
@@ -135,3 +160,4 @@ export class Puppeteer {
     clearCustomQueryHandlers();
   }
 }
+//# sourceMappingURL=Puppeteer.js.map

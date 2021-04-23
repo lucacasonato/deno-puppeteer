@@ -22,7 +22,7 @@ import { EvaluateHandleFn, SerializableOrJSHandle } from "./EvalTypes.js";
 /**
  * @internal
  */
-declare type ConsoleAPICalledCallback = (
+export declare type ConsoleAPICalledCallback = (
   eventType: string,
   handles: JSHandle[],
   trace: Protocol.Runtime.StackTrace,
@@ -30,7 +30,7 @@ declare type ConsoleAPICalledCallback = (
 /**
  * @internal
  */
-declare type ExceptionThrownCallback = (
+export declare type ExceptionThrownCallback = (
   details: Protocol.Runtime.ExceptionDetails,
 ) => void;
 /**
@@ -113,4 +113,3 @@ export declare class WebWorker extends EventEmitter {
     ...args: SerializableOrJSHandle[]
   ): Promise<JSHandle>;
 }
-export {};

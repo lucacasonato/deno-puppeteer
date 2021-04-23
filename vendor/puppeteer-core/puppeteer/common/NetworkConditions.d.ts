@@ -1,5 +1,5 @@
 /**
- * Copyright 2018 Google Inc. All rights reserved.
+ * Copyright 2021 Google Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,29 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { NetworkConditions } from "./NetworkManager.js";
 /**
  * @public
  */
-export declare class CustomError extends Error {
-  constructor(message: string);
-}
-/**
- * TimeoutError is emitted whenever certain operations are terminated due to timeout.
- *
- * @remarks
- *
- * Example operations are {@link Page.waitForSelector | page.waitForSelector}
- * or {@link PuppeteerNode.launch | puppeteer.launch}.
- *
- * @public
- */
-export declare class TimeoutError extends CustomError {
-}
+export declare type PredefinedNetworkConditions = {
+  [name: string]: NetworkConditions;
+};
 /**
  * @public
  */
-export declare type PuppeteerErrors = Record<string, typeof CustomError>;
-/**
- * @public
- */
-export declare const puppeteerErrors: PuppeteerErrors;
+export declare const networkConditions: PredefinedNetworkConditions;

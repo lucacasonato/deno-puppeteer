@@ -36,10 +36,19 @@ export interface ContinueRequestOverrides {
  */
 export interface ResponseForRequest {
   status: number;
-  headers: Record<string, string>;
+  /**
+     * Optional response headers. All values are converted to strings.
+     */
+  headers: Record<string, unknown>;
   contentType: string;
   body: string | Uint8Array;
 }
+/**
+ * Resource types for HTTPRequests as perceived by the rendering engine.
+ *
+ * @public
+ */
+export declare type ResourceType = Lowercase<Protocol.Network.ResourceType>;
 /**
  *
  * Represents an HTTP request sent by a page.
@@ -125,12 +134,8 @@ export declare class HTTPRequest {
   /**
      * Contains the request's resource type as it was perceived by the rendering
      * engine.
-     * @remarks
-     * @returns one of the following: `document`, `stylesheet`, `image`, `media`,
-     * `font`, `script`, `texttrack`, `xhr`, `fetch`, `eventsource`, `websocket`,
-     * `manifest`, `other`.
      */
-  resourceType(): string;
+  resourceType(): ResourceType;
   /**
      * @returns the method used (`GET`, `POST`, etc.)
      */
@@ -260,7 +265,7 @@ export declare class HTTPRequest {
      *
      * @param response - the response to fulfill the request with.
      */
-  respond(response: ResponseForRequest): Promise<void>;
+  respond(response: Partial<ResponseForRequest>): Promise<void>;
   /**
      * Aborts a request.
      *

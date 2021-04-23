@@ -59,3 +59,4 @@ export class ConsoleMessage {
     return this._stackTraceLocations;
   }
 }
+//# sourceMappingURL=ConsoleMessage.js.map

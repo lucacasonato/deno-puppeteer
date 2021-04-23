@@ -17,22 +17,23 @@ import { ElementHandle, JSHandle } from "./JSHandle.js";
 /**
  * @public
  */
-export declare type EvaluateFn<T = unknown> =
+export declare type EvaluateFn<T = any> =
   | string
-  | ((arg1: T, ...args: unknown[]) => unknown);
+  | ((arg1: T, ...args: any[]) => any);
+/**
+ * @public
+ */
 export declare type UnwrapPromiseLike<T> = T extends PromiseLike<infer U> ? U
   : T;
 /**
  * @public
  */
 export declare type EvaluateFnReturnType<T extends EvaluateFn> = T extends
-  (...args: unknown[]) => infer R ? R : unknown;
+  (...args: any[]) => infer R ? R : any;
 /**
  * @public
  */
-export declare type EvaluateHandleFn =
-  | string
-  | ((...args: unknown[]) => unknown);
+export declare type EvaluateHandleFn = string | ((...args: any[]) => any);
 /**
  * @public
  */

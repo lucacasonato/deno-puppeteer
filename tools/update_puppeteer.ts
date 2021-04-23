@@ -1,7 +1,7 @@
-import { Untar } from "https://deno.land/std@0.82.0/archive/tar.ts";
-import { basename, dirname } from "https://deno.land/std@0.82.0/path/mod.ts";
+import { Untar } from "https://deno.land/std@0.93.0/archive/tar.ts";
+import { basename, dirname } from "https://deno.land/std@0.93.0/path/mod.ts";
 import { gzipDecode } from "https://deno.land/x/wasm_gzip@v1.0.0/mod.ts";
-import { endsWith } from "https://deno.land/std@0.82.0/bytes/mod.ts";
+import { endsWith } from "https://deno.land/std@0.93.0/bytes/mod.ts";
 
 const version = Deno.args[0];
 
@@ -48,7 +48,10 @@ for (const fileName in files) {
     fileName.startsWith("puppeteer/node") ||
     fileName.endsWith(".map") ||
     fileName.endsWith(".tsbuildinfo") ||
-    fileName == "puppeteer/initialize-node.js"
+    fileName.includes("/initialize-") ||
+    fileName.includes("/web.") ||
+    fileName.includes("/node.") ||
+    fileName.includes("/environment.")
   ) {
     delete files[fileName];
   }
@@ -129,20 +132,13 @@ for (const fileName in files) {
   files[fileName] = encoder.encode(
     src.replace(
       `import { ChildProcess } from 'child_process';\n`,
-      `/** ChildProcess is not supported in Deno. Please ignore. */\ntype ChildProcess = void;\n`,
+      ``,
+    ).replace(
+      `ChildProcess;\n`,
+      `Deno.Process`,
     ),
   );
 }
-
-[
-  "puppeteer/common/Product.js",
-  "puppeteer/common/PuppeteerViewport.js",
-  "puppeteer/common/EvalTypes.js",
-  "puppeteer/common/ConnectionTransport.js",
-].forEach((fileName) => {
-  const src = decoder.decode(files[fileName]);
-  files[fileName] = encoder.encode(src + "\nexport {};");
-});
 
 const output = `./vendor/puppeteer-core`;
 

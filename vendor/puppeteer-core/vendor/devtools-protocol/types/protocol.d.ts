@@ -42,19 +42,20 @@ export namespace Protocol {
       /**
              * Message source. (ConsoleMessageSource enum)
              */
-      source: (
-        | "xml"
-        | "javascript"
-        | "network"
-        | "console-api"
-        | "storage"
-        | "appcache"
-        | "rendering"
-        | "security"
-        | "other"
-        | "deprecation"
-        | "worker"
-      );
+      source:
+        (
+          | "xml"
+          | "javascript"
+          | "network"
+          | "console-api"
+          | "storage"
+          | "appcache"
+          | "rendering"
+          | "security"
+          | "other"
+          | "deprecation"
+          | "worker"
+        );
       /**
              * Message severity. (ConsoleMessageLevel enum)
              */
@@ -196,18 +197,19 @@ export namespace Protocol {
       /**
              * Scope type. (ScopeType enum)
              */
-      type: (
-        | "global"
-        | "local"
-        | "with"
-        | "closure"
-        | "catch"
-        | "block"
-        | "script"
-        | "eval"
-        | "module"
-        | "wasm-expression-stack"
-      );
+      type:
+        (
+          | "global"
+          | "local"
+          | "with"
+          | "closure"
+          | "catch"
+          | "block"
+          | "script"
+          | "eval"
+          | "module"
+          | "wasm-expression-stack"
+        );
       /**
              * Object representing the scope. For `global` and `with` scopes it represents the actual
              * object; for the rest of the scopes, it is artificial transient object enumerating scope
@@ -809,19 +811,20 @@ export namespace Protocol {
       /**
              * Pause reason. (PausedEventReason enum)
              */
-      reason: (
-        | "ambiguous"
-        | "assert"
-        | "debugCommand"
-        | "DOM"
-        | "EventListener"
-        | "exception"
-        | "instrumentation"
-        | "OOM"
-        | "other"
-        | "promiseRejection"
-        | "XHR"
-      );
+      reason:
+        (
+          | "ambiguous"
+          | "assert"
+          | "debugCommand"
+          | "DOM"
+          | "EventListener"
+          | "exception"
+          | "instrumentation"
+          | "OOM"
+          | "other"
+          | "promiseRejection"
+          | "XHR"
+        );
       /**
              * Object containing break-specific auxiliary properties.
              */
@@ -1567,45 +1570,47 @@ export namespace Protocol {
       /**
              * Object type. (RemoteObjectType enum)
              */
-      type: (
-        | "object"
-        | "function"
-        | "undefined"
-        | "string"
-        | "number"
-        | "boolean"
-        | "symbol"
-        | "bigint"
-        | "wasm"
-      );
+      type:
+        (
+          | "object"
+          | "function"
+          | "undefined"
+          | "string"
+          | "number"
+          | "boolean"
+          | "symbol"
+          | "bigint"
+          | "wasm"
+        );
       /**
              * Object subtype hint. Specified for `object` or `wasm` type values only. (RemoteObjectSubtype enum)
              */
-      subtype?: (
-        | "array"
-        | "null"
-        | "node"
-        | "regexp"
-        | "date"
-        | "map"
-        | "set"
-        | "weakmap"
-        | "weakset"
-        | "iterator"
-        | "generator"
-        | "error"
-        | "proxy"
-        | "promise"
-        | "typedarray"
-        | "arraybuffer"
-        | "dataview"
-        | "i32"
-        | "i64"
-        | "f32"
-        | "f64"
-        | "v128"
-        | "externref"
-      );
+      subtype?:
+        (
+          | "array"
+          | "null"
+          | "node"
+          | "regexp"
+          | "date"
+          | "map"
+          | "set"
+          | "weakmap"
+          | "weakset"
+          | "iterator"
+          | "generator"
+          | "error"
+          | "proxy"
+          | "promise"
+          | "typedarray"
+          | "arraybuffer"
+          | "dataview"
+          | "i32"
+          | "i64"
+          | "f32"
+          | "f64"
+          | "v128"
+          | "externref"
+        );
       /**
              * Object class (constructor) name. Specified for `object` type values only.
              */
@@ -1681,33 +1686,35 @@ export namespace Protocol {
       /**
              * Object type. (ObjectPreviewType enum)
              */
-      type: (
-        | "object"
-        | "function"
-        | "undefined"
-        | "string"
-        | "number"
-        | "boolean"
-        | "symbol"
-        | "bigint"
-      );
+      type:
+        (
+          | "object"
+          | "function"
+          | "undefined"
+          | "string"
+          | "number"
+          | "boolean"
+          | "symbol"
+          | "bigint"
+        );
       /**
              * Object subtype hint. Specified for `object` type values only. (ObjectPreviewSubtype enum)
              */
-      subtype?: (
-        | "array"
-        | "null"
-        | "node"
-        | "regexp"
-        | "date"
-        | "map"
-        | "set"
-        | "weakmap"
-        | "weakset"
-        | "iterator"
-        | "generator"
-        | "error"
-      );
+      subtype?:
+        (
+          | "array"
+          | "null"
+          | "node"
+          | "regexp"
+          | "date"
+          | "map"
+          | "set"
+          | "weakmap"
+          | "weakset"
+          | "iterator"
+          | "generator"
+          | "error"
+        );
       /**
              * String representation of the object.
              */
@@ -1761,17 +1768,18 @@ export namespace Protocol {
       /**
              * Object type. Accessor means that the property itself is an accessor property. (PropertyPreviewType enum)
              */
-      type: (
-        | "object"
-        | "function"
-        | "undefined"
-        | "string"
-        | "number"
-        | "boolean"
-        | "symbol"
-        | "accessor"
-        | "bigint"
-      );
+      type:
+        (
+          | "object"
+          | "function"
+          | "undefined"
+          | "string"
+          | "number"
+          | "boolean"
+          | "symbol"
+          | "accessor"
+          | "bigint"
+        );
       /**
              * User-friendly property value string.
              */
@@ -1783,20 +1791,21 @@ export namespace Protocol {
       /**
              * Object subtype hint. Specified for `object` type values only. (PropertyPreviewSubtype enum)
              */
-      subtype?: (
-        | "array"
-        | "null"
-        | "node"
-        | "regexp"
-        | "date"
-        | "map"
-        | "set"
-        | "weakmap"
-        | "weakset"
-        | "iterator"
-        | "generator"
-        | "error"
-      );
+      subtype?:
+        (
+          | "array"
+          | "null"
+          | "node"
+          | "regexp"
+          | "date"
+          | "map"
+          | "set"
+          | "weakmap"
+          | "weakset"
+          | "iterator"
+          | "generator"
+          | "error"
+        );
     }
 
     export interface EntryPreview {
@@ -2472,26 +2481,27 @@ export namespace Protocol {
       /**
              * Type of the call. (ConsoleAPICalledEventType enum)
              */
-      type: (
-        | "log"
-        | "debug"
-        | "info"
-        | "error"
-        | "warning"
-        | "dir"
-        | "dirxml"
-        | "table"
-        | "trace"
-        | "clear"
-        | "startGroup"
-        | "startGroupCollapsed"
-        | "endGroup"
-        | "assert"
-        | "profile"
-        | "profileEnd"
-        | "count"
-        | "timeEnd"
-      );
+      type:
+        (
+          | "log"
+          | "debug"
+          | "info"
+          | "error"
+          | "warning"
+          | "dir"
+          | "dirxml"
+          | "table"
+          | "trace"
+          | "clear"
+          | "startGroup"
+          | "startGroupCollapsed"
+          | "endGroup"
+          | "assert"
+          | "profile"
+          | "profileEnd"
+          | "count"
+          | "timeEnd"
+        );
       /**
              * Call arguments.
              */
@@ -7032,12 +7042,13 @@ export namespace Protocol {
       /**
              * Orientation type. (ScreenOrientationType enum)
              */
-      type: (
-        | "portraitPrimary"
-        | "portraitSecondary"
-        | "landscapePrimary"
-        | "landscapeSecondary"
-      );
+      type:
+        (
+          | "portraitPrimary"
+          | "portraitSecondary"
+          | "landscapePrimary"
+          | "landscapeSecondary"
+        );
       /**
              * Orientation angle.
              */
@@ -7246,14 +7257,15 @@ export namespace Protocol {
       /**
              * Vision deficiency to emulate. (SetEmulatedVisionDeficiencyRequestType enum)
              */
-      type: (
-        | "none"
-        | "achromatopsia"
-        | "blurredVision"
-        | "deuteranopia"
-        | "protanopia"
-        | "tritanopia"
-      );
+      type:
+        (
+          | "none"
+          | "achromatopsia"
+          | "blurredVision"
+          | "deuteranopia"
+          | "protanopia"
+          | "tritanopia"
+        );
     }
 
     export interface SetGeolocationOverrideRequest {
@@ -8540,21 +8552,22 @@ export namespace Protocol {
       /**
              * Log entry source. (LogEntrySource enum)
              */
-      source: (
-        | "xml"
-        | "javascript"
-        | "network"
-        | "storage"
-        | "appcache"
-        | "rendering"
-        | "security"
-        | "deprecation"
-        | "worker"
-        | "violation"
-        | "intervention"
-        | "recommendation"
-        | "other"
-      );
+      source:
+        (
+          | "xml"
+          | "javascript"
+          | "network"
+          | "storage"
+          | "appcache"
+          | "rendering"
+          | "security"
+          | "deprecation"
+          | "worker"
+          | "violation"
+          | "intervention"
+          | "recommendation"
+          | "other"
+        );
       /**
              * Log entry severity. (LogEntryLevel enum)
              */
@@ -8610,15 +8623,16 @@ export namespace Protocol {
       /**
              * Violation type. (ViolationSettingName enum)
              */
-      name: (
-        | "longTask"
-        | "longLayout"
-        | "blockedEvent"
-        | "blockedParser"
-        | "discouragedAPIUse"
-        | "handler"
-        | "recurringHandler"
-      );
+      name:
+        (
+          | "longTask"
+          | "longLayout"
+          | "blockedEvent"
+          | "blockedParser"
+          | "discouragedAPIUse"
+          | "handler"
+          | "recurringHandler"
+        );
       /**
              * Time threshold to trigger upon.
              */
@@ -8999,16 +9013,17 @@ export namespace Protocol {
       /**
              * The referrer policy of the request, as defined in https://www.w3.org/TR/referrer-policy/ (RequestReferrerPolicy enum)
              */
-      referrerPolicy: (
-        | "unsafe-url"
-        | "no-referrer-when-downgrade"
-        | "no-referrer"
-        | "origin"
-        | "origin-when-cross-origin"
-        | "same-origin"
-        | "strict-origin"
-        | "strict-origin-when-cross-origin"
-      );
+      referrerPolicy:
+        (
+          | "unsafe-url"
+          | "no-referrer-when-downgrade"
+          | "no-referrer"
+          | "origin"
+          | "origin-when-cross-origin"
+          | "same-origin"
+          | "strict-origin"
+          | "strict-origin-when-cross-origin"
+        );
       /**
              * Whether is loaded via link preload.
              */
@@ -13886,12 +13901,13 @@ export namespace Protocol {
       /**
              * Controls how the trace buffer stores data. (TraceConfigRecordMode enum)
              */
-      recordMode?: (
-        | "recordUntilFull"
-        | "recordContinuously"
-        | "recordAsMuchAsPossible"
-        | "echoToConsole"
-      );
+      recordMode?:
+        (
+          | "recordUntilFull"
+          | "recordContinuously"
+          | "recordAsMuchAsPossible"
+          | "echoToConsole"
+        );
       /**
              * Turns on JavaScript stack sampling.
              */
