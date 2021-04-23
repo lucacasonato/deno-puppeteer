@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        deno: ["v1.x", "nightly"]
+        deno: ["v1.x", "canary"]
         os: [windows-latest, ubuntu-latest, macos-latest]
       fail-fast: false
 
@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Setup Deno
-        uses: denolib/setup-deno@v2.3.0
+        uses: denoland/setup-deno@main
         with:
           deno-version: ${{ matrix.deno }}
 
