@@ -1,7 +1,7 @@
 import {
   assert,
   assertEquals,
-} from "https://deno.land/std@0.94.0/testing/asserts.ts";
+} from "https://deno.land/std@0.93.0/testing/asserts.ts";
 import puppeteer, { Browser } from "./mod.ts";
 
 function browserTest(

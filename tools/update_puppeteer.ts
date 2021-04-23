@@ -1,7 +1,7 @@
-import { Untar } from "https://deno.land/std@0.94.0/archive/tar.ts";
-import { basename, dirname } from "https://deno.land/std@0.94.0/path/mod.ts";
+import { Untar } from "https://deno.land/std@0.93.0/archive/tar.ts";
+import { basename, dirname } from "https://deno.land/std@0.93.0/path/mod.ts";
 import { gzipDecode } from "https://deno.land/x/wasm_gzip@v1.0.0/mod.ts";
-import { endsWith } from "https://deno.land/std@0.94.0/bytes/mod.ts";
+import { endsWith } from "https://deno.land/std@0.93.0/bytes/mod.ts";
 
 const version = Deno.args[0];
 
