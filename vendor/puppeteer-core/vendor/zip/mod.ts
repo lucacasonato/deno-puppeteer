@@ -1,5 +1,6 @@
 import _JSZip from "https://dev.jspm.io/jszip@3.5.0";
-import { ensureDir, walk, WalkOptions } from "https://deno.land/std@0.93.0/fs/mod.ts";
+import { ensureDir } from "https://deno.land/std@0.93.0/fs/ensure_dir.ts";
+import { walk, WalkOptions } from "https://deno.land/std@0.93.0/fs/walk.ts";
 import { dirname, join, SEP } from "https://deno.land/std@0.93.0/path/mod.ts";
 import {
   InputFileFormat,
