@@ -1,6 +1,7 @@
 import _JSZip from "https://dev.jspm.io/jszip@3.5.0";
+import { ensureDir } from "https://deno.land/std@0.93.0/fs/ensure_dir.ts";
 import { walk, WalkOptions } from "https://deno.land/std@0.93.0/fs/walk.ts";
-import { join, SEP } from "https://deno.land/std@0.93.0/path/mod.ts";
+import { dirname, join, SEP } from "https://deno.land/std@0.93.0/path/mod.ts";
 import {
   InputFileFormat,
   JSZipFileOptions,
@@ -194,11 +195,11 @@ export class JSZip {
     for (const f of this) {
       const ff = join(dir, f.name);
       if (f.dir) {
-        // hopefully the directory is prior to any files inside it!
         await Deno.mkdir(ff, { recursive: true });
         continue;
       }
       const content = await f.async("uint8array");
+      await ensureDir(dirname(ff));
       // TODO pass WriteFileOptions e.g. mode
       await Deno.writeFile(ff, content);
     }
