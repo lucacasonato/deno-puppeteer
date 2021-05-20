@@ -41,3 +41,17 @@ jobs:
 
       - name: Run tests with lib.dom typings
         run: deno test -A --unstable --config fixtures/dom-tsconfig.json tests.ts
+
+  docker:
+    name: docker
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v2
+
+      - name: Build image
+        run: docker build -t denopuppeteer .
+
+      - name: Run container
+        run: docker run -i denopuppeteer

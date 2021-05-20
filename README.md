@@ -128,3 +128,9 @@ deno run -A --unstable get-dimensions.js
 The most noticable difference is likely that instead of some methods taking / returning Node `Buffer`, they take / return `Uint8Array`.
 
 Other than this, the documentation on https://pptr.dev generally applies.
+
+### How to run in Docker?
+
+An example Dockerfile can be found in this repository. It will install all necessary dependencies, and shows how to run the ./examples/docker.js.
+
+It is just meant as a jumping off point - customize it as you wish.
