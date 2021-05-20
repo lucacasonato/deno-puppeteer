@@ -54,4 +54,4 @@ jobs:
         run: docker build -t denopuppeteer .
 
       - name: Run container
-        run: docker run -it denopuppeteer
+        run: docker run -i denopuppeteer
