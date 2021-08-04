@@ -25,6 +25,7 @@ import { Browser } from "../../vendor/puppeteer-core/puppeteer/common/Browser.js
 import Launcher, { ProductLauncher } from "./Launcher.ts";
 import { PUPPETEER_REVISIONS } from "../../vendor/puppeteer-core/puppeteer/revisions.js";
 import { Product } from "../../vendor/puppeteer-core/puppeteer/common/Product.js";
+import { installPuppeteer } from "../../install.ts";
 
 /**
  * Extends the main {@link Puppeteer} class with Node specific behaviour for fetching and
@@ -122,7 +123,7 @@ export class PuppeteerDeno extends Puppeteer {
    * **NOTE** Puppeteer can also be used to control the Chrome browser,
    * but it works best with the version of Chromium it is bundled with.
    * There is no guarantee it will work with any other version.
-   * Use `executablePath` option with extreme caution.
+   * Use `executablePath` option with extreme caution. If it is not specified  then the puppeteer will be downloaded and installed if necessary.
    * If Google Chrome (rather than Chromium) is preferred, a {@link https://www.google.com/chrome/browser/canary.html | Chrome Canary} or {@link https://www.chromium.org/getting-involved/dev-channel | Dev Channel} build is suggested.
    * In `puppeteer.launch([options])`, any mention of Chromium also applies to Chrome.
    * See {@link https://www.howtogeek.com/202825/what%E2%80%99s-the-difference-between-chromium-and-chrome/ | this article} for a description of the differences between Chromium and Chrome. {@link https://chromium.googlesource.com/chromium/src/+/lkgr/docs/chromium_browser_vs_google_chrome.md | This article} describes some differences for Linux users.
@@ -130,7 +131,7 @@ export class PuppeteerDeno extends Puppeteer {
    * @param options - Set of configurable options to set on the browser.
    * @returns Promise which resolves to browser instance.
    */
-  launch(
+  async launch(
     options: LaunchOptions &
       ChromeArgOptions &
       BrowserConnectOptions & {
@@ -139,6 +140,9 @@ export class PuppeteerDeno extends Puppeteer {
       } = {}
   ): Promise<Browser> {
     if (options.product) this._productName = options.product;
+    if (!options.executablePath) {
+      await installPuppeteer({ enableLog: false });
+    }
     return this._launcher.launch(options);
   }
 

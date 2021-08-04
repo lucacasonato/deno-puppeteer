@@ -39,13 +39,19 @@ jobs:
       - name: Run tests
         run: deno test -A --unstable tests.ts
 
+      - name: Uninstall Chromium
+        run: deno run -A --unstable uninstall.ts
+
+      - name: Run tests without Chromium preinstalled
+        run: deno test -A --unstable tests.ts
+
       - name: Run tests with lib.dom typings
         run: deno test -A --unstable --config fixtures/dom-tsconfig.json tests.ts
 
   docker:
     name: docker
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Setup repo
         uses: actions/checkout@v2
