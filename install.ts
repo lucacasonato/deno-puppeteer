@@ -63,6 +63,9 @@ export async function installPuppeteer(
     const newRevisionInfo = await fetcher.download(
       revisionInfo.revision,
       (current, total) => {
+        if (!options.enableLog) {
+          return;
+        }
         if (!progressBar) {
           progressBar = new ProgressBar({
             total,
