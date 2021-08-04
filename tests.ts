@@ -8,13 +8,17 @@ function browserTest(
   name: string,
   fn: (browser: Browser) => void | Promise<void>,
 ) {
-  Deno.test(name, async () => {
-    let browser: Browser | undefined = undefined;
-    try {
-      browser = await puppeteer.launch({});
-      await fn(browser);
-    } finally {
-      if (browser) await browser.close();
+  Deno.test({
+    name,
+    sanitizeResources: false,
+    fn: async () => {
+      let browser: Browser | undefined = undefined;
+      try {
+        browser = await puppeteer.launch({});
+        await fn(browser);
+      } finally {
+        if (browser) await browser.close();
+      }
     }
   });
 }
