@@ -65,6 +65,8 @@ import { installPuppeteer } from "../../install.ts";
 export class PuppeteerDeno extends Puppeteer {
   private _lazyLauncher!: ProductLauncher;
   private __productName?: Product;
+  private _downloaded: boolean = false;
+
   /**
    * @internal
    */
@@ -140,8 +142,9 @@ export class PuppeteerDeno extends Puppeteer {
       } = {}
   ): Promise<Browser> {
     if (options.product) this._productName = options.product;
-    if (!options.executablePath) {
+    if (!options.executablePath && !this._downloaded) {
       await installPuppeteer({ enableLog: false });
+      this._downloaded = true;
     }
     return this._launcher.launch(options);
   }
