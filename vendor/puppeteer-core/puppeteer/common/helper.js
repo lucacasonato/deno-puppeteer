@@ -266,7 +266,7 @@ async function readProtocolStream(client, handle, path) {
   await client.send("IO.close", { handle });
   let resultArr = null;
   try {
-    resultArr = concatUint8Array(arrs);
+    resultArr = concatUint8Array(...arrs);
   } finally {
     return resultArr;
   }
