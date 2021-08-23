@@ -74,7 +74,7 @@ export async function installPuppeteer(
     const newRevisionInfo = await fetcher.download(
       revisionInfo.revision,
       (current, total) => {
-        if (!options.enableLog || (options.enableLog && logLevel === "default")) {
+        if (!options.enableLog || (options.enableLog && logLevel === "minimal")) {
           return;
         }
         if (!progressBar) {
@@ -99,4 +99,5 @@ export async function installPuppeteer(
 
 if (import.meta.main) {
   await installPuppeteer();
+  Deno.exit(0);
 }
