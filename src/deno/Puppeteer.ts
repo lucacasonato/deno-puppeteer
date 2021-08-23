@@ -25,7 +25,7 @@ import { Browser } from "../../vendor/puppeteer-core/puppeteer/common/Browser.js
 import Launcher, { ProductLauncher } from "./Launcher.ts";
 import { PUPPETEER_REVISIONS } from "../../vendor/puppeteer-core/puppeteer/revisions.js";
 import { Product } from "../../vendor/puppeteer-core/puppeteer/common/Product.js";
-import { installPuppeteer } from "../../install.ts";
+import { installPuppeteer, LogLevel } from "../../install.ts";
 
 /**
  * Extends the main {@link Puppeteer} class with Node specific behaviour for fetching and
@@ -139,11 +139,15 @@ export class PuppeteerDeno extends Puppeteer {
       BrowserConnectOptions & {
         product?: Product;
         extraPrefsFirefox?: Record<string, unknown>;
+        enableLog?: boolean;
+        logLevel?: LogLevel;
       } = {}
   ): Promise<Browser> {
     if (options.product) this._productName = options.product;
     if (!options.executablePath && !this._downloaded) {
-      await installPuppeteer({ enableLog: false });
+      const enableLog = options.enableLog !== undefined ? options.enableLog : true;
+      const logLevel = options.logLevel !== undefined ? options.logLevel : "default";
+      await installPuppeteer({ enableLog, logLevel });
       this._downloaded = true;
     }
     return this._launcher.launch(options);
