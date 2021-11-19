@@ -1,6 +1,6 @@
 FROM debian:buster-slim
 
-ENV DENO_VERSION=1.10.2
+ENV DENO_VERSION=1.14.2
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get -qq update \
@@ -48,11 +48,11 @@ RUN apt-get -qq update \
     wget \
     xdg-utils \
 # ↑ https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#chrome-headless-doesnt-launch-on-unix
-# ↓ Added based on the information obtained from by console.log(line) at https://deno.land/x/puppeteer@9.0.1/src/deno/BrowserRunner.ts#L168.
+# ↓ Added based on the information obtained from by console.log(line) at https://deno.land/x/puppeteer@9.0.2/src/deno/BrowserRunner.ts#L168.
     libdrm2 \
     libxkbcommon0 \
     libxshmfence1 \
-# ↑ Added based on the information obtained from by console.log(line) at https://deno.land/x/puppeteer@9.0.1/src/deno/BrowserRunner.ts#L168.
+# ↑ Added based on the information obtained from by console.log(line) at https://deno.land/x/puppeteer@9.0.2/src/deno/BrowserRunner.ts#L168.
     && curl -fsSL https://github.com/denoland/deno/releases/download/v${DENO_VERSION}/deno-x86_64-unknown-linux-gnu.zip \
     --output deno.zip \
     && unzip deno.zip \
@@ -79,8 +79,8 @@ ENV DENO_DIR /deno-dir/
 WORKDIR /root
 COPY . . 
 
-# https://deno.land/x/puppeteer@9.0.1#installation
-# In your real script, replace the installation script with https://deno.land/x/puppeteer@9.0.1/install.ts
+# https://deno.land/x/puppeteer@9.0.2#installation
+# In your real script, replace the installation script with https://deno.land/x/puppeteer@9.0.2/install.ts
 RUN PUPPETEER_PRODUCT=chrome deno run -A --unstable ./install.ts
 
 ENTRYPOINT ["deno"]
