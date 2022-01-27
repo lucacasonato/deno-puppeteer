@@ -6,7 +6,7 @@ create an instance of `Browser`, open pages, and then manipulate them with
 Puppeteer's API.
 
 ## Launch browser
-Puppeteer could launch not only **existed install browser** on you os or **cached browser**
+Puppeteer could launch not only **existed install browser** but also **cached browser**
 
 ### Specify existed browser
 **If you want to use existed browser**. 
