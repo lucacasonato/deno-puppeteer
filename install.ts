@@ -39,10 +39,11 @@ if (revisionInfo.local) {
           total,
         });
       }
-      if (!(progressBar as any).isCompleted) {
+      if (current == total) {
         progressBar.render(current);
+        console.log("\nDone downloading. Installing now.");
       } else {
-        console.log("Done downloading. Installing now.");
+        progressBar.render(current)
       }
     },
   );
