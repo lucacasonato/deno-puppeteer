@@ -503,33 +503,30 @@ async function extractTar(tarPath: string, folderPath: string): Promise<void> {
 async function installDMG(dmgPath: string, folderPath: string): Promise<void> {
   let mountPath;
   try {
-    const proc = Deno.run({
-      cmd: ["hdiutil", "attach", "-nobrowse", "-noautoopen", dmgPath],
+    const output = await Deno.spawn("hdiutil", {
+      args: ["attach", "-nobrowse", "-noautoopen", dmgPath],
     });
-    const stdout = new TextDecoder().decode(await proc.output());
-    proc.close();
+    const stdout = new TextDecoder().decode(output.stdout);
     const volumes = stdout.match(/\/Volumes\/(.*)/m);
     if (!volumes) throw new Error(`Could not find volume path in ${stdout}`);
     mountPath = volumes[0];
 
     let appName = undefined;
     for await (const file of Deno.readDir(mountPath)) {
-      if (file.name.endsWith(".app")) {
+      if (file.name.endsWith(".app") && file.isDirectory) {
         appName = file.name;
         break;
       }
     }
     if (!appName) throw new Error(`Cannot find app in ${mountPath}`);
-    copyDir(pathJoin(mountPath, appName), folderPath);
+    await copyDir(pathJoin(mountPath, appName), pathJoin(folderPath, appName));
   } finally {
     if (mountPath) {
-      const proc = Deno.run({
-        cmd: ["hdiutil", "detach", mountPath, "-quiet"],
+      const output = await Deno.spawn("hdiutil", {
+        args: ["detach", mountPath, "-quiet"],
       });
       debugFetcher(`Unmounting ${mountPath}`);
-      const status = await proc.status();
-      proc.close();
-      assert(status.success, "unmounting failed");
+      assert(output.status.success, "unmounting failed");
     }
   }
 }
