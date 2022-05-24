@@ -1,6 +1,7 @@
 /// <reference types="./HTTPResponse.d.ts" />
 import { SecurityDetails } from "./SecurityDetails.js";
 import { ProtocolError } from "./Errors.js";
+import { base64Decode } from "../../vendor/std.ts";
 /**
  * The HTTPResponse class represents responses which are received by the
  * {@link Page} class.
