@@ -38,50 +38,49 @@
  */
 export class Accessibility {
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(client) {
     this._client = client;
   }
   /**
-     * Captures the current state of the accessibility tree.
-     * The returned object represents the root accessible node of the page.
-     *
-     * @remarks
-     *
-     * **NOTE** The Chromium accessibility tree contains nodes that go unused on
-     * most platforms and by most screen readers. Puppeteer will discard them as
-     * well for an easier to process tree, unless `interestingOnly` is set to
-     * `false`.
-     *
-     * @example
-     * An example of dumping the entire accessibility tree:
-     * ```js
-     * const snapshot = await page.accessibility.snapshot();
-     * console.log(snapshot);
-     * ```
-     *
-     * @example
-     * An example of logging the focused node's name:
-     * ```js
-     * const snapshot = await page.accessibility.snapshot();
-     * const node = findFocusedNode(snapshot);
-     * console.log(node && node.name);
-     *
-     * function findFocusedNode(node) {
-     *   if (node.focused)
-     *     return node;
-     *   for (const child of node.children || []) {
-     *     const foundNode = findFocusedNode(child);
-     *     return foundNode;
-     *   }
-     *   return null;
-     * }
-     * ```
-     *
-     * @returns An AXNode object representing the snapshot.
-     *
-     */
+   * Captures the current state of the accessibility tree.
+   * The returned object represents the root accessible node of the page.
+   *
+   * @remarks
+   *
+   * **NOTE** The Chromium accessibility tree contains nodes that go unused on
+   * most platforms and by most screen readers. Puppeteer will discard them as
+   * well for an easier to process tree, unless `interestingOnly` is set to
+   * `false`.
+   *
+   * @example
+   * An example of dumping the entire accessibility tree:
+   * ```js
+   * const snapshot = await page.accessibility.snapshot();
+   * console.log(snapshot);
+   * ```
+   *
+   * @example
+   * An example of logging the focused node's name:
+   * ```js
+   * const snapshot = await page.accessibility.snapshot();
+   * const node = findFocusedNode(snapshot);
+   * console.log(node && node.name);
+   *
+   * function findFocusedNode(node) {
+   *   if (node.focused)
+   *     return node;
+   *   for (const child of node.children || []) {
+   *     const foundNode = findFocusedNode(child);
+   *     return foundNode;
+   *   }
+   *   return null;
+   * }
+   * ```
+   *
+   * @returns An AXNode object representing the snapshot.
+   */
   async snapshot(options = {}) {
     const { interestingOnly = true, root = null } = options;
     const { nodes } = await this._client.send("Accessibility.getFullAXTree");
@@ -331,10 +330,10 @@ class AXNode {
     ];
     const getBooleanPropertyValue = (key) => properties.get(key);
     for (const booleanProperty of booleanProperties) {
-      // WebArea's treat focus differently than other nodes. They report whether
+      // RootWebArea's treat focus differently than other nodes. They report whether
       // their frame  has focus, not whether focus is specifically on the root
       // node.
-      if (booleanProperty === "focused" && this._role === "WebArea") {
+      if (booleanProperty === "focused" && this._role === "RootWebArea") {
         continue;
       }
       const value = getBooleanPropertyValue(booleanProperty);

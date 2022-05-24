@@ -74,7 +74,7 @@ export class PuppeteerDeno extends Puppeteer {
    */
   constructor(settings: { preferredRevision: string; productName?: Product }) {
     const { preferredRevision, productName } = settings;
-    super();
+    super({ isPuppeteerCore: false });
     this.__productName = productName;
     this._preferredRevision = preferredRevision;
   }

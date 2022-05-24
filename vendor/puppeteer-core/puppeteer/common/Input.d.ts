@@ -15,6 +15,8 @@
  */
 import { CDPSession } from "./Connection.js";
 import { KeyInput } from "./USKeyboardLayout.js";
+import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
+import { Point } from "./JSHandle.js";
 /**
  * Keyboard provides an api for managing a virtual keyboard.
  * The high level api is {@link Keyboard."type"},
@@ -62,105 +64,105 @@ export declare class Keyboard {
   /** @internal */
   constructor(client: CDPSession);
   /**
-     * Dispatches a `keydown` event.
-     *
-     * @remarks
-     * If `key` is a single character and no modifier keys besides `Shift`
-     * are being held down, a `keypress`/`input` event will also generated.
-     * The `text` option can be specified to force an input event to be generated.
-     * If `key` is a modifier key, `Shift`, `Meta`, `Control`, or `Alt`,
-     * subsequent key presses will be sent with that modifier active.
-     * To release the modifier key, use {@link Keyboard.up}.
-     *
-     * After the key is pressed once, subsequent calls to
-     * {@link Keyboard.down} will have
-     * {@link https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/repeat | repeat}
-     * set to true. To release the key, use {@link Keyboard.up}.
-     *
-     * Modifier keys DO influence {@link Keyboard.down}.
-     * Holding down `Shift` will type the text in upper case.
-     *
-     * @param key - Name of key to press, such as `ArrowLeft`.
-     * See {@link KeyInput} for a list of all key names.
-     *
-     * @param options - An object of options. Accepts text which, if specified,
-     * generates an input event with this text.
-     */
+   * Dispatches a `keydown` event.
+   *
+   * @remarks
+   * If `key` is a single character and no modifier keys besides `Shift`
+   * are being held down, a `keypress`/`input` event will also generated.
+   * The `text` option can be specified to force an input event to be generated.
+   * If `key` is a modifier key, `Shift`, `Meta`, `Control`, or `Alt`,
+   * subsequent key presses will be sent with that modifier active.
+   * To release the modifier key, use {@link Keyboard.up}.
+   *
+   * After the key is pressed once, subsequent calls to
+   * {@link Keyboard.down} will have
+   * {@link https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/repeat | repeat}
+   * set to true. To release the key, use {@link Keyboard.up}.
+   *
+   * Modifier keys DO influence {@link Keyboard.down}.
+   * Holding down `Shift` will type the text in upper case.
+   *
+   * @param key - Name of key to press, such as `ArrowLeft`.
+   * See {@link KeyInput} for a list of all key names.
+   *
+   * @param options - An object of options. Accepts text which, if specified,
+   * generates an input event with this text.
+   */
   down(key: KeyInput, options?: {
     text?: string;
   }): Promise<void>;
   private _modifierBit;
   private _keyDescriptionForString;
   /**
-     * Dispatches a `keyup` event.
-     *
-     * @param key - Name of key to release, such as `ArrowLeft`.
-     * See {@link KeyInput | KeyInput}
-     * for a list of all key names.
-     */
+   * Dispatches a `keyup` event.
+   *
+   * @param key - Name of key to release, such as `ArrowLeft`.
+   * See {@link KeyInput | KeyInput}
+   * for a list of all key names.
+   */
   up(key: KeyInput): Promise<void>;
   /**
-     * Dispatches a `keypress` and `input` event.
-     * This does not send a `keydown` or `keyup` event.
-     *
-     * @remarks
-     * Modifier keys DO NOT effect {@link Keyboard.sendCharacter | Keyboard.sendCharacter}.
-     * Holding down `Shift` will not type the text in upper case.
-     *
-     * @example
-     * ```js
-     * page.keyboard.sendCharacter('嗨');
-     * ```
-     *
-     * @param char - Character to send into the page.
-     */
+   * Dispatches a `keypress` and `input` event.
+   * This does not send a `keydown` or `keyup` event.
+   *
+   * @remarks
+   * Modifier keys DO NOT effect {@link Keyboard.sendCharacter | Keyboard.sendCharacter}.
+   * Holding down `Shift` will not type the text in upper case.
+   *
+   * @example
+   * ```js
+   * page.keyboard.sendCharacter('嗨');
+   * ```
+   *
+   * @param char - Character to send into the page.
+   */
   sendCharacter(char: string): Promise<void>;
   private charIsKey;
   /**
-     * Sends a `keydown`, `keypress`/`input`,
-     * and `keyup` event for each character in the text.
-     *
-     * @remarks
-     * To press a special key, like `Control` or `ArrowDown`,
-     * use {@link Keyboard.press}.
-     *
-     * Modifier keys DO NOT effect `keyboard.type`.
-     * Holding down `Shift` will not type the text in upper case.
-     *
-     * @example
-     * ```js
-     * await page.keyboard.type('Hello'); // Types instantly
-     * await page.keyboard.type('World', {delay: 100}); // Types slower, like a user
-     * ```
-     *
-     * @param text - A text to type into a focused element.
-     * @param options - An object of options. Accepts delay which,
-     * if specified, is the time to wait between `keydown` and `keyup` in milliseconds.
-     * Defaults to 0.
-     */
+   * Sends a `keydown`, `keypress`/`input`,
+   * and `keyup` event for each character in the text.
+   *
+   * @remarks
+   * To press a special key, like `Control` or `ArrowDown`,
+   * use {@link Keyboard.press}.
+   *
+   * Modifier keys DO NOT effect `keyboard.type`.
+   * Holding down `Shift` will not type the text in upper case.
+   *
+   * @example
+   * ```js
+   * await page.keyboard.type('Hello'); // Types instantly
+   * await page.keyboard.type('World', {delay: 100}); // Types slower, like a user
+   * ```
+   *
+   * @param text - A text to type into a focused element.
+   * @param options - An object of options. Accepts delay which,
+   * if specified, is the time to wait between `keydown` and `keyup` in milliseconds.
+   * Defaults to 0.
+   */
   type(text: string, options?: {
     delay?: number;
   }): Promise<void>;
   /**
-     * Shortcut for {@link Keyboard.down}
-     * and {@link Keyboard.up}.
-     *
-     * @remarks
-     * If `key` is a single character and no modifier keys besides `Shift`
-     * are being held down, a `keypress`/`input` event will also generated.
-     * The `text` option can be specified to force an input event to be generated.
-     *
-     * Modifier keys DO effect {@link Keyboard.press}.
-     * Holding down `Shift` will type the text in upper case.
-     *
-     * @param key - Name of key to press, such as `ArrowLeft`.
-     * See {@link KeyInput} for a list of all key names.
-     *
-     * @param options - An object of options. Accepts text which, if specified,
-     * generates an input event with this text. Accepts delay which,
-     * if specified, is the time to wait between `keydown` and `keyup` in milliseconds.
-     * Defaults to 0.
-     */
+   * Shortcut for {@link Keyboard.down}
+   * and {@link Keyboard.up}.
+   *
+   * @remarks
+   * If `key` is a single character and no modifier keys besides `Shift`
+   * are being held down, a `keypress`/`input` event will also generated.
+   * The `text` option can be specified to force an input event to be generated.
+   *
+   * Modifier keys DO effect {@link Keyboard.press}.
+   * Holding down `Shift` will type the text in upper case.
+   *
+   * @param key - Name of key to press, such as `ArrowLeft`.
+   * See {@link KeyInput} for a list of all key names.
+   *
+   * @param options - An object of options. Accepts text which, if specified,
+   * generates an input event with this text. Accepts delay which,
+   * if specified, is the time to wait between `keydown` and `keyup` in milliseconds.
+   * Defaults to 0.
+   */
   press(key: KeyInput, options?: {
     delay?: number;
     text?: string;
@@ -169,7 +171,12 @@ export declare class Keyboard {
 /**
  * @public
  */
-export declare type MouseButton = "left" | "right" | "middle";
+export declare type MouseButton =
+  | "left"
+  | "right"
+  | "middle"
+  | "back"
+  | "forward";
 /**
  * @public
  */
@@ -248,25 +255,25 @@ export declare class Mouse {
   private _y;
   private _button;
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(client: CDPSession, keyboard: Keyboard);
   /**
-     * Dispatches a `mousemove` event.
-     * @param x - Horizontal position of the mouse.
-     * @param y - Vertical position of the mouse.
-     * @param options - Optional object. If specified, the `steps` property
-     * sends intermediate `mousemove` events when set to `1` (default).
-     */
+   * Dispatches a `mousemove` event.
+   * @param x - Horizontal position of the mouse.
+   * @param y - Vertical position of the mouse.
+   * @param options - Optional object. If specified, the `steps` property
+   * sends intermediate `mousemove` events when set to `1` (default).
+   */
   move(x: number, y: number, options?: {
     steps?: number;
   }): Promise<void>;
   /**
-     * Shortcut for `mouse.move`, `mouse.down` and `mouse.up`.
-     * @param x - Horizontal position of the mouse.
-     * @param y - Vertical position of the mouse.
-     * @param options - Optional `MouseOptions`.
-     */
+   * Shortcut for `mouse.move`, `mouse.down` and `mouse.up`.
+   * @param x - Horizontal position of the mouse.
+   * @param y - Vertical position of the mouse.
+   * @param options - Optional `MouseOptions`.
+   */
   click(
     x: number,
     y: number,
@@ -275,35 +282,70 @@ export declare class Mouse {
     },
   ): Promise<void>;
   /**
-     * Dispatches a `mousedown` event.
-     * @param options - Optional `MouseOptions`.
-     */
+   * Dispatches a `mousedown` event.
+   * @param options - Optional `MouseOptions`.
+   */
   down(options?: MouseOptions): Promise<void>;
   /**
-     * Dispatches a `mouseup` event.
-     * @param options - Optional `MouseOptions`.
-     */
+   * Dispatches a `mouseup` event.
+   * @param options - Optional `MouseOptions`.
+   */
   up(options?: MouseOptions): Promise<void>;
   /**
-     * Dispatches a `mousewheel` event.
-     * @param options - Optional: `MouseWheelOptions`.
-     *
-     * @example
-     * An example of zooming into an element:
-     * ```js
-     * await page.goto('https://mdn.mozillademos.org/en-US/docs/Web/API/Element/wheel_event$samples/Scaling_an_element_via_the_wheel?revision=1587366');
-     *
-     * const elem = await page.$('div');
-     * const boundingBox = await elem.boundingBox();
-     * await page.mouse.move(
-     *   boundingBox.x + boundingBox.width / 2,
-     *   boundingBox.y + boundingBox.height / 2
-     * );
-     *
-     * await page.mouse.wheel({ deltaY: -100 })
-     * ```
-     */
+   * Dispatches a `mousewheel` event.
+   * @param options - Optional: `MouseWheelOptions`.
+   *
+   * @example
+   * An example of zooming into an element:
+   * ```js
+   * await page.goto('https://mdn.mozillademos.org/en-US/docs/Web/API/Element/wheel_event$samples/Scaling_an_element_via_the_wheel?revision=1587366');
+   *
+   * const elem = await page.$('div');
+   * const boundingBox = await elem.boundingBox();
+   * await page.mouse.move(
+   *   boundingBox.x + boundingBox.width / 2,
+   *   boundingBox.y + boundingBox.height / 2
+   * );
+   *
+   * await page.mouse.wheel({ deltaY: -100 })
+   * ```
+   */
   wheel(options?: MouseWheelOptions): Promise<void>;
+  /**
+   * Dispatches a `drag` event.
+   * @param start - starting point for drag
+   * @param target - point to drag to
+   */
+  drag(start: Point, target: Point): Promise<Protocol.Input.DragData>;
+  /**
+   * Dispatches a `dragenter` event.
+   * @param target - point for emitting `dragenter` event
+   * @param data - drag data containing items and operations mask
+   */
+  dragEnter(target: Point, data: Protocol.Input.DragData): Promise<void>;
+  /**
+   * Dispatches a `dragover` event.
+   * @param target - point for emitting `dragover` event
+   * @param data - drag data containing items and operations mask
+   */
+  dragOver(target: Point, data: Protocol.Input.DragData): Promise<void>;
+  /**
+   * Performs a dragenter, dragover, and drop in sequence.
+   * @param target - point to drop on
+   * @param data - drag data containing items and operations mask
+   */
+  drop(target: Point, data: Protocol.Input.DragData): Promise<void>;
+  /**
+   * Performs a drag, dragenter, dragover, and drop in sequence.
+   * @param target - point to drag from
+   * @param target - point to drop on
+   * @param options - An object of options. Accepts delay which,
+   * if specified, is the time to wait between `dragover` and `drop` in milliseconds.
+   * Defaults to 0.
+   */
+  dragAndDrop(start: Point, target: Point, options?: {
+    delay?: number;
+  }): Promise<void>;
 }
 /**
  * The Touchscreen class exposes touchscreen events.
@@ -313,13 +355,13 @@ export declare class Touchscreen {
   private _client;
   private _keyboard;
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(client: CDPSession, keyboard: Keyboard);
   /**
-     * Dispatches a `touchstart` and `touchend` event.
-     * @param x - Horizontal position of the tap.
-     * @param y - Vertical position of the tap.
-     */
+   * Dispatches a `touchstart` and `touchend` event.
+   * @param x - Horizontal position of the tap.
+   * @param y - Vertical position of the tap.
+   */
   tap(x: number, y: number): Promise<void>;
 }

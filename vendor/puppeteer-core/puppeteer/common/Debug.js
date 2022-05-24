@@ -59,10 +59,10 @@ export const debug = (prefix) => {
     const everythingShouldBeLogged = debugLevel === "*";
     const prefixMatchesDebugLevel = everythingShouldBeLogged ||
       /**
-             * If the debug level is `foo*`, that means we match any prefix that
-             * starts with `foo`. If the level is `foo`, we match only the prefix
-             * `foo`.
-             */
+       * If the debug level is `foo*`, that means we match any prefix that
+       * starts with `foo`. If the level is `foo`, we match only the prefix
+       * `foo`.
+       */
       (debugLevel.endsWith("*")
         ? prefix.startsWith(debugLevel)
         : prefix === debugLevel);

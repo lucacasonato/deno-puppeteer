@@ -2,6 +2,7 @@ import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
 import { ProtocolMapping } from "../../vendor/devtools-protocol/types/protocol-mapping.d.ts";
 import { ConnectionTransport } from "./ConnectionTransport.js";
 import { EventEmitter } from "./EventEmitter.js";
+import { ProtocolError } from "./Errors.js";
 /**
  * @public
  */
@@ -12,7 +13,7 @@ export { ConnectionTransport, ProtocolMapping };
 export interface ConnectionCallback {
   resolve: Function;
   reject: Function;
-  error: Error;
+  error: ProtocolError;
   method: string;
 }
 /**
@@ -24,7 +25,7 @@ export declare const ConnectionEmittedEvents: {
   readonly Disconnected: symbol;
 };
 /**
- * @internal
+ * @public
  */
 export declare class Connection extends EventEmitter {
   _url: string;
@@ -35,11 +36,11 @@ export declare class Connection extends EventEmitter {
   _closed: boolean;
   _callbacks: Map<number, ConnectionCallback>;
   constructor(url: string, transport: ConnectionTransport, delay?: number);
-  static fromSession(session: CDPSession): Connection;
+  static fromSession(session: CDPSession): Connection | undefined;
   /**
-     * @param sessionId - The session id
-     * @returns The current CDP session if it exists
-     */
+   * @param sessionId - The session id
+   * @returns The current CDP session if it exists
+   */
   session(sessionId: string): CDPSession | null;
   url(): string;
   send<T extends keyof ProtocolMapping.Commands>(
@@ -49,11 +50,11 @@ export declare class Connection extends EventEmitter {
   _rawSend(message: Record<string, unknown>): number;
   _onMessage(message: string): Promise<void>;
   _onClose(): void;
-  dispose(): Promise<void>;
+  dispose(): void;
   /**
-     * @param targetInfo - The target info
-     * @returns The CDP session that is created
-     */
+   * @param targetInfo - The target info
+   * @returns The CDP session that is created
+   */
   createSession(targetInfo: Protocol.Target.TargetInfo): Promise<CDPSession>;
 }
 /**
@@ -66,6 +67,7 @@ export interface CDPSessionOnMessageObject {
   error: {
     message: string;
     data: any;
+    code: number;
   };
   result?: any;
 }
@@ -86,7 +88,7 @@ export declare const CDPSessionEmittedEvents: {
  * events can be subscribed to with `CDPSession.on` method.
  *
  * Useful links: {@link https://chromedevtools.github.io/devtools-protocol/ | DevTools Protocol Viewer}
- * and {@link https://github.com/aslushnikov/getting-started-with-cdp/blob/master/README.md | Getting Started with DevTools Protocol}.
+ * and {@link https://github.com/aslushnikov/getting-started-with-cdp/blob/HEAD/README.md | Getting Started with DevTools Protocol}.
  *
  * @example
  * ```js
@@ -104,31 +106,36 @@ export declare const CDPSessionEmittedEvents: {
  */
 export declare class CDPSession extends EventEmitter {
   /**
-     * @internal
-     */
-  _connection: Connection;
+   * @internal
+   */
+  _connection?: Connection;
   private _sessionId;
   private _targetType;
   private _callbacks;
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(connection: Connection, targetType: string, sessionId: string);
+  connection(): Connection | undefined;
   send<T extends keyof ProtocolMapping.Commands>(
     method: T,
     ...paramArgs: ProtocolMapping.Commands[T]["paramsType"]
   ): Promise<ProtocolMapping.Commands[T]["returnType"]>;
   /**
-     * @internal
-     */
+   * @internal
+   */
   _onMessage(object: CDPSessionOnMessageObject): void;
   /**
-     * Detaches the cdpSession from the target. Once detached, the cdpSession object
-     * won't emit any events and can't be used to send messages.
-     */
+   * Detaches the cdpSession from the target. Once detached, the cdpSession object
+   * won't emit any events and can't be used to send messages.
+   */
   detach(): Promise<void>;
   /**
-     * @internal
-     */
+   * @internal
+   */
   _onClosed(): void;
+  /**
+   * @internal
+   */
+  id(): string;
 }

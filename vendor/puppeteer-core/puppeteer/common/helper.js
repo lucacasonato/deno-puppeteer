@@ -97,7 +97,9 @@ async function waitForEvent(
   timeout,
   abortPromise,
 ) {
-  let eventTimeout, resolveCallback, rejectCallback;
+  let eventTimeout;
+  let resolveCallback;
+  let rejectCallback;
   const promise = new Promise((resolve, reject) => {
     resolveCallback = resolve;
     rejectCallback = reject;
@@ -242,34 +244,45 @@ async function waitWithTimeout(promise, taskName, timeout) {
     }
   }
 }
-async function readProtocolStream(client, handle, path) {
-  let eof = false;
-  let fileHandle;
+async function getReadableStreamAsUint8Array(readableStream, path) {
   if (path) {
-    fileHandle = await Deno.open(path, { create: true, write: true });
+    const file = await Deno.open(path, { create: true, write: true });
+    await readableStream.pipeTo(file.writable);
+    return null;
   }
-  const arrs = [];
-  while (!eof) {
-    const response = await client.send("IO.read", { handle });
-    eof = response.eof;
-    const arr = response.base64Encoded
-      ? base64Decode(response.data)
-      : new TextEncoder().encode(response.data);
-    arrs.push(arr);
-    if (path) {
-      await Deno.writeAll(fileHandle, arr);
-    }
+
+  const chunks = [];
+  const reader = readableStream.getReader();
+  for await (const chunk of reader) {
+    chunks.push(chunk);
   }
-  if (fileHandle) {
-    fileHandle.close();
-  }
-  await client.send("IO.close", { handle });
-  let resultArr = null;
-  try {
-    resultArr = concatUint8Array(...arrs);
-  } finally {
-    return resultArr;
-  }
+  await reader.cancel();
+  return concatUint8Array(chunks);
+}
+async function getReadableStreamFromProtocolStream(client, handle) {
+  let closed = false;
+  return new ReadableStream({
+    type: "bytes",
+    async read(controller) {
+      const size = controller.desiredSize;
+      const response = await client.send("IO.read", { handle, size });
+      const data = response.base64Encoded
+        ? base64Decode(response.data)
+        : new TextEncoder().encode(response.data);
+      controller.enqueue(data);
+      if (response.eof && !closed) {
+        closed = true;
+        await client.send("IO.close", { handle });
+        controller.close();
+      }
+    },
+    async cancel() {
+      if (!closed) {
+        closed = true;
+        await client.send("IO.close", { handle });
+      }
+    },
+  });
 }
 export const helper = {
   evaluationString,
@@ -278,7 +291,8 @@ export const helper = {
   pageBindingDeliverErrorString,
   pageBindingDeliverErrorValueString,
   makePredicateString,
-  readProtocolStream,
+  getReadableStreamAsUint8Array,
+  getReadableStreamFromProtocolStream,
   waitWithTimeout,
   waitForEvent,
   isString,

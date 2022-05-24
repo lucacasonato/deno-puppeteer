@@ -48,7 +48,7 @@ export declare type Serializable =
 /**
  * @public
  */
-export declare type JSONArray = Serializable[];
+export declare type JSONArray = readonly Serializable[];
 /**
  * @public
  */
@@ -62,12 +62,12 @@ export declare type SerializableOrJSHandle = Serializable | JSHandle;
 /**
  *  Wraps a DOM element into an ElementHandle instance
  * @public
- **/
+ */
 export declare type WrapElementHandle<X> = X extends any ? ElementHandle<X> : X;
 /**
  *  Unwraps a DOM element out of an ElementHandle instance
  * @public
- **/
+ */
 export declare type UnwrapElementHandle<X> = X extends ElementHandle<infer E>
   ? E
   : X;

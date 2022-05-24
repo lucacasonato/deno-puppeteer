@@ -27,19 +27,19 @@ export declare class Tracing {
   _recording: boolean;
   _path: string;
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(client: CDPSession);
   /**
-     * Starts a trace for the current page.
-     * @remarks
-     * Only one trace can be active at a time per browser.
-     * @param options - Optional `TracingOptions`.
-     */
+   * Starts a trace for the current page.
+   * @remarks
+   * Only one trace can be active at a time per browser.
+   * @param options - Optional `TracingOptions`.
+   */
   start(options?: TracingOptions): Promise<void>;
   /**
-     * Stops a trace started with the `start` method.
-     * @returns Promise which resolves to buffer with trace data.
-     */
+   * Stops a trace started with the `start` method.
+   * @returns Promise which resolves to buffer with trace data.
+   */
   stop(): Promise<Uint8Array>;
 }

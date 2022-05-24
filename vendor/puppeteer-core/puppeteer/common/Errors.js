@@ -37,6 +37,17 @@ export class CustomError extends Error {
 export class TimeoutError extends CustomError {
 }
 /**
+ * ProtocolError is emitted whenever there is an error from the protocol.
+ *
+ * @public
+ */
+export class ProtocolError extends CustomError {
+  constructor() {
+    super(...arguments);
+    this.originalMessage = "";
+  }
+}
+/**
  * @public
  */
 export const puppeteerErrors = {

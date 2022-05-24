@@ -20,8 +20,8 @@
  */
 export class ConsoleMessage {
   /**
-     * @public
-     */
+   * @public
+   */
   constructor(type, text, args, stackTraceLocations) {
     this._type = type;
     this._text = text;
@@ -29,32 +29,32 @@ export class ConsoleMessage {
     this._stackTraceLocations = stackTraceLocations;
   }
   /**
-     * @returns The type of the console message.
-     */
+   * @returns The type of the console message.
+   */
   type() {
     return this._type;
   }
   /**
-     * @returns The text of the console message.
-     */
+   * @returns The text of the console message.
+   */
   text() {
     return this._text;
   }
   /**
-     * @returns An array of arguments passed to the console.
-     */
+   * @returns An array of arguments passed to the console.
+   */
   args() {
     return this._args;
   }
   /**
-     * @returns The location of the console message.
-     */
+   * @returns The location of the console message.
+   */
   location() {
     return this._stackTraceLocations.length ? this._stackTraceLocations[0] : {};
   }
   /**
-     * @returns The array of locations on the stack of the console message.
-     */
+   * @returns The array of locations on the stack of the console message.
+   */
   stackTrace() {
     return this._stackTraceLocations;
   }
