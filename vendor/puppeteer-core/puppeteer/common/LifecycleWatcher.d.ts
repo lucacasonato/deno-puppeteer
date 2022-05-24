@@ -56,6 +56,7 @@ export declare class LifecycleWatcher {
   _timeoutPromise: Promise<TimeoutError | null>;
   _maximumTimer?: number;
   _hasSameDocumentNavigation?: boolean;
+  _swapped?: boolean;
   constructor(
     frameManager: FrameManager,
     frame: Frame,
@@ -64,7 +65,7 @@ export declare class LifecycleWatcher {
   );
   _onRequest(request: HTTPRequest): void;
   _onFrameDetached(frame: Frame): void;
-  navigationResponse(): HTTPResponse | null;
+  navigationResponse(): Promise<HTTPResponse | null>;
   _terminate(error: Error): void;
   sameDocumentNavigationPromise(): Promise<Error | null>;
   newDocumentNavigationPromise(): Promise<Error | null>;
@@ -72,6 +73,7 @@ export declare class LifecycleWatcher {
   timeoutOrTerminationPromise(): Promise<Error | TimeoutError | null>;
   _createTimeoutPromise(): Promise<TimeoutError | null>;
   _navigatedWithinDocument(frame: Frame): void;
+  _frameSwapped(frame: Frame): void;
   _checkLifecycleComplete(): void;
   dispose(): void;
 }

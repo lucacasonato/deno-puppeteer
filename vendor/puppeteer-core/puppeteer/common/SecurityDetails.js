@@ -22,8 +22,8 @@
  */
 export class SecurityDetails {
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(securityPayload) {
     this._subjectName = securityPayload.subjectName;
     this._issuer = securityPayload.issuer;
@@ -33,40 +33,40 @@ export class SecurityDetails {
     this._sanList = securityPayload.sanList;
   }
   /**
-     * @returns The name of the issuer of the certificate.
-     */
+   * @returns The name of the issuer of the certificate.
+   */
   issuer() {
     return this._issuer;
   }
   /**
-     * @returns {@link https://en.wikipedia.org/wiki/Unix_time | Unix timestamp}
-     * marking the start of the certificate's validity.
-     */
+   * @returns {@link https://en.wikipedia.org/wiki/Unix_time | Unix timestamp}
+   * marking the start of the certificate's validity.
+   */
   validFrom() {
     return this._validFrom;
   }
   /**
-     * @returns {@link https://en.wikipedia.org/wiki/Unix_time | Unix timestamp}
-     * marking the end of the certificate's validity.
-     */
+   * @returns {@link https://en.wikipedia.org/wiki/Unix_time | Unix timestamp}
+   * marking the end of the certificate's validity.
+   */
   validTo() {
     return this._validTo;
   }
   /**
-     * @returns The security protocol being used, e.g. "TLS 1.2".
-     */
+   * @returns The security protocol being used, e.g. "TLS 1.2".
+   */
   protocol() {
     return this._protocol;
   }
   /**
-     * @returns The name of the subject to which the certificate was issued.
-     */
+   * @returns The name of the subject to which the certificate was issued.
+   */
   subjectName() {
     return this._subjectName;
   }
   /**
-     * @returns The list of {@link https://en.wikipedia.org/wiki/Subject_Alternative_Name | subject alternative names (SANs)} of the certificate.
-     */
+   * @returns The list of {@link https://en.wikipedia.org/wiki/Subject_Alternative_Name | subject alternative names (SANs)} of the certificate.
+   */
   subjectAlternativeNames() {
     return this._sanList;
   }

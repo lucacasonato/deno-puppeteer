@@ -1,3 +1,18 @@
+/**
+ * Copyright 2017 Google Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import { CDPSession } from "./Connection.js";
 import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
 import { CommonEventEmitter } from "./EventEmitter.js";
@@ -34,7 +49,7 @@ declare function removeEventListeners(
 ): void;
 declare function isString(obj: unknown): obj is string;
 declare function isNumber(obj: unknown): obj is number;
-declare function waitForEvent<T extends any>(
+declare function waitForEvent<T>(
   emitter: CommonEventEmitter,
   eventName: string | symbol,
   predicate: (event: T) => Promise<boolean> | boolean,
@@ -66,16 +81,19 @@ declare function makePredicateString(
   predicate: Function,
   predicateQueryHandler?: Function,
 ): string;
-declare function waitWithTimeout<T extends any>(
+declare function waitWithTimeout<T>(
   promise: Promise<T>,
   taskName: string,
   timeout: number,
 ): Promise<T>;
-declare function readProtocolStream(
+declare function getReadableStreamAsUint8Array(
+  readableStream: ReadableStream,
+  path?: string,
+): Promise<Uint8Array | null>;
+declare function getReadableStreamFromProtocolStream(
   client: CDPSession,
   handle: string,
-  path?: string,
-): Promise<Uint8Array>;
+): Promise<ReadableStream>;
 export declare const helper: {
   evaluationString: typeof evaluationString;
   pageBindingInitString: typeof pageBindingInitString;
@@ -83,7 +101,8 @@ export declare const helper: {
   pageBindingDeliverErrorString: typeof pageBindingDeliverErrorString;
   pageBindingDeliverErrorValueString: typeof pageBindingDeliverErrorValueString;
   makePredicateString: typeof makePredicateString;
-  readProtocolStream: typeof readProtocolStream;
+  getReadableStreamAsUint8Array: typeof getReadableStreamAsUint8Array;
+  getReadableStreamFromProtocolStream: typeof getReadableStreamFromProtocolStream;
   waitWithTimeout: typeof waitWithTimeout;
   waitForEvent: typeof waitForEvent;
   isString: typeof isString;

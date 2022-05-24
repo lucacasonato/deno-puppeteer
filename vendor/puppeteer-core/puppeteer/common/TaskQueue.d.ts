@@ -1,4 +1,3 @@
-/// <reference types="./assert.d.ts" />
 /**
  * Copyright 2020 Google Inc. All rights reserved.
  *
@@ -14,19 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Asserts that the given value is truthy.
- * @param value
- * @param message - the error message to throw if the value is not truthy.
- */
-export const assert = (value, message) => {
-  if (!value) {
-    throw new Error(message);
-  }
-};
-export const assertNever = (value, message) => {
-  if (value) {
-    throw new Error(message);
-  }
-};
-//# sourceMappingURL=assert.js.map
+export declare class TaskQueue {
+  private _chain;
+  constructor();
+  postTask<T>(task: () => Promise<T>): Promise<T>;
+}

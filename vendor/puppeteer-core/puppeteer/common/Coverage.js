@@ -59,44 +59,45 @@ export class Coverage {
     this._cssCoverage = new CSSCoverage(client);
   }
   /**
-     * @param options - defaults to
-     * `{ resetOnNavigation : true, reportAnonymousScripts : false }`
-     * @returns Promise that resolves when coverage is started.
-     *
-     * @remarks
-     * Anonymous scripts are ones that don't have an associated url. These are
-     * scripts that are dynamically created on the page using `eval` or
-     * `new Function`. If `reportAnonymousScripts` is set to `true`, anonymous
-     * scripts will have `__puppeteer_evaluation_script__` as their URL.
-     */
+   * @param options - Set of configurable options for coverage defaults to
+   * `resetOnNavigation : true, reportAnonymousScripts : false`
+   * @returns Promise that resolves when coverage is started.
+   *
+   * @remarks
+   * Anonymous scripts are ones that don't have an associated url. These are
+   * scripts that are dynamically created on the page using `eval` or
+   * `new Function`. If `reportAnonymousScripts` is set to `true`, anonymous
+   * scripts will have `__puppeteer_evaluation_script__` as their URL.
+   */
   async startJSCoverage(options = {}) {
     return await this._jsCoverage.start(options);
   }
   /**
-     * @returns Promise that resolves to the array of coverage reports for
-     * all scripts.
-     *
-     * @remarks
-     * JavaScript Coverage doesn't include anonymous scripts by default.
-     * However, scripts with sourceURLs are reported.
-     */
+   * @returns Promise that resolves to the array of coverage reports for
+   * all scripts.
+   *
+   * @remarks
+   * JavaScript Coverage doesn't include anonymous scripts by default.
+   * However, scripts with sourceURLs are reported.
+   */
   async stopJSCoverage() {
     return await this._jsCoverage.stop();
   }
   /**
-     * @param options - defaults to `{ resetOnNavigation : true }`
-     * @returns Promise that resolves when coverage is started.
-     */
+   * @param options - Set of configurable options for coverage, defaults to
+   * `resetOnNavigation : true`
+   * @returns Promise that resolves when coverage is started.
+   */
   async startCSSCoverage(options = {}) {
     return await this._cssCoverage.start(options);
   }
   /**
-     * @returns Promise that resolves to the array of coverage reports
-     * for all stylesheets.
-     * @remarks
-     * CSS Coverage doesn't include dynamically injected style tags
-     * without sourceURLs.
-     */
+   * @returns Promise that resolves to the array of coverage reports
+   * for all stylesheets.
+   * @remarks
+   * CSS Coverage doesn't include dynamically injected style tags
+   * without sourceURLs.
+   */
   async stopCSSCoverage() {
     return await this._cssCoverage.stop();
   }
@@ -112,14 +113,19 @@ export class JSCoverage {
     this._eventListeners = [];
     this._resetOnNavigation = false;
     this._reportAnonymousScripts = false;
+    this._includeRawScriptCoverage = false;
     this._client = client;
   }
   async start(options = {}) {
     assert(!this._enabled, "JSCoverage is already enabled");
-    const { resetOnNavigation = true, reportAnonymousScripts = false } =
-      options;
+    const {
+      resetOnNavigation = true,
+      reportAnonymousScripts = false,
+      includeRawScriptCoverage = false,
+    } = options;
     this._resetOnNavigation = resetOnNavigation;
     this._reportAnonymousScripts = reportAnonymousScripts;
+    this._includeRawScriptCoverage = includeRawScriptCoverage;
     this._enabled = true;
     this._scriptURLs.clear();
     this._scriptSources.clear();
@@ -138,7 +144,7 @@ export class JSCoverage {
     await Promise.all([
       this._client.send("Profiler.enable"),
       this._client.send("Profiler.startPreciseCoverage", {
-        callCount: false,
+        callCount: this._includeRawScriptCoverage,
         detailed: true,
       }),
       this._client.send("Debugger.enable"),
@@ -198,7 +204,11 @@ export class JSCoverage {
         flattenRanges.push(...func.ranges);
       }
       const ranges = convertToDisjointRanges(flattenRanges);
-      coverage.push({ url, ranges, text });
+      if (!this._includeRawScriptCoverage) {
+        coverage.push({ url, ranges, text });
+      } else {
+        coverage.push({ url, ranges, text, rawScriptCoverage: entry });
+      }
     }
     return coverage;
   }

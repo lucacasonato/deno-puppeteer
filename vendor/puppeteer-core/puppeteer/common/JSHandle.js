@@ -29,12 +29,15 @@ export function createJSHandle(context, remoteObject) {
       context,
       context._client,
       remoteObject,
+      frame,
       frameManager.page(),
       frameManager,
     );
   }
   return new JSHandle(context, context._client, remoteObject);
 }
+const applyOffsetsToQuad = (quad, offsetX, offsetY) =>
+  quad.map((part) => ({ x: part.x + offsetX, y: part.y + offsetY }));
 /**
  * Represents an in-page JavaScript object. JSHandles can be created with the
  * {@link Page.evaluateHandle | page.evaluateHandle} method.
@@ -55,51 +58,51 @@ export function createJSHandle(context, remoteObject) {
  */
 export class JSHandle {
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(context, client, remoteObject) {
     /**
-         * @internal
-         */
+     * @internal
+     */
     this._disposed = false;
     this._context = context;
     this._client = client;
     this._remoteObject = remoteObject;
   }
   /** Returns the execution context the handle belongs to.
-     */
+   */
   executionContext() {
     return this._context;
   }
   /**
-     * This method passes this handle as the first argument to `pageFunction`.
-     * If `pageFunction` returns a Promise, then `handle.evaluate` would wait
-     * for the promise to resolve and return its value.
-     *
-     * @example
-     * ```js
-     * const tweetHandle = await page.$('.tweet .retweets');
-     * expect(await tweetHandle.evaluate(node => node.innerText)).toBe('10');
-     * ```
-     */
+   * This method passes this handle as the first argument to `pageFunction`.
+   * If `pageFunction` returns a Promise, then `handle.evaluate` would wait
+   * for the promise to resolve and return its value.
+   *
+   * @example
+   * ```js
+   * const tweetHandle = await page.$('.tweet .retweets');
+   * expect(await tweetHandle.evaluate(node => node.innerText)).toBe('10');
+   * ```
+   */
   async evaluate(pageFunction, ...args) {
     return await this.executionContext().evaluate(pageFunction, this, ...args);
   }
   /**
-     * This method passes this handle as the first argument to `pageFunction`.
-     *
-     * @remarks
-     *
-     * The only difference between `jsHandle.evaluate` and
-     * `jsHandle.evaluateHandle` is that `jsHandle.evaluateHandle`
-     * returns an in-page object (JSHandle).
-     *
-     * If the function passed to `jsHandle.evaluateHandle` returns a Promise,
-     * then `evaluateHandle.evaluateHandle` waits for the promise to resolve and
-     * returns its value.
-     *
-     * See {@link Page.evaluateHandle} for more details.
-     */
+   * This method passes this handle as the first argument to `pageFunction`.
+   *
+   * @remarks
+   *
+   * The only difference between `jsHandle.evaluate` and
+   * `jsHandle.evaluateHandle` is that `jsHandle.evaluateHandle`
+   * returns an in-page object (JSHandle).
+   *
+   * If the function passed to `jsHandle.evaluateHandle` returns a Promise,
+   * then `evaluateHandle.evaluateHandle` waits for the promise to resolve and
+   * returns its value.
+   *
+   * See {@link Page.evaluateHandle} for more details.
+   */
   async evaluateHandle(pageFunction, ...args) {
     return await this.executionContext().evaluateHandle(
       pageFunction,
@@ -108,7 +111,7 @@ export class JSHandle {
     );
   }
   /** Fetches a single property from the referenced object.
-     */
+   */
   async getProperty(propertyName) {
     const objectHandle = await this.evaluateHandle((object, propertyName) => {
       const result = { __proto__: null };
@@ -116,27 +119,28 @@ export class JSHandle {
       return result;
     }, propertyName);
     const properties = await objectHandle.getProperties();
-    const result = properties.get(propertyName) || null;
+    const result = properties.get(propertyName);
+    assert(result instanceof JSHandle);
     await objectHandle.dispose();
     return result;
   }
   /**
-     * The method returns a map with property names as keys and JSHandle
-     * instances for the property values.
-     *
-     * @example
-     * ```js
-     * const listHandle = await page.evaluateHandle(() => document.body.children);
-     * const properties = await listHandle.getProperties();
-     * const children = [];
-     * for (const property of properties.values()) {
-     *   const element = property.asElement();
-     *   if (element)
-     *     children.push(element);
-     * }
-     * children; // holds elementHandles to all children of document.body
-     * ```
-     */
+   * The method returns a map with property names as keys and JSHandle
+   * instances for the property values.
+   *
+   * @example
+   * ```js
+   * const listHandle = await page.evaluateHandle(() => document.body.children);
+   * const properties = await listHandle.getProperties();
+   * const children = [];
+   * for (const property of properties.values()) {
+   *   const element = property.asElement();
+   *   if (element)
+   *     children.push(element);
+   * }
+   * children; // holds elementHandles to all children of document.body
+   * ```
+   */
   async getProperties() {
     const response = await this._client.send("Runtime.getProperties", {
       objectId: this._remoteObject.objectId,
@@ -152,14 +156,14 @@ export class JSHandle {
     return result;
   }
   /**
-     * Returns a JSON representation of the object.
-     *
-     * @remarks
-     *
-     * The JSON is generated by running {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify | JSON.stringify}
-     * on the object in page and consequent {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse | JSON.parse} in puppeteer.
-     * **NOTE** The method throws if the referenced object is not stringifiable.
-     */
+   * @returns Returns a JSON representation of the object.If the object has a
+   * `toJSON` function, it will not be called.
+   * @remarks
+   *
+   * The JSON is generated by running {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify | JSON.stringify}
+   * on the object in page and consequent {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse | JSON.parse} in puppeteer.
+   * **NOTE** The method throws if the referenced object is not stringifiable.
+   */
   async jsonValue() {
     if (this._remoteObject.objectId) {
       const response = await this._client.send("Runtime.callFunctionOn", {
@@ -173,18 +177,19 @@ export class JSHandle {
     return helper.valueFromRemoteObject(this._remoteObject);
   }
   /**
-     * Returns either `null` or the object handle itself, if the object handle is
-     * an instance of {@link ElementHandle}.
-     */
+   * @returns Either `null` or the object handle itself, if the object
+   * handle is an instance of {@link ElementHandle}.
+   */
   asElement() {
-    // This always returns null, but subclasses can override this and return an
-    // ElementHandle.
+    /*  This always returns null, but subclasses can override this and return an
+            ElementHandle.
+        */
     return null;
   }
   /**
-     * Stops referencing the element handle, and resolves when the object handle is
-     * successfully disposed of.
-     */
+   * Stops referencing the element handle, and resolves when the object handle is
+   * successfully disposed of.
+   */
   async dispose() {
     if (this._disposed) {
       return;
@@ -193,10 +198,10 @@ export class JSHandle {
     await helper.releaseObject(this._client, this._remoteObject);
   }
   /**
-     * Returns a string representation of the JSHandle.
-     *
-     * @remarks Useful during debugging.
-     */
+   * Returns a string representation of the JSHandle.
+   *
+   * @remarks Useful during debugging.
+   */
   toString() {
     if (this._remoteObject.objectId) {
       const type = this._remoteObject.subtype || this._remoteObject.type;
@@ -241,22 +246,142 @@ export class JSHandle {
  */
 export class ElementHandle extends JSHandle {
   /**
-     * @internal
-     */
-  constructor(context, client, remoteObject, page, frameManager) {
+   * @internal
+   */
+  constructor(context, client, remoteObject, frame, page, frameManager) {
     super(context, client, remoteObject);
     this._client = client;
     this._remoteObject = remoteObject;
+    this._frame = frame;
     this._page = page;
     this._frameManager = frameManager;
+  }
+  /**
+   * Wait for the `selector` to appear within the element. If at the moment of calling the
+   * method the `selector` already exists, the method will return immediately. If
+   * the `selector` doesn't appear after the `timeout` milliseconds of waiting, the
+   * function will throw.
+   *
+   * This method does not work across navigations or if the element is detached from DOM.
+   *
+   * @param selector - A
+   * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector}
+   * of an element to wait for
+   * @param options - Optional waiting parameters
+   * @returns Promise which resolves when element specified by selector string
+   * is added to DOM. Resolves to `null` if waiting for hidden: `true` and
+   * selector is not found in DOM.
+   * @remarks
+   * The optional parameters in `options` are:
+   *
+   * - `visible`: wait for the selected element to be present in DOM and to be
+   * visible, i.e. to not have `display: none` or `visibility: hidden` CSS
+   * properties. Defaults to `false`.
+   *
+   * - `hidden`: wait for the selected element to not be found in the DOM or to be hidden,
+   * i.e. have `display: none` or `visibility: hidden` CSS properties. Defaults to
+   * `false`.
+   *
+   * - `timeout`: maximum time to wait in milliseconds. Defaults to `30000`
+   * (30 seconds). Pass `0` to disable timeout. The default value can be changed
+   * by using the {@link Page.setDefaultTimeout} method.
+   */
+  async waitForSelector(selector, options = {}) {
+    const frame = this._context.frame();
+    const secondaryContext = await frame._secondaryWorld.executionContext();
+    const adoptedRoot = await secondaryContext._adoptElementHandle(this);
+    const handle = await frame._secondaryWorld.waitForSelector(selector, {
+      ...options,
+      root: adoptedRoot,
+    });
+    await adoptedRoot.dispose();
+    if (!handle) {
+      return null;
+    }
+    const mainExecutionContext = await frame._mainWorld.executionContext();
+    const result = await mainExecutionContext._adoptElementHandle(handle);
+    await handle.dispose();
+    return result;
+  }
+  /**
+   * Wait for the `xpath` within the element. If at the moment of calling the
+   * method the `xpath` already exists, the method will return immediately. If
+   * the `xpath` doesn't appear after the `timeout` milliseconds of waiting, the
+   * function will throw.
+   *
+   * If `xpath` starts with `//` instead of `.//`, the dot will be appended automatically.
+   *
+   * This method works across navigation
+   * ```js
+   * const puppeteer = require('puppeteer');
+   * (async () => {
+   * const browser = await puppeteer.launch();
+   * const page = await browser.newPage();
+   * let currentURL;
+   * page
+   * .waitForXPath('//img')
+   * .then(() => console.log('First URL with image: ' + currentURL));
+   * for (currentURL of [
+   * 'https://example.com',
+   * 'https://google.com',
+   * 'https://bbc.com',
+   * ]) {
+   * await page.goto(currentURL);
+   * }
+   * await browser.close();
+   * })();
+   * ```
+   * @param xpath - A
+   * {@link https://developer.mozilla.org/en-US/docs/Web/XPath | xpath} of an
+   * element to wait for
+   * @param options - Optional waiting parameters
+   * @returns Promise which resolves when element specified by xpath string is
+   * added to DOM. Resolves to `null` if waiting for `hidden: true` and xpath is
+   * not found in DOM.
+   * @remarks
+   * The optional Argument `options` have properties:
+   *
+   * - `visible`: A boolean to wait for element to be present in DOM and to be
+   * visible, i.e. to not have `display: none` or `visibility: hidden` CSS
+   * properties. Defaults to `false`.
+   *
+   * - `hidden`: A boolean wait for element to not be found in the DOM or to be
+   * hidden, i.e. have `display: none` or `visibility: hidden` CSS properties.
+   * Defaults to `false`.
+   *
+   * - `timeout`: A number which is maximum time to wait for in milliseconds.
+   * Defaults to `30000` (30 seconds). Pass `0` to disable timeout. The default
+   * value can be changed by using the {@link Page.setDefaultTimeout} method.
+   */
+  async waitForXPath(xpath, options = {}) {
+    const frame = this._context.frame();
+    const secondaryContext = await frame._secondaryWorld.executionContext();
+    const adoptedRoot = await secondaryContext._adoptElementHandle(this);
+    xpath = xpath.startsWith("//") ? "." + xpath : xpath;
+    if (!xpath.startsWith(".//")) {
+      await adoptedRoot.dispose();
+      throw new Error("Unsupported xpath expression: " + xpath);
+    }
+    const handle = await frame._secondaryWorld.waitForXPath(xpath, {
+      ...options,
+      root: adoptedRoot,
+    });
+    await adoptedRoot.dispose();
+    if (!handle) {
+      return null;
+    }
+    const mainExecutionContext = await frame._mainWorld.executionContext();
+    const result = await mainExecutionContext._adoptElementHandle(handle);
+    await handle.dispose();
+    return result;
   }
   asElement() {
     return this;
   }
   /**
-     * Resolves to the content frame for element handles referencing
-     * iframe nodes, or null otherwise
-     */
+   * Resolves to the content frame for element handles referencing
+   * iframe nodes, or null otherwise
+   */
   async contentFrame() {
     const nodeInfo = await this._client.send("DOM.describeNode", {
       objectId: this._remoteObject.objectId,
@@ -312,31 +437,86 @@ export class ElementHandle extends JSHandle {
       throw new Error(error);
     }
   }
-  async _clickablePoint() {
+  async _getOOPIFOffsets(frame) {
+    let offsetX = 0;
+    let offsetY = 0;
+    while (frame.parentFrame()) {
+      const parent = frame.parentFrame();
+      if (!frame.isOOPFrame()) {
+        frame = parent;
+        continue;
+      }
+      const { backendNodeId } = await parent._client.send("DOM.getFrameOwner", {
+        frameId: frame._id,
+      });
+      const result = await parent._client.send("DOM.getBoxModel", {
+        backendNodeId: backendNodeId,
+      });
+      if (!result) {
+        break;
+      }
+      const contentBoxQuad = result.model.content;
+      const topLeftCorner = this._fromProtocolQuad(contentBoxQuad)[0];
+      offsetX += topLeftCorner.x;
+      offsetY += topLeftCorner.y;
+      frame = parent;
+    }
+    return { offsetX, offsetY };
+  }
+  /**
+   * Returns the middle point within an element unless a specific offset is provided.
+   */
+  async clickablePoint(offset) {
     const [result, layoutMetrics] = await Promise.all([
       this._client
         .send("DOM.getContentQuads", {
           objectId: this._remoteObject.objectId,
         })
         .catch(debugError),
-      this._client.send("Page.getLayoutMetrics"),
+      this._page.client().send("Page.getLayoutMetrics"),
     ]);
     if (!result || !result.quads.length) {
-      throw new Error("Node is either not visible or not an HTMLElement");
+      throw new Error("Node is either not clickable or not an HTMLElement");
     }
     // Filter out quads that have too small area to click into.
-    const { clientWidth, clientHeight } = layoutMetrics.layoutViewport;
+    // Fallback to `layoutViewport` in case of using Firefox.
+    const { clientWidth, clientHeight } = layoutMetrics.cssLayoutViewport ||
+      layoutMetrics.layoutViewport;
+    const { offsetX, offsetY } = await this._getOOPIFOffsets(this._frame);
     const quads = result.quads
       .map((quad) => this._fromProtocolQuad(quad))
+      .map((quad) => applyOffsetsToQuad(quad, offsetX, offsetY))
       .map((quad) =>
         this._intersectQuadWithViewport(quad, clientWidth, clientHeight)
       )
       .filter((quad) => computeQuadArea(quad) > 1);
     if (!quads.length) {
-      throw new Error("Node is either not visible or not an HTMLElement");
+      throw new Error("Node is either not clickable or not an HTMLElement");
+    }
+    const quad = quads[0];
+    if (offset) {
+      // Return the point of the first quad identified by offset.
+      let minX = Number.MAX_SAFE_INTEGER;
+      let minY = Number.MAX_SAFE_INTEGER;
+      for (const point of quad) {
+        if (point.x < minX) {
+          minX = point.x;
+        }
+        if (point.y < minY) {
+          minY = point.y;
+        }
+      }
+      if (
+        minX !== Number.MAX_SAFE_INTEGER &&
+        minY !== Number.MAX_SAFE_INTEGER
+      ) {
+        return {
+          x: minX + offset.x,
+          y: minY + offset.y,
+        };
+      }
     }
     // Return the middle point of the first quad.
-    const quad = quads[0];
     let x = 0;
     let y = 0;
     for (const point of quad) {
@@ -371,39 +551,84 @@ export class ElementHandle extends JSHandle {
     }));
   }
   /**
-     * This method scrolls element into view if needed, and then
-     * uses {@link Page.mouse} to hover over the center of the element.
-     * If the element is detached from DOM, the method throws an error.
-     */
+   * This method scrolls element into view if needed, and then
+   * uses {@link Page.mouse} to hover over the center of the element.
+   * If the element is detached from DOM, the method throws an error.
+   */
   async hover() {
     await this._scrollIntoViewIfNeeded();
-    const { x, y } = await this._clickablePoint();
+    const { x, y } = await this.clickablePoint();
     await this._page.mouse.move(x, y);
   }
   /**
-     * This method scrolls element into view if needed, and then
-     * uses {@link Page.mouse} to click in the center of the element.
-     * If the element is detached from DOM, the method throws an error.
-     */
+   * This method scrolls element into view if needed, and then
+   * uses {@link Page.mouse} to click in the center of the element.
+   * If the element is detached from DOM, the method throws an error.
+   */
   async click(options = {}) {
     await this._scrollIntoViewIfNeeded();
-    const { x, y } = await this._clickablePoint();
+    const { x, y } = await this.clickablePoint(options.offset);
     await this._page.mouse.click(x, y, options);
   }
   /**
-     * Triggers a `change` and `input` event once all the provided options have been
-     * selected. If there's no `<select>` element matching `selector`, the method
-     * throws an error.
-     *
-     * @example
-     * ```js
-     * handle.select('blue'); // single selection
-     * handle.select('red', 'green', 'blue'); // multiple selections
-     * ```
-     * @param values - Values of options to select. If the `<select>` has the
-     *    `multiple` attribute, all values are considered, otherwise only the first
-     *    one is taken into account.
-     */
+   * This method creates and captures a dragevent from the element.
+   */
+  async drag(target) {
+    assert(
+      this._page.isDragInterceptionEnabled(),
+      "Drag Interception is not enabled!",
+    );
+    await this._scrollIntoViewIfNeeded();
+    const start = await this.clickablePoint();
+    return await this._page.mouse.drag(start, target);
+  }
+  /**
+   * This method creates a `dragenter` event on the element.
+   */
+  async dragEnter(data = { items: [], dragOperationsMask: 1 }) {
+    await this._scrollIntoViewIfNeeded();
+    const target = await this.clickablePoint();
+    await this._page.mouse.dragEnter(target, data);
+  }
+  /**
+   * This method creates a `dragover` event on the element.
+   */
+  async dragOver(data = { items: [], dragOperationsMask: 1 }) {
+    await this._scrollIntoViewIfNeeded();
+    const target = await this.clickablePoint();
+    await this._page.mouse.dragOver(target, data);
+  }
+  /**
+   * This method triggers a drop on the element.
+   */
+  async drop(data = { items: [], dragOperationsMask: 1 }) {
+    await this._scrollIntoViewIfNeeded();
+    const destination = await this.clickablePoint();
+    await this._page.mouse.drop(destination, data);
+  }
+  /**
+   * This method triggers a dragenter, dragover, and drop on the element.
+   */
+  async dragAndDrop(target, options) {
+    await this._scrollIntoViewIfNeeded();
+    const startPoint = await this.clickablePoint();
+    const targetPoint = await target.clickablePoint();
+    await this._page.mouse.dragAndDrop(startPoint, targetPoint, options);
+  }
+  /**
+   * Triggers a `change` and `input` event once all the provided options have been
+   * selected. If there's no `<select>` element matching `selector`, the method
+   * throws an error.
+   *
+   * @example
+   * ```js
+   * handle.select('blue'); // single selection
+   * handle.select('red', 'green', 'blue'); // multiple selections
+   * ```
+   * @param values - Values of options to select. If the `<select>` has the
+   *    `multiple` attribute, all values are considered, otherwise only the first
+   *    one is taken into account.
+   */
   async select(...values) {
     for (const value of values) {
       assert(
@@ -416,7 +641,7 @@ export class ElementHandle extends JSHandle {
       );
     }
     return this.evaluate((element, values) => {
-      if (element.nodeName.toLowerCase() !== "select") {
+      if (!(element instanceof HTMLSelectElement)) {
         throw new Error("Element is not a <select> element.");
       }
       const options = Array.from(element.options);
@@ -435,18 +660,27 @@ export class ElementHandle extends JSHandle {
     }, values);
   }
   /**
-     * This method expects `elementHandle` to point to an
-     * {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input | input element}.
-     * @param filePaths - Sets the value of the file input to these paths.
-     *    If some of the  `filePaths` are relative paths, then they are resolved
-     *    relative to the {@link https://nodejs.org/api/process.html#process_process_cwd | current working directory}
-     */
+   * This method expects `elementHandle` to point to an
+   * {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input | input element}.
+   * @param filePaths - Sets the value of the file input to these paths.
+   *    If some of the  `filePaths` are relative paths, then they are resolved
+   *    relative to the {@link https://nodejs.org/api/process.html#process_process_cwd | current working directory}
+   */
   async uploadFile(...filePaths) {
-    const isMultiple = await this.evaluate((element) => element.multiple);
+    const isMultiple = await this.evaluate((element) => {
+      if (!(element instanceof HTMLInputElement)) {
+        throw new Error("uploadFile can only be called on an input element.");
+      }
+      return element.multiple;
+    });
     assert(
       filePaths.length <= 1 || isMultiple,
       "Multiple file uploads only work with <input type=file multiple>",
     );
+    /*
+      This import is only needed for `uploadFile`, so keep it scoped here to
+      avoid paying the cost unnecessarily.
+    */
     // Locate all files and confirm that they exist.
     const files = await Promise.all(filePaths.map(async (filePath) => {
       const resolvedPath = pathResolve(filePath);
@@ -462,9 +696,9 @@ export class ElementHandle extends JSHandle {
     const { objectId } = this._remoteObject;
     const { node } = await this._client.send("DOM.describeNode", { objectId });
     const { backendNodeId } = node;
-    // The zero-length array is a special case, it seems that DOM.setFileInputFiles does
-    // not actually update the files in that case, so the solution is to eval the element
-    // value to a new FileList directly.
+    // The zero-length array is a special case, it seems that
+    // DOM.setFileInputFiles does not actually update the files in that case,
+    // so the solution is to eval the element value to a new FileList directly.
     if (files.length === 0) {
       await this.evaluate((element) => {
         element.files = new DataTransfer().files;
@@ -481,109 +715,127 @@ export class ElementHandle extends JSHandle {
     }
   }
   /**
-     * This method scrolls element into view if needed, and then uses
-     * {@link Touchscreen.tap} to tap in the center of the element.
-     * If the element is detached from DOM, the method throws an error.
-     */
+   * This method scrolls element into view if needed, and then uses
+   * {@link Touchscreen.tap} to tap in the center of the element.
+   * If the element is detached from DOM, the method throws an error.
+   */
   async tap() {
     await this._scrollIntoViewIfNeeded();
-    const { x, y } = await this._clickablePoint();
+    const { x, y } = await this.clickablePoint();
     await this._page.touchscreen.tap(x, y);
   }
   /**
-     * Calls {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus | focus} on the element.
-     */
+   * Calls {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus | focus} on the element.
+   */
   async focus() {
     await this.evaluate((element) => element.focus());
   }
   /**
-     * Focuses the element, and then sends a `keydown`, `keypress`/`input`, and
-     * `keyup` event for each character in the text.
-     *
-     * To press a special key, like `Control` or `ArrowDown`,
-     * use {@link ElementHandle.press}.
-     *
-     * @example
-     * ```js
-     * await elementHandle.type('Hello'); // Types instantly
-     * await elementHandle.type('World', {delay: 100}); // Types slower, like a user
-     * ```
-     *
-     * @example
-     * An example of typing into a text field and then submitting the form:
-     *
-     * ```js
-     * const elementHandle = await page.$('input');
-     * await elementHandle.type('some text');
-     * await elementHandle.press('Enter');
-     * ```
-     */
+   * Focuses the element, and then sends a `keydown`, `keypress`/`input`, and
+   * `keyup` event for each character in the text.
+   *
+   * To press a special key, like `Control` or `ArrowDown`,
+   * use {@link ElementHandle.press}.
+   *
+   * @example
+   * ```js
+   * await elementHandle.type('Hello'); // Types instantly
+   * await elementHandle.type('World', {delay: 100}); // Types slower, like a user
+   * ```
+   *
+   * @example
+   * An example of typing into a text field and then submitting the form:
+   *
+   * ```js
+   * const elementHandle = await page.$('input');
+   * await elementHandle.type('some text');
+   * await elementHandle.press('Enter');
+   * ```
+   */
   async type(text, options) {
     await this.focus();
     await this._page.keyboard.type(text, options);
   }
   /**
-     * Focuses the element, and then uses {@link Keyboard.down} and {@link Keyboard.up}.
-     *
-     * @remarks
-     * If `key` is a single character and no modifier keys besides `Shift`
-     * are being held down, a `keypress`/`input` event will also be generated.
-     * The `text` option can be specified to force an input event to be generated.
-     *
-     * **NOTE** Modifier keys DO affect `elementHandle.press`. Holding down `Shift`
-     * will type the text in upper case.
-     *
-     * @param key - Name of key to press, such as `ArrowLeft`.
-     *    See {@link KeyInput} for a list of all key names.
-     */
+   * Focuses the element, and then uses {@link Keyboard.down} and {@link Keyboard.up}.
+   *
+   * @remarks
+   * If `key` is a single character and no modifier keys besides `Shift`
+   * are being held down, a `keypress`/`input` event will also be generated.
+   * The `text` option can be specified to force an input event to be generated.
+   *
+   * **NOTE** Modifier keys DO affect `elementHandle.press`. Holding down `Shift`
+   * will type the text in upper case.
+   *
+   * @param key - Name of key to press, such as `ArrowLeft`.
+   *    See {@link KeyInput} for a list of all key names.
+   */
   async press(key, options) {
     await this.focus();
     await this._page.keyboard.press(key, options);
   }
   /**
-     * This method returns the bounding box of the element (relative to the main frame),
-     * or `null` if the element is not visible.
-     */
+   * This method returns the bounding box of the element (relative to the main frame),
+   * or `null` if the element is not visible.
+   */
   async boundingBox() {
     const result = await this._getBoxModel();
     if (!result) {
       return null;
     }
+    const { offsetX, offsetY } = await this._getOOPIFOffsets(this._frame);
     const quad = result.model.border;
     const x = Math.min(quad[0], quad[2], quad[4], quad[6]);
     const y = Math.min(quad[1], quad[3], quad[5], quad[7]);
     const width = Math.max(quad[0], quad[2], quad[4], quad[6]) - x;
     const height = Math.max(quad[1], quad[3], quad[5], quad[7]) - y;
-    return { x, y, width, height };
+    return { x: x + offsetX, y: y + offsetY, width, height };
   }
   /**
-     * This method returns boxes of the element, or `null` if the element is not visible.
-     *
-     * @remarks
-     *
-     * Boxes are represented as an array of points;
-     * Each Point is an object `{x, y}`. Box points are sorted clock-wise.
-     */
+   * This method returns boxes of the element, or `null` if the element is not visible.
+   *
+   * @remarks
+   *
+   * Boxes are represented as an array of points;
+   * Each Point is an object `{x, y}`. Box points are sorted clock-wise.
+   */
   async boxModel() {
     const result = await this._getBoxModel();
     if (!result) {
       return null;
     }
+    const { offsetX, offsetY } = await this._getOOPIFOffsets(this._frame);
     const { content, padding, border, margin, width, height } = result.model;
     return {
-      content: this._fromProtocolQuad(content),
-      padding: this._fromProtocolQuad(padding),
-      border: this._fromProtocolQuad(border),
-      margin: this._fromProtocolQuad(margin),
+      content: applyOffsetsToQuad(
+        this._fromProtocolQuad(content),
+        offsetX,
+        offsetY,
+      ),
+      padding: applyOffsetsToQuad(
+        this._fromProtocolQuad(padding),
+        offsetX,
+        offsetY,
+      ),
+      border: applyOffsetsToQuad(
+        this._fromProtocolQuad(border),
+        offsetX,
+        offsetY,
+      ),
+      margin: applyOffsetsToQuad(
+        this._fromProtocolQuad(margin),
+        offsetX,
+        offsetY,
+      ),
       width,
       height,
     };
   }
   /**
-     * This method scrolls element into view if needed, and then uses
-     * {@link Page.screenshot} to take a screenshot of the element.
-     * If the element is detached from DOM, the method throws an error.
-     */
+   * This method scrolls element into view if needed, and then uses
+   * {@link Page.screenshot} to take a screenshot of the element.
+   * If the element is detached from DOM, the method throws an error.
+   */
   async screenshot(options = {}) {
     let needsViewportReset = false;
     let boundingBox = await this.boundingBox();
@@ -606,9 +858,10 @@ export class ElementHandle extends JSHandle {
     assert(boundingBox, "Node is either not visible or not an HTMLElement");
     assert(boundingBox.width !== 0, "Node has 0 width.");
     assert(boundingBox.height !== 0, "Node has 0 height.");
-    const { layoutViewport: { pageX, pageY } } = await this._client.send(
-      "Page.getLayoutMetrics",
-    );
+    const layoutMetrics = await this._client.send("Page.getLayoutMetrics");
+    // Fallback to `layoutViewport` in case of using Firefox.
+    const { pageX, pageY } = layoutMetrics.cssVisualViewport ||
+      layoutMetrics.layoutViewport;
     const clip = Object.assign({}, boundingBox);
     clip.x += pageX;
     clip.y += pageY;
@@ -621,9 +874,9 @@ export class ElementHandle extends JSHandle {
     return imageData;
   }
   /**
-     * Runs `element.querySelector` within the page. If no element matches the selector,
-     * the return value resolves to `null`.
-     */
+   * Runs `element.querySelector` within the page. If no element matches the selector,
+   * the return value resolves to `null`.
+   */
   async $(selector) {
     const { updatedSelector, queryHandler } = getQueryHandlerAndSelector(
       selector,
@@ -631,9 +884,9 @@ export class ElementHandle extends JSHandle {
     return queryHandler.queryOne(this, updatedSelector);
   }
   /**
-     * Runs `element.querySelectorAll` within the page. If no elements match the selector,
-     * the return value resolves to `[]`.
-     */
+   * Runs `element.querySelectorAll` within the page. If no elements match the selector,
+   * the return value resolves to `[]`.
+   */
   async $$(selector) {
     const { updatedSelector, queryHandler } = getQueryHandlerAndSelector(
       selector,
@@ -641,20 +894,20 @@ export class ElementHandle extends JSHandle {
     return queryHandler.queryAll(this, updatedSelector);
   }
   /**
-     * This method runs `document.querySelector` within the element and passes it as
-     * the first argument to `pageFunction`. If there's no element matching `selector`,
-     * the method throws an error.
-     *
-     * If `pageFunction` returns a Promise, then `frame.$eval` would wait for the promise
-     * to resolve and return its value.
-     *
-     * @example
-     * ```js
-     * const tweetHandle = await page.$('.tweet');
-     * expect(await tweetHandle.$eval('.like', node => node.innerText)).toBe('100');
-     * expect(await tweetHandle.$eval('.retweets', node => node.innerText)).toBe('10');
-     * ```
-     */
+   * This method runs `document.querySelector` within the element and passes it as
+   * the first argument to `pageFunction`. If there's no element matching `selector`,
+   * the method throws an error.
+   *
+   * If `pageFunction` returns a Promise, then `frame.$eval` would wait for the promise
+   * to resolve and return its value.
+   *
+   * @example
+   * ```js
+   * const tweetHandle = await page.$('.tweet');
+   * expect(await tweetHandle.$eval('.like', node => node.innerText)).toBe('100');
+   * expect(await tweetHandle.$eval('.retweets', node => node.innerText)).toBe('10');
+   * ```
+   */
   async $eval(selector, pageFunction, ...args) {
     const elementHandle = await this.$(selector);
     if (!elementHandle) {
@@ -665,38 +918,38 @@ export class ElementHandle extends JSHandle {
     const result = await elementHandle.evaluate(pageFunction, ...args);
     await elementHandle.dispose();
     /**
-         * This `as` is a little unfortunate but helps TS understand the behavior of
-         * `elementHandle.evaluate`. If evaluate returns an element it will return an
-         * ElementHandle instance, rather than the plain object. All the
-         * WrapElementHandle type does is wrap ReturnType into
-         * ElementHandle<ReturnType> if it is an ElementHandle, or leave it alone as
-         * ReturnType if it isn't.
-         */
+     * This `as` is a little unfortunate but helps TS understand the behavior of
+     * `elementHandle.evaluate`. If evaluate returns an element it will return an
+     * ElementHandle instance, rather than the plain object. All the
+     * WrapElementHandle type does is wrap ReturnType into
+     * ElementHandle<ReturnType> if it is an ElementHandle, or leave it alone as
+     * ReturnType if it isn't.
+     */
     return result;
   }
   /**
-     * This method runs `document.querySelectorAll` within the element and passes it as
-     * the first argument to `pageFunction`. If there's no element matching `selector`,
-     * the method throws an error.
-     *
-     * If `pageFunction` returns a Promise, then `frame.$$eval` would wait for the
-     * promise to resolve and return its value.
-     *
-     * @example
-     * ```html
-     * <div class="feed">
-     *   <div class="tweet">Hello!</div>
-     *   <div class="tweet">Hi!</div>
-     * </div>
-     * ```
-     *
-     * @example
-     * ```js
-     * const feedHandle = await page.$('.feed');
-     * expect(await feedHandle.$$eval('.tweet', nodes => nodes.map(n => n.innerText)))
-     *  .toEqual(['Hello!', 'Hi!']);
-     * ```
-     */
+   * This method runs `document.querySelectorAll` within the element and passes it as
+   * the first argument to `pageFunction`. If there's no element matching `selector`,
+   * the method throws an error.
+   *
+   * If `pageFunction` returns a Promise, then `frame.$$eval` would wait for the
+   * promise to resolve and return its value.
+   *
+   * @example
+   * ```html
+   * <div class="feed">
+   *   <div class="tweet">Hello!</div>
+   *   <div class="tweet">Hi!</div>
+   * </div>
+   * ```
+   *
+   * @example
+   * ```js
+   * const feedHandle = await page.$('.feed');
+   * expect(await feedHandle.$$eval('.tweet', nodes => nodes.map(n => n.innerText)))
+   *  .toEqual(['Hello!', 'Hi!']);
+   * ```
+   */
   async $$eval(selector, pageFunction, ...args) {
     const { updatedSelector, queryHandler } = getQueryHandlerAndSelector(
       selector,
@@ -710,10 +963,10 @@ export class ElementHandle extends JSHandle {
     return result;
   }
   /**
-     * The method evaluates the XPath expression relative to the elementHandle.
-     * If there are no such elements, the method will resolve to an empty array.
-     * @param expression - Expression to {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/evaluate | evaluate}
-     */
+   * The method evaluates the XPath expression relative to the elementHandle.
+   * If there are no such elements, the method will resolve to an empty array.
+   * @param expression - Expression to {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/evaluate | evaluate}
+   */
   async $x(expression) {
     const arrayHandle = await this.evaluateHandle((element, expression) => {
       const document = element.ownerDocument || element;
@@ -742,10 +995,11 @@ export class ElementHandle extends JSHandle {
     return result;
   }
   /**
-     * Resolves to true if the element is visible in the current viewport.
-     */
-  async isIntersectingViewport() {
-    return await this.evaluate(async (element) => {
+   * Resolves to true if the element is visible in the current viewport.
+   */
+  async isIntersectingViewport(options) {
+    const { threshold = 0 } = options || {};
+    return await this.evaluate(async (element, threshold) => {
       const visibleRatio = await new Promise((resolve) => {
         const observer = new IntersectionObserver((entries) => {
           resolve(entries[0].intersectionRatio);
@@ -753,13 +1007,14 @@ export class ElementHandle extends JSHandle {
         });
         observer.observe(element);
       });
-      return visibleRatio > 0;
-    });
+      return threshold === 1 ? visibleRatio === 1 : visibleRatio > threshold;
+    }, threshold);
   }
 }
 function computeQuadArea(quad) {
-  // Compute sum of all directed areas of adjacent triangles
-  // https://en.wikipedia.org/wiki/Polygon#Simple_polygons
+  /* Compute sum of all directed areas of adjacent triangles
+      https://en.wikipedia.org/wiki/Polygon#Simple_polygons
+    */
   let area = 0;
   for (let i = 0; i < quad.length; ++i) {
     const p1 = quad[i];

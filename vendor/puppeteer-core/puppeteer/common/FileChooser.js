@@ -35,24 +35,24 @@ import { assert } from "./assert.js";
  */
 export class FileChooser {
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(element, event) {
     this._handled = false;
     this._element = element;
     this._multiple = event.mode !== "selectSingle";
   }
   /**
-     * Whether file chooser allow for {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#attr-multiple | multiple} file selection.
-     */
+   * Whether file chooser allow for {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#attr-multiple | multiple} file selection.
+   */
   isMultiple() {
     return this._multiple;
   }
   /**
-     * Accept the file chooser request with given paths.
-     * @param filePaths - If some of the  `filePaths` are relative paths,
-     * then they are resolved relative to the {@link https://nodejs.org/api/process.html#process_process_cwd | current working directory}.
-     */
+   * Accept the file chooser request with given paths.
+   * @param filePaths - If some of the  `filePaths` are relative paths,
+   * then they are resolved relative to the {@link https://nodejs.org/api/process.html#process_process_cwd | current working directory}.
+   */
   async accept(filePaths) {
     assert(
       !this._handled,
@@ -62,8 +62,8 @@ export class FileChooser {
     await this._element.uploadFile(...filePaths);
   }
   /**
-     * Closes the file chooser without selecting any files.
-     */
+   * Closes the file chooser without selecting any files.
+   */
   cancel() {
     assert(
       !this._handled,

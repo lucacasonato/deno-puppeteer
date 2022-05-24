@@ -21,14 +21,16 @@ import { WebWorker } from "./WebWorker.js";
  */
 export class Target {
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(
     targetInfo,
     browserContext,
     sessionFactory,
     ignoreHTTPSErrors,
     defaultViewport,
+    screenshotTaskQueue,
+    isPageTargetCallback,
   ) {
     this._targetInfo = targetInfo;
     this._browserContext = browserContext;
@@ -36,6 +38,8 @@ export class Target {
     this._sessionFactory = sessionFactory;
     this._ignoreHTTPSErrors = ignoreHTTPSErrors;
     this._defaultViewport = defaultViewport;
+    this._screenshotTaskQueue = screenshotTaskQueue;
+    this._isPageTargetCallback = isPageTargetCallback;
     /** @type {?Promise<!Puppeteer.Page>} */
     this._pagePromise = null;
     /** @type {?Promise<!WebWorker>} */
@@ -61,42 +65,38 @@ export class Target {
     this._isClosedPromise = new Promise((
       fulfill,
     ) => (this._closedCallback = fulfill));
-    this._isInitialized = this._targetInfo.type !== "page" ||
+    this._isInitialized = !this._isPageTargetCallback(this._targetInfo) ||
       this._targetInfo.url !== "";
     if (this._isInitialized) {
       this._initializedCallback(true);
     }
   }
   /**
-     * Creates a Chrome Devtools Protocol session attached to the target.
-     */
+   * Creates a Chrome Devtools Protocol session attached to the target.
+   */
   createCDPSession() {
     return this._sessionFactory();
   }
   /**
-     * If the target is not of type `"page"` or `"background_page"`, returns `null`.
-     */
+   * If the target is not of type `"page"` or `"background_page"`, returns `null`.
+   */
   async page() {
-    if (
-      (this._targetInfo.type === "page" ||
-        this._targetInfo.type === "background_page" ||
-        this._targetInfo.type === "webview") &&
-      !this._pagePromise
-    ) {
+    if (this._isPageTargetCallback(this._targetInfo) && !this._pagePromise) {
       this._pagePromise = this._sessionFactory().then((client) =>
         Page.create(
           client,
           this,
           this._ignoreHTTPSErrors,
           this._defaultViewport,
+          this._screenshotTaskQueue,
         )
       );
     }
     return this._pagePromise;
   }
   /**
-     * If the target is not of type `"service_worker"` or `"shared_worker"`, returns `null`.
-     */
+   * If the target is not of type `"service_worker"` or `"shared_worker"`, returns `null`.
+   */
   async worker() {
     if (
       this._targetInfo.type !== "service_worker" &&
@@ -121,12 +121,12 @@ export class Target {
     return this._targetInfo.url;
   }
   /**
-     * Identifies what kind of target this is.
-     *
-     * @remarks
-     *
-     * See {@link https://developer.chrome.com/extensions/background_pages | docs} for more info about background pages.
-     */
+   * Identifies what kind of target this is.
+   *
+   * @remarks
+   *
+   * See {@link https://developer.chrome.com/extensions/background_pages | docs} for more info about background pages.
+   */
   type() {
     const type = this._targetInfo.type;
     if (
@@ -142,17 +142,20 @@ export class Target {
     return "other";
   }
   /**
-     * Get the browser the target belongs to.
-     */
+   * Get the browser the target belongs to.
+   */
   browser() {
     return this._browserContext.browser();
   }
+  /**
+   * Get the browser context the target belongs to.
+   */
   browserContext() {
     return this._browserContext;
   }
   /**
-     * Get the target that opened this target. Top-level targets return `null`.
-     */
+   * Get the target that opened this target. Top-level targets return `null`.
+   */
   opener() {
     const { openerId } = this._targetInfo;
     if (!openerId) {
@@ -161,13 +164,14 @@ export class Target {
     return this.browser()._targets.get(openerId);
   }
   /**
-     * @internal
-     */
+   * @internal
+   */
   _targetInfoChanged(targetInfo) {
     this._targetInfo = targetInfo;
     if (
       !this._isInitialized &&
-      (this._targetInfo.type !== "page" || this._targetInfo.url !== "")
+      (!this._isPageTargetCallback(this._targetInfo) ||
+        this._targetInfo.url !== "")
     ) {
       this._isInitialized = true;
       this._initializedCallback(true);

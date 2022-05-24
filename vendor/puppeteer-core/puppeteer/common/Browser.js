@@ -19,6 +19,7 @@ import { helper } from "./helper.js";
 import { Target } from "./Target.js";
 import { EventEmitter } from "./EventEmitter.js";
 import { ConnectionEmittedEvents } from "./Connection.js";
+import { TaskQueue } from "./TaskQueue.js";
 const WEB_PERMISSION_TO_PROTOCOL_PERMISSION = new Map([
   ["geolocation", "geolocation"],
   ["midi", "midi"],
@@ -36,6 +37,7 @@ const WEB_PERMISSION_TO_PROTOCOL_PERMISSION = new Map([
   ["clipboard-read", "clipboardReadWrite"],
   ["clipboard-write", "clipboardReadWrite"],
   ["payment-handler", "paymentHandler"],
+  ["persistent-storage", "durableStorage"],
   ["idle-detection", "idleDetection"],
   // chrome-specific permissions we have.
   ["midi-sysex", "midiSysex"],
@@ -87,8 +89,8 @@ const WEB_PERMISSION_TO_PROTOCOL_PERMISSION = new Map([
  */
 export class Browser extends EventEmitter {
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(
     connection,
     contextIds,
@@ -96,14 +98,20 @@ export class Browser extends EventEmitter {
     defaultViewport,
     process,
     closeCallback,
+    targetFilterCallback,
+    isPageTargetCallback,
   ) {
     super();
+    this._ignoredTargets = new Set();
     this._ignoreHTTPSErrors = ignoreHTTPSErrors;
     this._defaultViewport = defaultViewport;
     this._process = process;
+    this._screenshotTaskQueue = new TaskQueue();
     this._connection = connection;
     this._closeCallback = closeCallback || function () {};
-    this._defaultContext = new BrowserContext(this._connection, this, null);
+    this._targetFilterCallback = targetFilterCallback || (() => true);
+    this._setIsPageTargetCallback(isPageTargetCallback);
+    this._defaultContext = new BrowserContext(this._connection, this);
     this._contexts = new Map();
     for (const contextId of contextIds) {
       this._contexts.set(
@@ -127,8 +135,8 @@ export class Browser extends EventEmitter {
     );
   }
   /**
-     * @internal
-     */
+   * @internal
+   */
   static async create(
     connection,
     contextIds,
@@ -136,6 +144,8 @@ export class Browser extends EventEmitter {
     defaultViewport,
     process,
     closeCallback,
+    targetFilterCallback,
+    isPageTargetCallback,
   ) {
     const browser = new Browser(
       connection,
@@ -144,37 +154,56 @@ export class Browser extends EventEmitter {
       defaultViewport,
       process,
       closeCallback,
+      targetFilterCallback,
+      isPageTargetCallback,
     );
     await connection.send("Target.setDiscoverTargets", { discover: true });
     return browser;
   }
   /**
-     * The spawned browser process. Returns `null` if the browser instance was created with
-     * {@link Puppeteer.connect}.
-     */
+   * The spawned browser process. Returns `null` if the browser instance was created with
+   * {@link Puppeteer.connect}.
+   */
   process() {
-    return this._process;
+    var _a;
+    return (_a = this._process) !== null && _a !== void 0 ? _a : null;
   }
   /**
-     * Creates a new incognito browser context. This won't share cookies/cache with other
-     * browser contexts.
-     *
-     * @example
-     * ```js
-     * (async () => {
-     *  const browser = await puppeteer.launch();
-     *   // Create a new incognito browser context.
-     *   const context = await browser.createIncognitoBrowserContext();
-     *   // Create a new page in a pristine context.
-     *   const page = await context.newPage();
-     *   // Do stuff
-     *   await page.goto('https://example.com');
-     * })();
-     * ```
-     */
-  async createIncognitoBrowserContext() {
+   * @internal
+   */
+  _setIsPageTargetCallback(isPageTargetCallback) {
+    this._isPageTargetCallback = isPageTargetCallback ||
+      ((target) => {
+        return (target.type === "page" ||
+          target.type === "background_page" ||
+          target.type === "webview");
+      });
+  }
+  /**
+   * Creates a new incognito browser context. This won't share cookies/cache with other
+   * browser contexts.
+   *
+   * @example
+   * ```js
+   * (async () => {
+   *  const browser = await puppeteer.launch();
+   *   // Create a new incognito browser context.
+   *   const context = await browser.createIncognitoBrowserContext();
+   *   // Create a new page in a pristine context.
+   *   const page = await context.newPage();
+   *   // Do stuff
+   *   await page.goto('https://example.com');
+   * })();
+   * ```
+   */
+  async createIncognitoBrowserContext(options = {}) {
+    const { proxyServer, proxyBypassList } = options;
     const { browserContextId } = await this._connection.send(
       "Target.createBrowserContext",
+      {
+        proxyServer,
+        proxyBypassList: proxyBypassList && proxyBypassList.join(","),
+      },
     );
     const context = new BrowserContext(
       this._connection,
@@ -185,40 +214,54 @@ export class Browser extends EventEmitter {
     return context;
   }
   /**
-     * Returns an array of all open browser contexts. In a newly created browser, this will
-     * return a single instance of {@link BrowserContext}.
-     */
+   * Returns an array of all open browser contexts. In a newly created browser, this will
+   * return a single instance of {@link BrowserContext}.
+   */
   browserContexts() {
     return [this._defaultContext, ...Array.from(this._contexts.values())];
   }
   /**
-     * Returns the default browser context. The default browser context cannot be closed.
-     */
+   * Returns the default browser context. The default browser context cannot be closed.
+   */
   defaultBrowserContext() {
     return this._defaultContext;
   }
   /**
-     * @internal
-     * Used by BrowserContext directly so cannot be marked private.
-     */
+   * @internal
+   * Used by BrowserContext directly so cannot be marked private.
+   */
   async _disposeContext(contextId) {
+    if (!contextId) {
+      return;
+    }
     await this._connection.send("Target.disposeBrowserContext", {
-      browserContextId: contextId || undefined,
+      browserContextId: contextId,
     });
     this._contexts.delete(contextId);
   }
   async _targetCreated(event) {
+    var _a;
     const targetInfo = event.targetInfo;
     const { browserContextId } = targetInfo;
     const context = browserContextId && this._contexts.has(browserContextId)
       ? this._contexts.get(browserContextId)
       : this._defaultContext;
+    if (!context) {
+      throw new Error("Missing browser context");
+    }
+    const shouldAttachToTarget = this._targetFilterCallback(targetInfo);
+    if (!shouldAttachToTarget) {
+      this._ignoredTargets.add(targetInfo.targetId);
+      return;
+    }
     const target = new Target(
       targetInfo,
       context,
       () => this._connection.createSession(targetInfo),
       this._ignoreHTTPSErrors,
-      this._defaultViewport,
+      (_a = this._defaultViewport) !== null && _a !== void 0 ? _a : null,
+      this._screenshotTaskQueue,
+      this._isPageTargetCallback,
     );
     assert(
       !this._targets.has(event.targetInfo.targetId),
@@ -231,7 +274,15 @@ export class Browser extends EventEmitter {
     }
   }
   async _targetDestroyed(event) {
+    if (this._ignoredTargets.has(event.targetId)) {
+      return;
+    }
     const target = this._targets.get(event.targetId);
+    if (!target) {
+      throw new Error(
+        `Missing target in _targetDestroyed (id = ${event.targetId})`,
+      );
+    }
     target._initializedCallback(false);
     this._targets.delete(event.targetId);
     target._closedCallback();
@@ -243,8 +294,15 @@ export class Browser extends EventEmitter {
     }
   }
   _targetInfoChanged(event) {
+    if (this._ignoredTargets.has(event.targetInfo.targetId)) {
+      return;
+    }
     const target = this._targets.get(event.targetInfo.targetId);
-    assert(target, "target should exist before targetInfoChanged");
+    if (!target) {
+      throw new Error(
+        `Missing target in targetInfoChanged (id = ${event.targetInfo.targetId})`,
+      );
+    }
     const previousURL = target.url();
     const wasInitialized = target._isInitialized;
     target._targetInfoChanged(event.targetInfo);
@@ -256,83 +314,94 @@ export class Browser extends EventEmitter {
     }
   }
   /**
-     * The browser websocket endpoint which can be used as an argument to
-     * {@link Puppeteer.connect}.
-     *
-     * @returns The Browser websocket url.
-     *
-     * @remarks
-     *
-     * The format is `ws://${host}:${port}/devtools/browser/<id>`.
-     *
-     * You can find the `webSocketDebuggerUrl` from `http://${host}:${port}/json/version`.
-     * Learn more about the
-     * {@link https://chromedevtools.github.io/devtools-protocol | devtools protocol} and
-     * the {@link
-     * https://chromedevtools.github.io/devtools-protocol/#how-do-i-access-the-browser-target
-     * | browser endpoint}.
-     */
+   * The browser websocket endpoint which can be used as an argument to
+   * {@link Puppeteer.connect}.
+   *
+   * @returns The Browser websocket url.
+   *
+   * @remarks
+   *
+   * The format is `ws://${host}:${port}/devtools/browser/<id>`.
+   *
+   * You can find the `webSocketDebuggerUrl` from `http://${host}:${port}/json/version`.
+   * Learn more about the
+   * {@link https://chromedevtools.github.io/devtools-protocol | devtools protocol} and
+   * the {@link
+   * https://chromedevtools.github.io/devtools-protocol/#how-do-i-access-the-browser-target
+   * | browser endpoint}.
+   */
   wsEndpoint() {
     return this._connection.url();
   }
   /**
-     * Creates a {@link Page} in the default browser context.
-     */
+   * Promise which resolves to a new {@link Page} object. The Page is created in
+   * a default browser context.
+   */
   async newPage() {
     return this._defaultContext.newPage();
   }
   /**
-     * @internal
-     * Used by BrowserContext directly so cannot be marked private.
-     */
+   * @internal
+   * Used by BrowserContext directly so cannot be marked private.
+   */
   async _createPageInContext(contextId) {
     const { targetId } = await this._connection.send("Target.createTarget", {
       url: "about:blank",
       browserContextId: contextId || undefined,
     });
-    const target = await this._targets.get(targetId);
-    assert(
-      await target._initializedPromise,
-      "Failed to create target for page",
-    );
+    const target = this._targets.get(targetId);
+    if (!target) {
+      throw new Error(`Missing target for page (id = ${targetId})`);
+    }
+    const initialized = await target._initializedPromise;
+    if (!initialized) {
+      throw new Error(`Failed to create target for page (id = ${targetId})`);
+    }
     const page = await target.page();
+    if (!page) {
+      throw new Error(
+        `Failed to create a page for context (id = ${contextId})`,
+      );
+    }
     return page;
   }
   /**
-     * All active targets inside the Browser. In case of multiple browser contexts, returns
-     * an array with all the targets in all browser contexts.
-     */
+   * All active targets inside the Browser. In case of multiple browser contexts, returns
+   * an array with all the targets in all browser contexts.
+   */
   targets() {
     return Array.from(this._targets.values()).filter((target) =>
       target._isInitialized
     );
   }
   /**
-     * The target associated with the browser.
-     */
+   * The target associated with the browser.
+   */
   target() {
-    return this.targets().find((target) => target.type() === "browser");
+    const browserTarget = this.targets().find((target) =>
+      target.type() === "browser"
+    );
+    if (!browserTarget) {
+      throw new Error("Browser target is not found");
+    }
+    return browserTarget;
   }
   /**
-     * Searches for a target in all browser contexts.
-     *
-     * @param predicate - A function to be run for every target.
-     * @returns The first target found that matches the `predicate` function.
-     *
-     * @example
-     *
-     * An example of finding a target for a page opened via `window.open`:
-     * ```js
-     * await page.evaluate(() => window.open('https://www.example.com/'));
-     * const newWindowTarget = await browser.waitForTarget(target => target.url() === 'https://www.example.com/');
-     * ```
-     */
+   * Searches for a target in all browser contexts.
+   *
+   * @param predicate - A function to be run for every target.
+   * @returns The first target found that matches the `predicate` function.
+   *
+   * @example
+   *
+   * An example of finding a target for a page opened via `window.open`:
+   * ```js
+   * await page.evaluate(() => window.open('https://www.example.com/'));
+   * const newWindowTarget = await browser.waitForTarget(target => target.url() === 'https://www.example.com/');
+   * ```
+   */
   async waitForTarget(predicate, options = {}) {
     const { timeout = 30000 } = options;
-    const existingTarget = this.targets().find(predicate);
-    if (existingTarget) {
-      return existingTarget;
-    }
     let resolve;
     const targetPromise = new Promise((x) => (resolve = x));
     this.on("targetcreated", /* TargetCreated */ check);
@@ -341,26 +410,40 @@ export class Browser extends EventEmitter {
       if (!timeout) {
         return await targetPromise;
       }
-      return await helper.waitWithTimeout(targetPromise, "target", timeout);
+      return await helper.waitWithTimeout(
+        Promise.race([
+          targetPromise,
+          (async () => {
+            for (const target of this.targets()) {
+              if (await predicate(target)) {
+                return target;
+              }
+            }
+            await targetPromise;
+          })(),
+        ]),
+        "target",
+        timeout,
+      );
     } finally {
       this.removeListener("targetcreated", /* TargetCreated */ check);
       this.removeListener("targetchanged", /* TargetChanged */ check);
     }
-    function check(target) {
-      if (predicate(target)) {
+    async function check(target) {
+      if (await predicate(target)) {
         resolve(target);
       }
     }
   }
   /**
-     * An array of all open pages inside the Browser.
-     *
-     * @remarks
-     *
-     * In case of multiple browser contexts, returns an array with all the pages in all
-     * browser contexts. Non-visible pages, such as `"background_page"`, will not be listed
-     * here. You can find them using {@link Target.page}.
-     */
+   * An array of all open pages inside the Browser.
+   *
+   * @remarks
+   *
+   * In case of multiple browser contexts, returns an array with all the pages in all
+   * browser contexts. Non-visible pages, such as `"background_page"`, will not be listed
+   * here. You can find them using {@link Target.page}.
+   */
   async pages() {
     const contextPages = await Promise.all(
       this.browserContexts().map((context) => context.pages()),
@@ -369,46 +452,46 @@ export class Browser extends EventEmitter {
     return contextPages.reduce((acc, x) => acc.concat(x), []);
   }
   /**
-     * A string representing the browser name and version.
-     *
-     * @remarks
-     *
-     * For headless Chromium, this is similar to `HeadlessChrome/61.0.3153.0`. For
-     * non-headless, this is similar to `Chrome/61.0.3153.0`.
-     *
-     * The format of browser.version() might change with future releases of Chromium.
-     */
+   * A string representing the browser name and version.
+   *
+   * @remarks
+   *
+   * For headless Chromium, this is similar to `HeadlessChrome/61.0.3153.0`. For
+   * non-headless, this is similar to `Chrome/61.0.3153.0`.
+   *
+   * The format of browser.version() might change with future releases of Chromium.
+   */
   async version() {
     const version = await this._getVersion();
     return version.product;
   }
   /**
-     * The browser's original user agent. Pages can override the browser user agent with
-     * {@link Page.setUserAgent}.
-     */
+   * The browser's original user agent. Pages can override the browser user agent with
+   * {@link Page.setUserAgent}.
+   */
   async userAgent() {
     const version = await this._getVersion();
     return version.userAgent;
   }
   /**
-     * Closes Chromium and all of its pages (if any were opened). The {@link Browser} object
-     * itself is considered to be disposed and cannot be used anymore.
-     */
+   * Closes Chromium and all of its pages (if any were opened). The {@link Browser} object
+   * itself is considered to be disposed and cannot be used anymore.
+   */
   async close() {
     await this._closeCallback.call(null);
-    await this.disconnect();
+    this.disconnect();
   }
   /**
-     * Disconnects Puppeteer from the browser, but leaves the Chromium process running.
-     * After calling `disconnect`, the {@link Browser} object is considered disposed and
-     * cannot be used anymore.
-     */
-  async disconnect() {
-    await this._connection.dispose();
+   * Disconnects Puppeteer from the browser, but leaves the Chromium process running.
+   * After calling `disconnect`, the {@link Browser} object is considered disposed and
+   * cannot be used anymore.
+   */
+  disconnect() {
+    this._connection.dispose();
   }
   /**
-     * Indicates that the browser is connected.
-     */
+   * Indicates that the browser is connected.
+   */
   isConnected() {
     return !this._connection._closed;
   }
@@ -450,8 +533,8 @@ export class Browser extends EventEmitter {
  */
 export class BrowserContext extends EventEmitter {
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(connection, browser, contextId) {
     super();
     this._connection = connection;
@@ -459,30 +542,30 @@ export class BrowserContext extends EventEmitter {
     this._id = contextId;
   }
   /**
-     * An array of all active targets inside the browser context.
-     */
+   * An array of all active targets inside the browser context.
+   */
   targets() {
     return this._browser
       .targets()
       .filter((target) => target.browserContext() === this);
   }
   /**
-     * This searches for a target in this specific browser context.
-     *
-     * @example
-     * An example of finding a target for a page opened via `window.open`:
-     * ```js
-     * await page.evaluate(() => window.open('https://www.example.com/'));
-     * const newWindowTarget = await browserContext.waitForTarget(target => target.url() === 'https://www.example.com/');
-     * ```
-     *
-     * @param predicate - A function to be run for every target
-     * @param options - An object of options. Accepts a timout,
-     * which is the maximum wait time in milliseconds.
-     * Pass `0` to disable the timeout. Defaults to 30 seconds.
-     * @returns Promise which resolves to the first target found
-     * that matches the `predicate` function.
-     */
+   * This searches for a target in this specific browser context.
+   *
+   * @example
+   * An example of finding a target for a page opened via `window.open`:
+   * ```js
+   * await page.evaluate(() => window.open('https://www.example.com/'));
+   * const newWindowTarget = await browserContext.waitForTarget(target => target.url() === 'https://www.example.com/');
+   * ```
+   *
+   * @param predicate - A function to be run for every target
+   * @param options - An object of options. Accepts a timout,
+   * which is the maximum wait time in milliseconds.
+   * Pass `0` to disable the timeout. Defaults to 30 seconds.
+   * @returns Promise which resolves to the first target found
+   * that matches the `predicate` function.
+   */
   waitForTarget(predicate, options = {}) {
     return this._browser.waitForTarget(
       (target) => target.browserContext() === this && predicate(target),
@@ -490,12 +573,12 @@ export class BrowserContext extends EventEmitter {
     );
   }
   /**
-     * An array of all pages inside the browser context.
-     *
-     * @returns Promise which resolves to an array of all open pages.
-     * Non visible pages, such as `"background_page"`, will not be listed here.
-     * You can find them using {@link Target.page | the target page}.
-     */
+   * An array of all pages inside the browser context.
+   *
+   * @returns Promise which resolves to an array of all open pages.
+   * Non visible pages, such as `"background_page"`, will not be listed here.
+   * You can find them using {@link Target.page | the target page}.
+   */
   async pages() {
     const pages = await Promise.all(
       this.targets()
@@ -505,26 +588,26 @@ export class BrowserContext extends EventEmitter {
     return pages.filter((page) => !!page);
   }
   /**
-     * Returns whether BrowserContext is incognito.
-     * The default browser context is the only non-incognito browser context.
-     *
-     * @remarks
-     * The default browser context cannot be closed.
-     */
+   * Returns whether BrowserContext is incognito.
+   * The default browser context is the only non-incognito browser context.
+   *
+   * @remarks
+   * The default browser context cannot be closed.
+   */
   isIncognito() {
     return !!this._id;
   }
   /**
-     * @example
-     * ```js
-     * const context = browser.defaultBrowserContext();
-     * await context.overridePermissions('https://html5demos.com', ['geolocation']);
-     * ```
-     *
-     * @param origin - The origin to grant permissions to, e.g. "https://example.com".
-     * @param permissions - An array of permissions to grant.
-     * All permissions that are not listed here will be automatically denied.
-     */
+   * @example
+   * ```js
+   * const context = browser.defaultBrowserContext();
+   * await context.overridePermissions('https://html5demos.com', ['geolocation']);
+   * ```
+   *
+   * @param origin - The origin to grant permissions to, e.g. "https://example.com".
+   * @param permissions - An array of permissions to grant.
+   * All permissions that are not listed here will be automatically denied.
+   */
   async overridePermissions(origin, permissions) {
     const protocolPermissions = permissions.map((permission) => {
       const protocolPermission = WEB_PERMISSION_TO_PROTOCOL_PERMISSION.get(
@@ -542,40 +625,40 @@ export class BrowserContext extends EventEmitter {
     });
   }
   /**
-     * Clears all permission overrides for the browser context.
-     *
-     * @example
-     * ```js
-     * const context = browser.defaultBrowserContext();
-     * context.overridePermissions('https://example.com', ['clipboard-read']);
-     * // do stuff ..
-     * context.clearPermissionOverrides();
-     * ```
-     */
+   * Clears all permission overrides for the browser context.
+   *
+   * @example
+   * ```js
+   * const context = browser.defaultBrowserContext();
+   * context.overridePermissions('https://example.com', ['clipboard-read']);
+   * // do stuff ..
+   * context.clearPermissionOverrides();
+   * ```
+   */
   async clearPermissionOverrides() {
     await this._connection.send("Browser.resetPermissions", {
       browserContextId: this._id || undefined,
     });
   }
   /**
-     * Creates a new page in the browser context.
-     */
+   * Creates a new page in the browser context.
+   */
   newPage() {
     return this._browser._createPageInContext(this._id);
   }
   /**
-     * The browser this browser context belongs to.
-     */
+   * The browser this browser context belongs to.
+   */
   browser() {
     return this._browser;
   }
   /**
-     * Closes the browser context. All the targets that belong to the browser context
-     * will be closed.
-     *
-     * @remarks
-     * Only incognito browser contexts can be closed.
-     */
+   * Closes the browser context. All the targets that belong to the browser context
+   * will be closed.
+   *
+   * @remarks
+   * Only incognito browser contexts can be closed.
+   */
   async close() {
     assert(this._id, "Non-incognito profiles cannot be closed!");
     await this._browser._disposeContext(this._id);

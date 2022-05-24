@@ -39,8 +39,8 @@ import { assert } from "./assert.js";
  */
 export class Dialog {
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(client, type, message, defaultValue = "") {
     this._handled = false;
     this._client = client;
@@ -49,30 +49,30 @@ export class Dialog {
     this._defaultValue = defaultValue;
   }
   /**
-     * @returns The type of the dialog.
-     */
+   * @returns The type of the dialog.
+   */
   type() {
     return this._type;
   }
   /**
-     * @returns The message displayed in the dialog.
-     */
+   * @returns The message displayed in the dialog.
+   */
   message() {
     return this._message;
   }
   /**
-     * @returns The default value of the prompt, or an empty string if the dialog
-     * is not a `prompt`.
-     */
+   * @returns The default value of the prompt, or an empty string if the dialog
+   * is not a `prompt`.
+   */
   defaultValue() {
     return this._defaultValue;
   }
   /**
-     * @param promptText - optional text that will be entered in the dialog
-     * prompt. Has no effect if the dialog's type is not `prompt`.
-     *
-     * @returns A promise that resolves when the dialog has been accepted.
-     */
+   * @param promptText - optional text that will be entered in the dialog
+   * prompt. Has no effect if the dialog's type is not `prompt`.
+   *
+   * @returns A promise that resolves when the dialog has been accepted.
+   */
   async accept(promptText) {
     assert(!this._handled, "Cannot accept dialog which is already handled!");
     this._handled = true;
@@ -82,8 +82,8 @@ export class Dialog {
     });
   }
   /**
-     * @returns A promise which will resolve once the dialog has been dismissed
-     */
+   * @returns A promise which will resolve once the dialog has been dismissed
+   */
   async dismiss() {
     assert(!this._handled, "Cannot dismiss dialog which is already handled!");
     this._handled = true;

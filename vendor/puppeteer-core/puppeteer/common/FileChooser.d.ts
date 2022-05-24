@@ -38,24 +38,24 @@ export declare class FileChooser {
   private _multiple;
   private _handled;
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(
     element: ElementHandle,
     event: Protocol.Page.FileChooserOpenedEvent,
   );
   /**
-     * Whether file chooser allow for {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#attr-multiple | multiple} file selection.
-     */
+   * Whether file chooser allow for {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#attr-multiple | multiple} file selection.
+   */
   isMultiple(): boolean;
   /**
-     * Accept the file chooser request with given paths.
-     * @param filePaths - If some of the  `filePaths` are relative paths,
-     * then they are resolved relative to the {@link https://nodejs.org/api/process.html#process_process_cwd | current working directory}.
-     */
+   * Accept the file chooser request with given paths.
+   * @param filePaths - If some of the  `filePaths` are relative paths,
+   * then they are resolved relative to the {@link https://nodejs.org/api/process.html#process_process_cwd | current working directory}.
+   */
   accept(filePaths: string[]): Promise<void>;
   /**
-     * Closes the file chooser without selecting any files.
-     */
+   * Closes the file chooser without selecting any files.
+   */
   cancel(): void;
 }

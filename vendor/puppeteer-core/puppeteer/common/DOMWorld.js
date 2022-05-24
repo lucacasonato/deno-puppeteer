@@ -23,39 +23,44 @@ import { getQueryHandlerAndSelector } from "./QueryHandler.js";
  * @internal
  */
 export class DOMWorld {
-  constructor(frameManager, frame, timeoutSettings) {
+  constructor(client, frameManager, frame, timeoutSettings) {
     this._documentPromise = null;
     this._contextPromise = null;
     this._contextResolveCallback = null;
     this._detached = false;
     /**
-         * @internal
-         */
+     * @internal
+     */
     this._waitTasks = new Set();
     /**
-         * @internal
-         * Contains mapping from functions that should be bound to Puppeteer functions.
-         */
+     * @internal
+     * Contains mapping from functions that should be bound to Puppeteer functions.
+     */
     this._boundFunctions = new Map();
     // Set of bindings that have been registered in the current context.
     this._ctxBindings = new Set();
     // If multiple waitFor are set up asynchronously, we need to wait for the
     // first one to set up the binding in the page before running the others.
     this._settingUpBinding = null;
+    // Keep own reference to client because it might differ from the FrameManager's
+    // client for OOP iframes.
+    this._client = client;
     this._frameManager = frameManager;
     this._frame = frame;
     this._timeoutSettings = timeoutSettings;
     this._setContext(null);
-    frameManager._client.on(
-      "Runtime.bindingCalled",
-      (event) => this._onBindingCalled(event),
-    );
+    this._onBindingCalled = this._onBindingCalled.bind(this);
+    this._client.on("Runtime.bindingCalled", this._onBindingCalled);
   }
   frame() {
     return this._frame;
   }
   async _setContext(context) {
     if (context) {
+      assert(
+        this._contextResolveCallback,
+        "Execution Context has already been set.",
+      );
       this._ctxBindings.clear();
       this._contextResolveCallback.call(null, context);
       this._contextResolveCallback = null;
@@ -74,6 +79,7 @@ export class DOMWorld {
   }
   _detach() {
     this._detached = true;
+    this._client.off("Runtime.bindingCalled", this._onBindingCalled);
     for (const waitTask of this._waitTasks) {
       waitTask.terminate(
         new Error("waitForFunction failed: frame got detached."),
@@ -170,20 +176,21 @@ export class DOMWorld {
     }
   }
   /**
-     * Adds a script tag into the current context.
-     *
-     * @remarks
-     *
-     * You can pass a URL, filepath or string of contents. Note that when running Puppeteer
-     * in a browser environment you cannot pass a filepath and should use either
-     * `url` or `content`.
-     */
+   * Adds a script tag into the current context.
+   *
+   * @remarks
+   *
+   * You can pass a URL, filepath or string of contents. Note that when running Puppeteer
+   * in a browser environment you cannot pass a filepath and should use either
+   * `url` or `content`.
+   */
   async addScriptTag(options) {
-    const { url = null, path = null, content = null, type = "" } = options;
+    const { url = null, path = null, content = null, id = "", type = "" } =
+      options;
     if (url !== null) {
       try {
         const context = await this.executionContext();
-        return (await context.evaluateHandle(addScriptUrl, url, type))
+        return (await context.evaluateHandle(addScriptUrl, url, id, type))
           .asElement();
       } catch (error) {
         throw new Error(`Loading script from ${url} failed`);
@@ -193,20 +200,27 @@ export class DOMWorld {
       let contents = await Deno.readTextFile(path);
       contents += "//# sourceURL=" + path.replace(/\n/g, "");
       const context = await this.executionContext();
-      return (await context.evaluateHandle(addScriptContent, contents, type))
-        .asElement();
+      return (await context.evaluateHandle(
+        addScriptContent,
+        contents,
+        id,
+        type,
+      )).asElement();
     }
     if (content !== null) {
       const context = await this.executionContext();
-      return (await context.evaluateHandle(addScriptContent, content, type))
+      return (await context.evaluateHandle(addScriptContent, content, id, type))
         .asElement();
     }
     throw new Error(
       "Provide an object with a `url`, `path` or `content` property",
     );
-    async function addScriptUrl(url, type) {
+    async function addScriptUrl(url, id, type) {
       const script = document.createElement("script");
       script.src = url;
+      if (id) {
+        script.id = id;
+      }
       if (type) {
         script.type = type;
       }
@@ -218,10 +232,13 @@ export class DOMWorld {
       await promise;
       return script;
     }
-    function addScriptContent(content, type = "text/javascript") {
+    function addScriptContent(content, id, type = "text/javascript") {
       const script = document.createElement("script");
       script.type = type;
       script.text = content;
+      if (id) {
+        script.id = id;
+      }
       let error = null;
       script.onerror = (e) => (error = e);
       document.head.appendChild(script);
@@ -232,15 +249,14 @@ export class DOMWorld {
     }
   }
   /**
-     * Adds a style tag into the current context.
-     *
-     * @remarks
-     *
-     * You can pass a URL, filepath or string of contents. Note that when running Puppeteer
-     * in a browser environment you cannot pass a filepath and should use either
-     * `url` or `content`.
-     *
-     */
+   * Adds a style tag into the current context.
+   *
+   * @remarks
+   *
+   * You can pass a URL, filepath or string of contents. Note that when running Puppeteer
+   * in a browser environment you cannot pass a filepath and should use either
+   * `url` or `content`.
+   */
   async addStyleTag(options) {
     const { url = null, path = null, content = null } = options;
     if (url !== null) {
@@ -334,8 +350,8 @@ export class DOMWorld {
     return queryHandler.waitFor(this, updatedSelector, options);
   }
   /**
-     * @internal
-     */
+   * @internal
+   */
   async addBindingToContext(context, name) {
     // Previous operation added the binding so we are done.
     if (
@@ -431,8 +447,8 @@ export class DOMWorld {
     }
   }
   /**
-     * @internal
-     */
+   * @internal
+   */
   async waitForSelectorInPage(queryOne, selector, options, binding) {
     const {
       visible: waitForVisible = false,
@@ -443,20 +459,22 @@ export class DOMWorld {
     const title = `selector \`${selector}\`${
       waitForHidden ? " to be hidden" : ""
     }`;
-    async function predicate(selector, waitForVisible, waitForHidden) {
+    async function predicate(root, selector, waitForVisible, waitForHidden) {
       const node = predicateQueryHandler
-        ? (await predicateQueryHandler(document, selector))
-        : document.querySelector(selector);
+        ? (await predicateQueryHandler(root, selector))
+        : root.querySelector(selector);
       return checkWaitForOptions(node, waitForVisible, waitForHidden);
     }
     const waitTaskOptions = {
       domWorld: this,
       predicateBody: helper.makePredicateString(predicate, queryOne),
+      predicateAcceptsContextElement: true,
       title,
       polling,
       timeout,
       args: [selector, waitForVisible, waitForHidden],
       binding,
+      root: options.root,
     };
     const waitTask = new WaitTask(waitTaskOptions);
     const jsHandle = await waitTask.promise;
@@ -475,24 +493,25 @@ export class DOMWorld {
     } = options;
     const polling = waitForVisible || waitForHidden ? "raf" : "mutation";
     const title = `XPath \`${xpath}\`${waitForHidden ? " to be hidden" : ""}`;
-    function predicate(xpath, waitForVisible, waitForHidden) {
-      const node =
-        document.evaluate(
-          xpath,
-          document,
-          null,
-          XPathResult.FIRST_ORDERED_NODE_TYPE,
-          null,
-        ).singleNodeValue;
+    function predicate(root, xpath, waitForVisible, waitForHidden) {
+      const node = document.evaluate(
+        xpath,
+        root,
+        null,
+        XPathResult.FIRST_ORDERED_NODE_TYPE,
+        null,
+      ).singleNodeValue;
       return checkWaitForOptions(node, waitForVisible, waitForHidden);
     }
     const waitTaskOptions = {
       domWorld: this,
       predicateBody: helper.makePredicateString(predicate),
+      predicateAcceptsContextElement: true,
       title,
       polling,
       timeout,
       args: [xpath, waitForVisible, waitForHidden],
+      root: options.root,
     };
     const waitTask = new WaitTask(waitTaskOptions);
     const jsHandle = await waitTask.promise;
@@ -509,6 +528,7 @@ export class DOMWorld {
     const waitTaskOptions = {
       domWorld: this,
       predicateBody: pageFunction,
+      predicateAcceptsContextElement: false,
       title: "function",
       polling,
       timeout,
@@ -529,6 +549,7 @@ export class WaitTask {
   constructor(options) {
     this._runCount = 0;
     this._terminated = false;
+    this._root = null;
     if (helper.isString(options.polling)) {
       assert(
         options.polling === "raf" || options.polling === "mutation",
@@ -551,7 +572,10 @@ export class WaitTask {
     this._domWorld = options.domWorld;
     this._polling = options.polling;
     this._timeout = options.timeout;
+    this._root = options.root;
     this._predicateBody = getPredicateBody(options.predicateBody);
+    this._predicateAcceptsContextElement =
+      options.predicateAcceptsContextElement;
     this._args = options.args;
     this._binding = options.binding;
     this._runCount = 0;
@@ -601,7 +625,9 @@ export class WaitTask {
     try {
       success = await context.evaluateHandle(
         waitForPredicatePageFunction,
+        this._root || null,
         this._predicateBody,
+        this._predicateAcceptsContextElement,
         this._polling,
         this._timeout,
         ...this._args,
@@ -664,11 +690,14 @@ export class WaitTask {
   }
 }
 async function waitForPredicatePageFunction(
+  root,
   predicateBody,
+  predicateAcceptsContextElement,
   polling,
   timeout,
   ...args
 ) {
+  root = root || document;
   const predicate = new Function("...args", predicateBody);
   let timedOut = false;
   if (timeout) {
@@ -684,10 +713,12 @@ async function waitForPredicatePageFunction(
     return await pollInterval(polling);
   }
   /**
-     * @returns {!Promise<*>}
-     */
+   * @returns {!Promise<*>}
+   */
   async function pollMutation() {
-    const success = await predicate(...args);
+    const success = predicateAcceptsContextElement
+      ? await predicate(root, ...args)
+      : await predicate(...args);
     if (success) {
       return Promise.resolve(success);
     }
@@ -698,13 +729,15 @@ async function waitForPredicatePageFunction(
         observer.disconnect();
         fulfill();
       }
-      const success = await predicate(...args);
+      const success = predicateAcceptsContextElement
+        ? await predicate(root, ...args)
+        : await predicate(...args);
       if (success) {
         observer.disconnect();
         fulfill(success);
       }
     });
-    observer.observe(document, {
+    observer.observe(root, {
       childList: true,
       subtree: true,
       attributes: true,
@@ -721,7 +754,9 @@ async function waitForPredicatePageFunction(
         fulfill();
         return;
       }
-      const success = await predicate(...args);
+      const success = predicateAcceptsContextElement
+        ? await predicate(root, ...args)
+        : await predicate(...args);
       if (success) {
         fulfill(success);
       } else {
@@ -739,7 +774,9 @@ async function waitForPredicatePageFunction(
         fulfill();
         return;
       }
-      const success = await predicate(...args);
+      const success = predicateAcceptsContextElement
+        ? await predicate(root, ...args)
+        : await predicate(...args);
       if (success) {
         fulfill(success);
       } else {

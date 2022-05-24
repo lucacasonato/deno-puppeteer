@@ -19,16 +19,16 @@ import { JSHandle } from "./JSHandle.js";
  */
 export interface ConsoleMessageLocation {
   /**
-     * URL of the resource if known or `undefined` otherwise.
-     */
+   * URL of the resource if known or `undefined` otherwise.
+   */
   url?: string;
   /**
-     * 0-based line number in the resource if known or `undefined` otherwise.
-     */
+   * 0-based line number in the resource if known or `undefined` otherwise.
+   */
   lineNumber?: number;
   /**
-     * 0-based column number in the resource if known or `undefined` otherwise.
-     */
+   * 0-based column number in the resource if known or `undefined` otherwise.
+   */
   columnNumber?: number;
 }
 /**
@@ -65,8 +65,8 @@ export declare class ConsoleMessage {
   private _args;
   private _stackTraceLocations;
   /**
-     * @public
-     */
+   * @public
+   */
   constructor(
     type: ConsoleMessageType,
     text: string,
@@ -74,23 +74,23 @@ export declare class ConsoleMessage {
     stackTraceLocations: ConsoleMessageLocation[],
   );
   /**
-     * @returns The type of the console message.
-     */
+   * @returns The type of the console message.
+   */
   type(): ConsoleMessageType;
   /**
-     * @returns The text of the console message.
-     */
+   * @returns The text of the console message.
+   */
   text(): string;
   /**
-     * @returns An array of arguments passed to the console.
-     */
+   * @returns An array of arguments passed to the console.
+   */
   args(): JSHandle[];
   /**
-     * @returns The location of the console message.
-     */
+   * @returns The location of the console message.
+   */
   location(): ConsoleMessageLocation;
   /**
-     * @returns The array of locations on the stack of the console message.
-     */
+   * @returns The array of locations on the stack of the console message.
+   */
   stackTrace(): ConsoleMessageLocation[];
 }

@@ -27,6 +27,7 @@ import {
   UnwrapPromiseLike,
   WrapElementHandle,
 } from "./EvalTypes.js";
+import { CDPSession } from "./Connection.js";
 /**
  * @public
  */
@@ -34,6 +35,7 @@ export interface WaitForSelectorOptions {
   visible?: boolean;
   hidden?: boolean;
   timeout?: number;
+  root?: ElementHandle;
 }
 /**
  * @internal
@@ -47,6 +49,7 @@ export interface PageBinding {
  */
 export declare class DOMWorld {
   private _frameManager;
+  private _client;
   private _frame;
   private _timeoutSettings;
   private _documentPromise?;
@@ -54,17 +57,18 @@ export declare class DOMWorld {
   private _contextResolveCallback?;
   private _detached;
   /**
-     * @internal
-     */
+   * @internal
+   */
   _waitTasks: Set<WaitTask>;
   /**
-     * @internal
-     * Contains mapping from functions that should be bound to Puppeteer functions.
-     */
+   * @internal
+   * Contains mapping from functions that should be bound to Puppeteer functions.
+   */
   _boundFunctions: Map<string, Function>;
   private _ctxBindings;
   private static bindingIdentifier;
   constructor(
+    client: CDPSession,
     frameManager: FrameManager,
     frame: Frame,
     timeoutSettings: TimeoutSettings,
@@ -108,30 +112,30 @@ export declare class DOMWorld {
     waitUntil?: PuppeteerLifeCycleEvent | PuppeteerLifeCycleEvent[];
   }): Promise<void>;
   /**
-     * Adds a script tag into the current context.
-     *
-     * @remarks
-     *
-     * You can pass a URL, filepath or string of contents. Note that when running Puppeteer
-     * in a browser environment you cannot pass a filepath and should use either
-     * `url` or `content`.
-     */
+   * Adds a script tag into the current context.
+   *
+   * @remarks
+   *
+   * You can pass a URL, filepath or string of contents. Note that when running Puppeteer
+   * in a browser environment you cannot pass a filepath and should use either
+   * `url` or `content`.
+   */
   addScriptTag(options: {
     url?: string;
     path?: string;
     content?: string;
+    id?: string;
     type?: string;
   }): Promise<ElementHandle>;
   /**
-     * Adds a style tag into the current context.
-     *
-     * @remarks
-     *
-     * You can pass a URL, filepath or string of contents. Note that when running Puppeteer
-     * in a browser environment you cannot pass a filepath and should use either
-     * `url` or `content`.
-     *
-     */
+   * Adds a style tag into the current context.
+   *
+   * @remarks
+   *
+   * You can pass a URL, filepath or string of contents. Note that when running Puppeteer
+   * in a browser environment you cannot pass a filepath and should use either
+   * `url` or `content`.
+   */
   addStyleTag(options: {
     url?: string;
     path?: string;
@@ -155,13 +159,13 @@ export declare class DOMWorld {
   ): Promise<ElementHandle | null>;
   private _settingUpBinding;
   /**
-     * @internal
-     */
+   * @internal
+   */
   addBindingToContext(context: ExecutionContext, name: string): Promise<void>;
   private _onBindingCalled;
   /**
-     * @internal
-     */
+   * @internal
+   */
   waitForSelectorInPage(
     queryOne: Function,
     selector: string,
@@ -184,11 +188,13 @@ export declare class DOMWorld {
 export interface WaitTaskOptions {
   domWorld: DOMWorld;
   predicateBody: Function | string;
+  predicateAcceptsContextElement: boolean;
   title: string;
   polling: string | number;
   timeout: number;
   binding?: PageBinding;
   args: SerializableOrJSHandle[];
+  root?: ElementHandle;
 }
 /**
  * @internal
@@ -198,6 +204,7 @@ export declare class WaitTask {
   _polling: string | number;
   _timeout: number;
   _predicateBody: string;
+  _predicateAcceptsContextElement: boolean;
   _args: SerializableOrJSHandle[];
   _binding: PageBinding;
   _runCount: number;
@@ -206,6 +213,7 @@ export declare class WaitTask {
   _reject: (x: Error) => void;
   _timeoutTimer?: number;
   _terminated: boolean;
+  _root: ElementHandle;
   constructor(options: WaitTaskOptions);
   terminate(error: Error): void;
   rerun(): Promise<void>;

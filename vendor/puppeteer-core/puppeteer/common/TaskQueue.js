@@ -1,4 +1,4 @@
-/// <reference types="./assert.d.ts" />
+/// <reference types="./TaskQueue.d.ts" />
 /**
  * Copyright 2020 Google Inc. All rights reserved.
  *
@@ -14,19 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Asserts that the given value is truthy.
- * @param value
- * @param message - the error message to throw if the value is not truthy.
- */
-export const assert = (value, message) => {
-  if (!value) {
-    throw new Error(message);
+export class TaskQueue {
+  constructor() {
+    this._chain = Promise.resolve();
   }
-};
-export const assertNever = (value, message) => {
-  if (value) {
-    throw new Error(message);
+  postTask(task) {
+    const result = this._chain.then(task);
+    this._chain = result.then(() => undefined, () => undefined);
+    return result;
   }
-};
-//# sourceMappingURL=assert.js.map
+}
+//# sourceMappingURL=TaskQueue.js.map

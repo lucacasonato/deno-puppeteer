@@ -67,6 +67,11 @@ export class LifecycleWatcher {
       ),
       helper.addEventListener(
         this._frameManager,
+        FrameManagerEmittedEvents.FrameSwapped,
+        this._frameSwapped.bind(this),
+      ),
+      helper.addEventListener(
+        this._frameManager,
         FrameManagerEmittedEvents.FrameDetached,
         this._onFrameDetached.bind(this),
       ),
@@ -107,7 +112,8 @@ export class LifecycleWatcher {
     }
     this._checkLifecycleComplete();
   }
-  navigationResponse() {
+  async navigationResponse() {
+    // We may need to wait for ExtraInfo events before the request is complete.
     return this._navigationRequest ? this._navigationRequest.response() : null;
   }
   _terminate(error) {
@@ -144,6 +150,13 @@ export class LifecycleWatcher {
     this._hasSameDocumentNavigation = true;
     this._checkLifecycleComplete();
   }
+  _frameSwapped(frame) {
+    if (frame !== this._frame) {
+      return;
+    }
+    this._swapped = true;
+    this._checkLifecycleComplete();
+  }
   _checkLifecycleComplete() {
     // We expect navigation to commit.
     if (!checkLifecycle(this._frame, this._expectedLifecycle)) {
@@ -154,6 +167,10 @@ export class LifecycleWatcher {
       this._frame._loaderId === this._initialLoaderId &&
       !this._hasSameDocumentNavigation
     ) {
+      if (this._swapped) {
+        this._swapped = false;
+        this._newDocumentNavigationCompleteCallback();
+      }
       return;
     }
     if (this._hasSameDocumentNavigation) {
@@ -163,10 +180,10 @@ export class LifecycleWatcher {
       this._newDocumentNavigationCompleteCallback();
     }
     /**
-         * @param {!Frame} frame
-         * @param {!Array<string>} expectedLifecycle
-         * @returns {boolean}
-         */
+     * @param {!Frame} frame
+     * @param {!Array<string>} expectedLifecycle
+     * @returns {boolean}
+     */
     function checkLifecycle(frame, expectedLifecycle) {
       for (const event of expectedLifecycle) {
         if (!frame._lifecycleEvents.has(event)) {
@@ -174,7 +191,10 @@ export class LifecycleWatcher {
         }
       }
       for (const child of frame.childFrames()) {
-        if (!checkLifecycle(child, expectedLifecycle)) {
+        if (
+          child._hasStartedLoading &&
+          !checkLifecycle(child, expectedLifecycle)
+        ) {
           return false;
         }
       }

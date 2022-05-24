@@ -36,6 +36,8 @@ export const connectToBrowser = async (options) => {
     defaultViewport = { width: 800, height: 600 },
     transport,
     slowMo = 0,
+    targetFilter,
+    isPageTarget,
   } = options;
   assert(
     Number(!!browserWSEndpoint) + Number(!!browserURL) + Number(!!transport) ===
@@ -65,6 +67,8 @@ export const connectToBrowser = async (options) => {
     defaultViewport,
     null,
     () => connection.send("Browser.close").catch(debugError),
+    targetFilter,
+    isPageTarget,
   );
 };
 async function getWSEndpoint(browserURL) {

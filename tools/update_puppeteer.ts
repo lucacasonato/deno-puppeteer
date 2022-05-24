@@ -22,11 +22,16 @@ for await (const file of untar) {
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
+const packageJSON = decoder.decode(originalFiles["package.json"]);
+const packageJSONObject = JSON.parse(packageJSON);
+
+const protocolVersion = packageJSONObject.dependencies["devtools-protocol"];
+
 const protocolReq = await fetch(
-  "https://unpkg.com/devtools-protocol@0.0.818844/types/protocol.d.ts",
+  `https://unpkg.com/devtools-protocol@${protocolVersion}/types/protocol.d.ts`,
 );
 const protocolMapping = await fetch(
-  "https://unpkg.com/devtools-protocol@0.0.818844/types/protocol-mapping.d.ts",
+  `https://unpkg.com/devtools-protocol@${protocolVersion}/types/protocol-mapping.d.ts`,
 );
 const files: Record<string, Uint8Array> = {
   LICENSE: originalFiles.LICENSE,
