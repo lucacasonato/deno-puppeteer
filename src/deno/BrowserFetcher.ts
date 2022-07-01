@@ -194,7 +194,7 @@ export class BrowserFetcher {
       return;
     }
 
-    const platform = Deno.build.os;
+    const platform = Deno.env.get("PUPPETEER_PLATFORM") || Deno.build.os;
     if (platform === "darwin") this._platform = "mac";
     else if (platform === "linux") this._platform = "linux";
     else if (platform === "windows") {
