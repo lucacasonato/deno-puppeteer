@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { PuppeteerEventListener } from "./helper.js";
+import { PuppeteerEventListener } from "./util.js";
 import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
 import { CDPSession } from "./Connection.js";
 /**
@@ -90,11 +90,12 @@ export interface CSSCoverageOptions {
  * @example
  * An example of using JavaScript and CSS coverage to get percentage of initially
  * executed code:
- * ```js
+ *
+ * ```ts
  * // Enable both JavaScript and CSS coverage
  * await Promise.all([
  *   page.coverage.startJSCoverage(),
- *   page.coverage.startCSSCoverage()
+ *   page.coverage.startCSSCoverage(),
  * ]);
  * // Navigate to page
  * await page.goto('https://example.com');
@@ -108,22 +109,15 @@ export interface CSSCoverageOptions {
  * const coverage = [...jsCoverage, ...cssCoverage];
  * for (const entry of coverage) {
  *   totalBytes += entry.text.length;
- *   for (const range of entry.ranges)
- *     usedBytes += range.end - range.start - 1;
+ *   for (const range of entry.ranges) usedBytes += range.end - range.start - 1;
  * }
- * console.log(`Bytes used: ${usedBytes / totalBytes * 100}%`);
+ * console.log(`Bytes used: ${(usedBytes / totalBytes) * 100}%`);
  * ```
+ *
  * @public
  */
 export declare class Coverage {
-  /**
-   * @internal
-   */
-  _jsCoverage: JSCoverage;
-  /**
-   * @internal
-   */
-  _cssCoverage: CSSCoverage;
+  #private;
   constructor(client: CDPSession);
   /**
    * @param options - Set of configurable options for coverage defaults to
@@ -134,7 +128,7 @@ export declare class Coverage {
    * Anonymous scripts are ones that don't have an associated url. These are
    * scripts that are dynamically created on the page using `eval` or
    * `new Function`. If `reportAnonymousScripts` is set to `true`, anonymous
-   * scripts will have `__puppeteer_evaluation_script__` as their URL.
+   * scripts will have `pptr://__puppeteer_evaluation_script__` as their URL.
    */
   startJSCoverage(options?: JSCoverageOptions): Promise<void>;
   /**
@@ -165,40 +159,23 @@ export declare class Coverage {
  * @public
  */
 export declare class JSCoverage {
-  _client: CDPSession;
-  _enabled: boolean;
-  _scriptURLs: Map<string, string>;
-  _scriptSources: Map<string, string>;
-  _eventListeners: PuppeteerEventListener[];
-  _resetOnNavigation: boolean;
-  _reportAnonymousScripts: boolean;
-  _includeRawScriptCoverage: boolean;
+  #private;
   constructor(client: CDPSession);
   start(options?: {
     resetOnNavigation?: boolean;
     reportAnonymousScripts?: boolean;
     includeRawScriptCoverage?: boolean;
   }): Promise<void>;
-  _onExecutionContextsCleared(): void;
-  _onScriptParsed(event: Protocol.Debugger.ScriptParsedEvent): Promise<void>;
   stop(): Promise<JSCoverageEntry[]>;
 }
 /**
  * @public
  */
 export declare class CSSCoverage {
-  _client: CDPSession;
-  _enabled: boolean;
-  _stylesheetURLs: Map<string, string>;
-  _stylesheetSources: Map<string, string>;
-  _eventListeners: PuppeteerEventListener[];
-  _resetOnNavigation: boolean;
-  _reportAnonymousScripts: boolean;
+  #private;
   constructor(client: CDPSession);
   start(options?: {
     resetOnNavigation?: boolean;
   }): Promise<void>;
-  _onExecutionContextsCleared(): void;
-  _onStyleSheet(event: Protocol.CSS.StyleSheetAddedEvent): Promise<void>;
   stop(): Promise<CoverageEntry[]>;
 }

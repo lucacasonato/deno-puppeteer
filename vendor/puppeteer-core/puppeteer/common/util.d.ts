@@ -13,104 +13,151 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { CDPSession } from "./Connection.js";
 import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
+import { CDPSession } from "./Connection.js";
+import { ElementHandle } from "./ElementHandle.js";
 import { CommonEventEmitter } from "./EventEmitter.js";
+import { ExecutionContext } from "./ExecutionContext.js";
+import { JSHandle } from "./JSHandle.js";
+/**
+ * @internal
+ */
 export declare const debugError: (...args: unknown[]) => void;
-declare function getExceptionMessage(
+/**
+ * @internal
+ */
+export declare function getExceptionMessage(
   exceptionDetails: Protocol.Runtime.ExceptionDetails,
 ): string;
-declare function valueFromRemoteObject(
+/**
+ * @internal
+ */
+export declare function valueFromRemoteObject(
   remoteObject: Protocol.Runtime.RemoteObject,
 ): any;
-declare function releaseObject(
+/**
+ * @internal
+ */
+export declare function releaseObject(
   client: CDPSession,
   remoteObject: Protocol.Runtime.RemoteObject,
 ): Promise<void>;
 /**
- * @public
+ * @internal
  */
 export interface PuppeteerEventListener {
   emitter: CommonEventEmitter;
   eventName: string | symbol;
   handler: (...args: any[]) => void;
 }
-declare function addEventListener(
+/**
+ * @internal
+ */
+export declare function addEventListener(
   emitter: CommonEventEmitter,
   eventName: string | symbol,
   handler: (...args: any[]) => void,
 ): PuppeteerEventListener;
-declare function removeEventListeners(
+/**
+ * @internal
+ */
+export declare function removeEventListeners(
   listeners: Array<{
     emitter: CommonEventEmitter;
     eventName: string | symbol;
     handler: (...args: any[]) => void;
   }>,
 ): void;
-declare function isString(obj: unknown): obj is string;
-declare function isNumber(obj: unknown): obj is number;
-declare function waitForEvent<T>(
+/**
+ * @internal
+ */
+export declare const isString: (obj: unknown) => obj is string;
+/**
+ * @internal
+ */
+export declare const isNumber: (obj: unknown) => obj is number;
+/**
+ * @internal
+ */
+export declare function waitForEvent<T>(
   emitter: CommonEventEmitter,
   eventName: string | symbol,
   predicate: (event: T) => Promise<boolean> | boolean,
   timeout: number,
   abortPromise: Promise<Error>,
 ): Promise<T>;
-declare function evaluationString(
+/**
+ * @internal
+ */
+export declare function createJSHandle(
+  context: ExecutionContext,
+  remoteObject: Protocol.Runtime.RemoteObject,
+): JSHandle | ElementHandle<any>;
+/**
+ * @internal
+ */
+export declare function evaluationString(
   fun: Function | string,
   ...args: unknown[]
 ): string;
-declare function pageBindingInitString(type: string, name: string): string;
-declare function pageBindingDeliverResultString(
+/**
+ * @internal
+ */
+export declare function pageBindingInitString(
+  type: string,
+  name: string,
+): string;
+/**
+ * @internal
+ */
+export declare function pageBindingDeliverResultString(
   name: string,
   seq: number,
   result: unknown,
 ): string;
-declare function pageBindingDeliverErrorString(
+/**
+ * @internal
+ */
+export declare function pageBindingDeliverErrorString(
   name: string,
   seq: number,
   message: string,
-  stack: string,
+  stack?: string,
 ): string;
-declare function pageBindingDeliverErrorValueString(
+/**
+ * @internal
+ */
+export declare function pageBindingDeliverErrorValueString(
   name: string,
   seq: number,
   value: unknown,
 ): string;
-declare function makePredicateString(
+/**
+ * @internal
+ */
+export declare function makePredicateString(
   predicate: Function,
-  predicateQueryHandler?: Function,
+  predicateQueryHandler: Function,
 ): string;
-declare function waitWithTimeout<T>(
+/**
+ * @internal
+ */
+export declare function waitWithTimeout<T>(
   promise: Promise<T>,
   taskName: string,
   timeout: number,
 ): Promise<T>;
-declare function getReadableStreamAsUint8Array(
-  readableStream: ReadableStream,
+/**
+ * @internal
+ */
+export declare function getReadableStreamAsUint8Array(
+  readable: ReadableStream,
   path?: string,
 ): Promise<Uint8Array | null>;
-declare function getReadableStreamFromProtocolStream(
+/**
+ * @internal
+ */
+export declare function getReadableStreamFromProtocolStream(
   client: CDPSession,
   handle: string,
 ): Promise<ReadableStream>;
-export declare const helper: {
-  evaluationString: typeof evaluationString;
-  pageBindingInitString: typeof pageBindingInitString;
-  pageBindingDeliverResultString: typeof pageBindingDeliverResultString;
-  pageBindingDeliverErrorString: typeof pageBindingDeliverErrorString;
-  pageBindingDeliverErrorValueString: typeof pageBindingDeliverErrorValueString;
-  makePredicateString: typeof makePredicateString;
-  getReadableStreamAsUint8Array: typeof getReadableStreamAsUint8Array;
-  getReadableStreamFromProtocolStream: typeof getReadableStreamFromProtocolStream;
-  waitWithTimeout: typeof waitWithTimeout;
-  waitForEvent: typeof waitForEvent;
-  isString: typeof isString;
-  isNumber: typeof isNumber;
-  addEventListener: typeof addEventListener;
-  removeEventListeners: typeof removeEventListeners;
-  valueFromRemoteObject: typeof valueFromRemoteObject;
-  getExceptionMessage: typeof getExceptionMessage;
-  releaseObject: typeof releaseObject;
-};
-export {};

@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
 import { ProtocolMapping } from "../../vendor/devtools-protocol/types/protocol-mapping.d.ts";
 import { EventEmitter } from "./EventEmitter.js";
-import { Frame } from "./FrameManager.js";
+import { Frame } from "./Frame.js";
 import { HTTPResponse } from "./HTTPResponse.js";
-import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
 /**
  * @public
  */
@@ -49,7 +49,7 @@ export interface ResponseForRequest {
    */
   headers: Record<string, unknown>;
   contentType: string;
-  body: string | Uint8Array;
+  body: string | Buffer;
 }
 /**
  * Resource types for HTTPRequests as perceived by the rendering engine.
@@ -76,7 +76,7 @@ interface CDPSession extends EventEmitter {
  * Whenever the page sends a request, such as for a network resource, the
  * following events are emitted by Puppeteer's `page`:
  *
- * - `request`:  emitted when the request is issued by the page.
+ * - `request`: emitted when the request is issued by the page.
  * - `requestfinished` - emitted when the response body is downloaded and the
  *   request is complete.
  *
@@ -101,6 +101,7 @@ interface CDPSession extends EventEmitter {
  * @public
  */
 export declare class HTTPRequest {
+  #private;
   /**
    * @internal
    */
@@ -108,11 +109,11 @@ export declare class HTTPRequest {
   /**
    * @internal
    */
-  _interceptionId: string;
+  _interceptionId: string | undefined;
   /**
    * @internal
    */
-  _failureText: any;
+  _failureText: string | null;
   /**
    * @internal
    */
@@ -125,29 +126,19 @@ export declare class HTTPRequest {
    * @internal
    */
   _redirectChain: HTTPRequest[];
-  private _client;
-  private _isNavigationRequest;
-  private _allowInterception;
-  private _interceptionHandled;
-  private _url;
-  private _resourceType;
-  private _method;
-  private _postData?;
-  private _headers;
-  private _frame;
-  private _continueRequestOverrides;
-  private _responseForRequest;
-  private _abortErrorReason;
-  private _interceptResolutionState;
-  private _interceptHandlers;
-  private _initiator;
+  /**
+   * Warning! Using this client can break Puppeteer. Use with caution.
+   *
+   * @experimental
+   */
+  get client(): CDPSession;
   /**
    * @internal
    */
   constructor(
     client: CDPSession,
-    frame: Frame,
-    interceptionId: string,
+    frame: Frame | null,
+    interceptionId: string | undefined,
     allowInterception: boolean,
     event: Protocol.Network.RequestWillBeSentEvent,
     redirectChain: HTTPRequest[],
@@ -173,14 +164,14 @@ export declare class HTTPRequest {
   abortErrorReason(): Protocol.Network.ErrorReason | null;
   /**
    * @returns An InterceptResolutionState object describing the current resolution
-   *  action and priority.
+   * action and priority.
    *
-   *  InterceptResolutionState contains:
-   *    action: InterceptResolutionAction
-   *    priority?: number
+   * InterceptResolutionState contains:
+   * action: InterceptResolutionAction
+   * priority?: number
    *
-   *  InterceptResolutionAction is one of: `abort`, `respond`, `continue`,
-   *  `disabled`, `none`, or `already-handled`.
+   * InterceptResolutionAction is one of: `abort`, `respond`, `continue`,
+   * `disabled`, `none`, or `already-handled`.
    */
   interceptResolutionState(): InterceptResolutionState;
   /**
@@ -247,7 +238,7 @@ export declare class HTTPRequest {
    * For example, if the website `http://example.com` has a single redirect to
    * `https://example.com`, then the chain will contain one request:
    *
-   * ```js
+   * ```ts
    * const response = await page.goto('http://example.com');
    * const chain = response.request().redirectChain();
    * console.log(chain.length); // 1
@@ -256,7 +247,7 @@ export declare class HTTPRequest {
    *
    * If the website `https://google.com` has no redirects, then the chain will be empty:
    *
-   * ```js
+   * ```ts
    * const response = await page.goto('https://google.com');
    * const chain = response.request().redirectChain();
    * console.log(chain.length); // 0
@@ -275,7 +266,7 @@ export declare class HTTPRequest {
    *
    * Example of logging all failed requests:
    *
-   * ```js
+   * ```ts
    * page.on('requestfailed', request => {
    *   console.log(request.url() + ' ' + request.failure().errorText);
    * });
@@ -300,7 +291,8 @@ export declare class HTTPRequest {
    * Exception is immediately thrown if the request interception is not enabled.
    *
    * @example
-   * ```js
+   *
+   * ```ts
    * await page.setRequestInterception(true);
    * page.on('request', request => {
    *   // Override headers
@@ -321,7 +313,6 @@ export declare class HTTPRequest {
     overrides?: ContinueRequestOverrides,
     priority?: number,
   ): Promise<void>;
-  private _continue;
   /**
    * Fulfills a request with the given response.
    *
@@ -334,13 +325,14 @@ export declare class HTTPRequest {
    *
    * @example
    * An example of fulfilling all requests with 404 responses:
-   * ```js
+   *
+   * ```ts
    * await page.setRequestInterception(true);
    * page.on('request', request => {
    *   request.respond({
    *     status: 404,
    *     contentType: 'text/plain',
-   *     body: 'Not Found!'
+   *     body: 'Not Found!',
    *   });
    * });
    * ```
@@ -357,7 +349,6 @@ export declare class HTTPRequest {
     response: Partial<ResponseForRequest>,
     priority?: number,
   ): Promise<void>;
-  private _respond;
   /**
    * Aborts a request.
    *
@@ -372,7 +363,6 @@ export declare class HTTPRequest {
    * immediately.
    */
   abort(errorCode?: ErrorCode, priority?: number): Promise<void>;
-  private _abort;
 }
 /**
  * @public

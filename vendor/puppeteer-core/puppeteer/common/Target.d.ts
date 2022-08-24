@@ -20,18 +20,12 @@ import { Browser, BrowserContext, IsPageTargetCallback } from "./Browser.js";
 import { Viewport } from "./PuppeteerViewport.js";
 import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
 import { TaskQueue } from "./TaskQueue.js";
+import { TargetManager } from "./TargetManager.js";
 /**
  * @public
  */
 export declare class Target {
-  private _targetInfo;
-  private _browserContext;
-  private _sessionFactory;
-  private _ignoreHTTPSErrors;
-  private _defaultViewport?;
-  private _pagePromise?;
-  private _workerPromise?;
-  private _screenshotTaskQueue;
+  #private;
   /**
    * @internal
    */
@@ -65,17 +59,31 @@ export declare class Target {
    */
   constructor(
     targetInfo: Protocol.Target.TargetInfo,
+    session: CDPSession | undefined,
     browserContext: BrowserContext,
-    sessionFactory: () => Promise<CDPSession>,
+    targetManager: TargetManager,
+    sessionFactory: (isAutoAttachEmulated: boolean) => Promise<CDPSession>,
     ignoreHTTPSErrors: boolean,
     defaultViewport: Viewport | null,
     screenshotTaskQueue: TaskQueue,
     isPageTargetCallback: IsPageTargetCallback,
   );
   /**
+   * @internal
+   */
+  _session(): CDPSession | undefined;
+  /**
    * Creates a Chrome Devtools Protocol session attached to the target.
    */
   createCDPSession(): Promise<CDPSession>;
+  /**
+   * @internal
+   */
+  _targetManager(): TargetManager;
+  /**
+   * @internal
+   */
+  _getTargetInfo(): Protocol.Target.TargetInfo;
   /**
    * If the target is not of type `"page"` or `"background_page"`, returns `null`.
    */
@@ -111,7 +119,7 @@ export declare class Target {
   /**
    * Get the target that opened this target. Top-level targets return `null`.
    */
-  opener(): Target | null;
+  opener(): Target | undefined;
   /**
    * @internal
    */

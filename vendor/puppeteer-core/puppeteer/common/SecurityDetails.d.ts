@@ -21,12 +21,7 @@ import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
  * @public
  */
 export declare class SecurityDetails {
-  private _subjectName;
-  private _issuer;
-  private _validFrom;
-  private _validTo;
-  private _protocol;
-  private _sanList;
+  #private;
   /**
    * @internal
    */

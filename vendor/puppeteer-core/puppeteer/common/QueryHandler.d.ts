@@ -13,62 +13,108 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { DOMWorld, WaitForSelectorOptions } from "./DOMWorld.js";
-import { ElementHandle, JSHandle } from "./JSHandle.js";
+import { IsolatedWorld, WaitForSelectorOptions } from "./IsolatedWorld.js";
+import { ElementHandle } from "./ElementHandle.js";
+import { JSHandle } from "./JSHandle.js";
+/**
+ * @public
+ */
+export interface CustomQueryHandler {
+  /**
+   * @returns A {@link Node} matching the given `selector` from {@link node}.
+   */
+  queryOne?: (node: any, selector: string) => any | null;
+  /**
+   * @returns Some {@link Node}s matching the given `selector` from {@link node}.
+   */
+  queryAll?: (node: any, selector: string) => any[];
+}
 /**
  * @internal
  */
 export interface InternalQueryHandler {
+  /**
+   * Queries for a single node given a selector and {@link ElementHandle}.
+   *
+   * Akin to {@link Window.prototype.querySelector}.
+   */
   queryOne?: (
-    element: ElementHandle,
+    element: ElementHandle<any>,
     selector: string,
-  ) => Promise<ElementHandle | null>;
+  ) => Promise<ElementHandle<any> | null>;
+  /**
+   * Queries for multiple nodes given a selector and {@link ElementHandle}.
+   *
+   * Akin to {@link Window.prototype.querySelectorAll}.
+   */
+  queryAll?: (
+    element: ElementHandle<any>,
+    selector: string,
+  ) => Promise<Array<ElementHandle<any>>>;
+  /**
+   * Queries for multiple nodes given a selector and {@link ElementHandle}.
+   * Unlike {@link queryAll}, this returns a handle to a node array.
+   *
+   * Akin to {@link Window.prototype.querySelectorAll}.
+   */
+  queryAllArray?: (
+    element: ElementHandle<any>,
+    selector: string,
+  ) => Promise<JSHandle<any[]>>;
+  /**
+   * Waits until a single node appears for a given selector and
+   * {@link ElementHandle}.
+   *
+   * Akin to {@link Window.prototype.querySelectorAll}.
+   */
   waitFor?: (
-    domWorld: DOMWorld,
+    isolatedWorld: IsolatedWorld,
     selector: string,
     options: WaitForSelectorOptions,
-  ) => Promise<ElementHandle | null>;
-  queryAll?: (
-    element: ElementHandle,
-    selector: string,
-  ) => Promise<ElementHandle[]>;
-  queryAllArray?: (
-    element: ElementHandle,
-    selector: string,
-  ) => Promise<JSHandle>;
+  ) => Promise<ElementHandle<any> | null>;
 }
 /**
- * Contains two functions `queryOne` and `queryAll` that can
- * be {@link Puppeteer.registerCustomQueryHandler | registered}
- * as alternative querying strategies. The functions `queryOne` and `queryAll`
- * are executed in the page context.  `queryOne` should take an `Element` and a
- * selector string as argument and return a single `Element` or `null` if no
- * element is found. `queryAll` takes the same arguments but should instead
- * return a `NodeListOf<any>` or `Array<any>` with all the elements
- * that match the given query selector.
+ * Registers a {@link CustomQueryHandler | custom query handler}.
+ *
+ * @remarks
+ * After registration, the handler can be used everywhere where a selector is
+ * expected by prepending the selection string with `<name>/`. The name is only
+ * allowed to consist of lower- and upper case latin letters.
+ *
+ * @example
+ *
+ * ```
+ * puppeteer.registerCustomQueryHandler('text', { … });
+ * const aHandle = await page.$('text/…');
+ * ```
+ *
+ * @param name - The name that the custom query handler will be registered
+ * under.
+ * @param queryHandler - The {@link CustomQueryHandler | custom query handler}
+ * to register.
+ *
  * @public
- */
-export interface CustomQueryHandler {
-  queryOne?: (element: any, selector: string) => any | null;
-  queryAll?: (element: any, selector: string) => any[];
-}
-/**
- * @internal
  */
 export declare function registerCustomQueryHandler(
   name: string,
   handler: CustomQueryHandler,
 ): void;
 /**
- * @internal
+ * @param name - The name of the query handler to unregistered.
+ *
+ * @public
  */
 export declare function unregisterCustomQueryHandler(name: string): void;
 /**
- * @internal
+ * @returns a list with the names of all registered custom query handlers.
+ *
+ * @public
  */
 export declare function customQueryHandlerNames(): string[];
 /**
- * @internal
+ * Clears all registered handlers.
+ *
+ * @public
  */
 export declare function clearCustomQueryHandlers(): void;
 /**

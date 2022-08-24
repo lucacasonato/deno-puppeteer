@@ -116,7 +116,8 @@ class ChromeLauncher implements ProductLauncher {
         slowMo,
         preferredRevision: this._preferredRevision,
       });
-      const browser = await Browser.create(
+      const browser = await Browser._create(
+        "chrome",
         connection,
         [],
         ignoreHTTPSErrors,
@@ -277,7 +278,8 @@ class FirefoxLauncher implements ProductLauncher {
         slowMo,
         preferredRevision: this._preferredRevision,
       });
-      const browser = await Browser.create(
+      const browser = await Browser._create(
+        "firefox",
         connection,
         [],
         ignoreHTTPSErrors,

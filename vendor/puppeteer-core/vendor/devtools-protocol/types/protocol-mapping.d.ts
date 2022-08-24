@@ -228,6 +228,10 @@ export namespace ProtocolMapping {
      */
     "DOM.pseudoElementAdded": [Protocol.DOM.PseudoElementAddedEvent];
     /**
+     * Called when top layer elements are changed.
+     */
+    "DOM.topLayerElementsUpdated": [];
+    /**
      * Called when a pseudo element is removed from an element.
      */
     "DOM.pseudoElementRemoved": [Protocol.DOM.PseudoElementRemovedEvent];
@@ -569,6 +573,12 @@ export namespace ProtocolMapping {
      */
     "Page.backForwardCacheNotUsed": [
       Protocol.Page.BackForwardCacheNotUsedEvent,
+    ];
+    /**
+     * Fired when a prerender attempt is completed.
+     */
+    "Page.prerenderAttemptCompleted": [
+      Protocol.Page.PrerenderAttemptCompletedEvent,
     ];
     "Page.loadEventFired": [Protocol.Page.LoadEventFiredEvent];
     /**
@@ -921,7 +931,19 @@ export namespace ProtocolMapping {
       returnType: void;
     };
     /**
-     * Restarts particular call frame from the beginning.
+     * Restarts particular call frame from the beginning. The old, deprecated
+     * behavior of `restartFrame` is to stay paused and allow further CDP commands
+     * after a restart was scheduled. This can cause problems with restarting, so
+     * we now continue execution immediatly after it has been scheduled until we
+     * reach the beginning of the restarted frame.
+     *
+     * To stay back-wards compatible, `restartFrame` now expects a `mode`
+     * parameter to be present. If the `mode` parameter is missing, `restartFrame`
+     * errors out.
+     *
+     * The various return values are deprecated and `callFrames` is always empty.
+     * Use the call frames from the `Debugger#paused` events instead, that fires
+     * once V8 pauses at the beginning of the restarted function.
      */
     "Debugger.restartFrame": {
       paramsType: [Protocol.Debugger.RestartFrameRequest];
@@ -1024,6 +1046,12 @@ export namespace ProtocolMapping {
     };
     /**
      * Edits JavaScript source live.
+     *
+     * In general, functions that are currently on the stack can not be edited with
+     * a single exception: If the edited function is the top-most stack frame and
+     * that is the only activation of that function on the stack. In this case
+     * the live edit will be successful and a `Debugger.restartFrame` for the
+     * top-most function is automatically triggered.
      */
     "Debugger.setScriptSource": {
       paramsType: [Protocol.Debugger.SetScriptSourceRequest];
@@ -1350,6 +1378,17 @@ export namespace ProtocolMapping {
     "Runtime.removeBinding": {
       paramsType: [Protocol.Runtime.RemoveBindingRequest];
       returnType: void;
+    };
+    /**
+     * This method tries to lookup and populate exception details for a
+     * JavaScript Error object.
+     * Note that the stackTrace portion of the resulting exceptionDetails will
+     * only be populated if the Runtime domain was enabled at the time when the
+     * Error was thrown.
+     */
+    "Runtime.getExceptionDetails": {
+      paramsType: [Protocol.Runtime.GetExceptionDetailsRequest];
+      returnType: Protocol.Runtime.GetExceptionDetailsResponse;
     };
     /**
      * Returns supported domains.
@@ -1830,6 +1869,13 @@ export namespace ProtocolMapping {
       returnType: Protocol.CSS.SetSupportsTextResponse;
     };
     /**
+     * Modifies the expression of a scope at-rule.
+     */
+    "CSS.setScopeText": {
+      paramsType: [Protocol.CSS.SetScopeTextRequest];
+      returnType: Protocol.CSS.SetScopeTextResponse;
+    };
+    /**
      * Modifies the rule selector.
      */
     "CSS.setRuleSelector": {
@@ -2168,6 +2214,15 @@ export namespace ProtocolMapping {
     "DOM.querySelectorAll": {
       paramsType: [Protocol.DOM.QuerySelectorAllRequest];
       returnType: Protocol.DOM.QuerySelectorAllResponse;
+    };
+    /**
+     * Returns NodeIds of current top layer elements.
+     * Top layer is rendered closest to the user within a viewport, therefore its elements always
+     * appear on top of all other content.
+     */
+    "DOM.getTopLayerElements": {
+      paramsType: [];
+      returnType: Protocol.DOM.GetTopLayerElementsResponse;
     };
     /**
      * Re-does the last undone action.
@@ -2688,6 +2743,10 @@ export namespace ProtocolMapping {
       paramsType: [Protocol.Emulation.SetDisabledImageTypesRequest];
       returnType: void;
     };
+    "Emulation.setHardwareConcurrencyOverride": {
+      paramsType: [Protocol.Emulation.SetHardwareConcurrencyOverrideRequest];
+      returnType: void;
+    };
     /**
      * Allows overriding user agent with the given string.
      */
@@ -2706,7 +2765,7 @@ export namespace ProtocolMapping {
      * Sends a BeginFrame to the target and returns when the frame was completed. Optionally captures a
      * screenshot from the resulting frame. Requires that the target was created with enabled
      * BeginFrameControl. Designed for use with --run-all-compositor-stages-before-draw, see also
-     * https://goo.gl/3zHXhB for more background.
+     * https://goo.gle/chrome-headless-rendering for more background.
      */
     "HeadlessExperimental.beginFrame": {
       paramsType: [Protocol.HeadlessExperimental.BeginFrameRequest?];
@@ -4055,6 +4114,13 @@ export namespace ProtocolMapping {
       returnType: void;
     };
     /**
+     * Returns a storage key given a frame id.
+     */
+    "Storage.getStorageKeyForFrame": {
+      paramsType: [Protocol.Storage.GetStorageKeyForFrameRequest];
+      returnType: Protocol.Storage.GetStorageKeyForFrameResponse;
+    };
+    /**
      * Clears storage for origin.
      */
     "Storage.clearDataForOrigin": {
@@ -4463,7 +4529,7 @@ export namespace ProtocolMapping {
      * retrieval with a virtual authenticator.
      */
     "WebAuthn.enable": {
-      paramsType: [];
+      paramsType: [Protocol.WebAuthn.EnableRequest?];
       returnType: void;
     };
     /**

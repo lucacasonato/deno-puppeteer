@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* Use the global version. */
+/** Use the global version. */
 export const getFetch = async () => {
   return globalThis.fetch;
 };

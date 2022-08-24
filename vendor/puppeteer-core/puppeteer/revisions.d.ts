@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-declare type Revisions = Readonly<{
-  readonly chromium: string;
-  readonly firefox: string;
+/**
+ * @internal
+ */
+export declare const PUPPETEER_REVISIONS: Readonly<{
+  chromium: "1022525";
+  firefox: "latest";
 }>;
-export declare const PUPPETEER_REVISIONS: Revisions;
-export {};

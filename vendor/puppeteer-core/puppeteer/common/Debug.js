@@ -18,13 +18,9 @@
  * A debug function that can be used in any environment.
  *
  * @remarks
- *
  * If used in Node, it falls back to the
  * {@link https://www.npmjs.com/package/debug | debug module}. In the browser it
  * uses `console.log`.
- *
- * @param prefix - this will be prefixed to each log.
- * @returns a function that can be called to log to that debug channel.
  *
  * In Node, use the `DEBUG` environment variable to control logging:
  *
@@ -43,12 +39,18 @@
  * ```
  *
  * @example
+ *
  * ```
  * const log = debug('Page');
  *
  * log('new page created')
  * // logs "Page: new page created"
  * ```
+ *
+ * @param prefix - this will be prefixed to each log.
+ * @returns a function that can be called to log to that debug channel.
+ *
+ * @internal
  */
 export const debug = (prefix) => {
   return (...logArgs) => {
@@ -57,12 +59,11 @@ export const debug = (prefix) => {
       return;
     }
     const everythingShouldBeLogged = debugLevel === "*";
-    const prefixMatchesDebugLevel = everythingShouldBeLogged ||
-      /**
-       * If the debug level is `foo*`, that means we match any prefix that
-       * starts with `foo`. If the level is `foo`, we match only the prefix
-       * `foo`.
-       */
+    const prefixMatchesDebugLevel = everythingShouldBeLogged || /**
+     * If the debug level is `foo*`, that means we match any prefix that
+     * starts with `foo`. If the level is `foo`, we match only the prefix
+     * `foo`.
+     */
       (debugLevel.endsWith("*")
         ? prefix.startsWith(debugLevel)
         : prefix === debugLevel);
