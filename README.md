@@ -2,7 +2,7 @@
 
 <img src="./logo.png" height="200" align="right">
 
-###### [API](https://github.com/puppeteer/puppeteer/blob/v14.1.1/docs/api.md)
+###### [API](https://github.com/puppeteer/puppeteer/blob/v16.2.0/docs/api.md)
 
 A fork of [Puppeteer](https://pptr.dev/) running on Deno.
 
@@ -31,7 +31,7 @@ Here are a few examples to get you started:
 To use Puppeteer, import it like so:
 
 ```ts
-import puppeteer from "https://deno.land/x/puppeteer@14.1.1/mod.ts";
+import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
 ```
 
 Puppeteer can use any recent version of Chromium or Firefox Nightly, but this
@@ -39,13 +39,13 @@ version of Puppeteer is only validated against a specific version. To cache
 these versions in the Puppeteer cache, run the commands below.
 
 ```shell
-PUPPETEER_PRODUCT=chrome deno run -A --unstable https://deno.land/x/puppeteer@14.1.1/install.ts
-PUPPETEER_PRODUCT=firefox deno run -A --unstable https://deno.land/x/puppeteer@14.1.1/install.ts
+PUPPETEER_PRODUCT=chrome deno run -A --unstable https://deno.land/x/puppeteer@16.2.0/install.ts
+PUPPETEER_PRODUCT=firefox deno run -A --unstable https://deno.land/x/puppeteer@16.2.0/install.ts
 ```
 
 You can find all of the supported environment variables to customize
 installation
-[in the Puppeteer docs](https://pptr.dev/#?product=Puppeteer&version=v14.1.1&show=api-environment-variables).
+[in the Puppeteer docs](https://pptr.dev/#?product=Puppeteer&version=v16.2.0&show=api-environment-variables).
 
 ### Usage
 
@@ -59,7 +59,7 @@ _example.png_:
 Save file as **example.js**
 
 ```js
-import puppeteer from "https://deno.land/x/puppeteer@14.1.1/mod.ts";
+import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
 
 const browser = await puppeteer.launch();
 const page = await browser.newPage();
@@ -77,14 +77,14 @@ deno run -A --unstable example.js
 
 Puppeteer sets an initial page size to 800×600px, which defines the screenshot
 size. The page size can be customized with
-[`Page.setViewport()`](https://github.com/puppeteer/puppeteer/blob/v14.1.1/docs/api.md#pagesetviewportviewport).
+[`Page.setViewport()`](https://github.com/puppeteer/puppeteer/blob/v16.2.0/docs/api.md#pagesetviewportviewport).
 
 **Example** - create a PDF.
 
 Save file as **hn.js**
 
 ```js
-import puppeteer from "https://deno.land/x/puppeteer@14.1.1/mod.ts";
+import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
 
 const browser = await puppeteer.launch();
 const page = await browser.newPage();
@@ -103,7 +103,7 @@ deno run -A --unstable hn.js
 ```
 
 See
-[`Page.pdf()`](https://github.com/puppeteer/puppeteer/blob/v14.1.1/docs/api.md#pagepdfoptions)
+[`Page.pdf()`](https://github.com/puppeteer/puppeteer/blob/v16.2.0/docs/api.md#pagepdfoptions)
 for more information about creating pdfs.
 
 **Example** - evaluate script in the context of the page
@@ -111,7 +111,7 @@ for more information about creating pdfs.
 Save file as **get-dimensions.js**
 
 ```js
-import puppeteer from "https://deno.land/x/puppeteer@14.1.1/mod.ts";
+import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
 
 const browser = await puppeteer.launch();
 const page = await browser.newPage();
