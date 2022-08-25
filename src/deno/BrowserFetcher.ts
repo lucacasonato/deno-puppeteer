@@ -16,7 +16,7 @@
 
 import { Product } from "../../vendor/puppeteer-core/puppeteer/common/Product.js";
 import { debug } from "../../vendor/puppeteer-core/puppeteer/common/Debug.js";
-import { assert } from "../../vendor/puppeteer-core/puppeteer/common/assert.js";
+import { assert } from "../../vendor/puppeteer-core/puppeteer/util/assert.js";
 import {
   copyDir,
   exists,

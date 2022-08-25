@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
+import { CDPSession } from "./Connection.js";
+import { ConsoleMessageType } from "./ConsoleMessage.js";
+import { EvaluateFunc, HandleFor } from "./types.js";
 import { EventEmitter } from "./EventEmitter.js";
 import { ExecutionContext } from "./ExecutionContext.js";
 import { JSHandle } from "./JSHandle.js";
-import { CDPSession } from "./Connection.js";
-import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
-import { EvaluateHandleFn, SerializableOrJSHandle } from "./EvalTypes.js";
 /**
  * @internal
  */
 export declare type ConsoleAPICalledCallback = (
-  eventType: string,
+  eventType: ConsoleMessageType,
   handles: JSHandle[],
   trace: Protocol.Runtime.StackTrace,
 ) => void;
@@ -34,7 +35,7 @@ export declare type ExceptionThrownCallback = (
   details: Protocol.Runtime.ExceptionDetails,
 ) => void;
 /**
- * The WebWorker class represents a
+ * This class represents a
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API | WebWorker}.
  *
  * @remarks
@@ -42,9 +43,14 @@ export declare type ExceptionThrownCallback = (
  * object to signal the worker lifecycle.
  *
  * @example
- * ```js
- * page.on('workercreated', worker => console.log('Worker created: ' + worker.url()));
- * page.on('workerdestroyed', worker => console.log('Worker destroyed: ' + worker.url()));
+ *
+ * ```ts
+ * page.on('workercreated', worker =>
+ *   console.log('Worker created: ' + worker.url())
+ * );
+ * page.on('workerdestroyed', worker =>
+ *   console.log('Worker destroyed: ' + worker.url())
+ * );
  *
  * console.log('Current workers:');
  * for (const worker of page.workers()) {
@@ -55,10 +61,7 @@ export declare type ExceptionThrownCallback = (
  * @public
  */
 export declare class WebWorker extends EventEmitter {
-  _client: CDPSession;
-  _url: string;
-  _executionContextPromise: Promise<ExecutionContext>;
-  _executionContextCallback: (value: ExecutionContext) => void;
+  #private;
   /**
    * @internal
    */
@@ -91,10 +94,13 @@ export declare class WebWorker extends EventEmitter {
    * @param args - Arguments to pass to `pageFunction`.
    * @returns Promise which resolves to the return value of `pageFunction`.
    */
-  evaluate<ReturnType>(
-    pageFunction: Function | string,
-    ...args: any[]
-  ): Promise<ReturnType>;
+  evaluate<
+    Params extends unknown[],
+    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>,
+  >(
+    pageFunction: Func | string,
+    ...args: Params
+  ): Promise<Awaited<ReturnType<Func>>>;
   /**
    * The only difference between `worker.evaluate` and `worker.evaluateHandle`
    * is that `worker.evaluateHandle` returns in-page object (JSHandle). If the
@@ -107,8 +113,11 @@ export declare class WebWorker extends EventEmitter {
    * @param args - Arguments to pass to `pageFunction`.
    * @returns Promise which resolves to the return value of `pageFunction`.
    */
-  evaluateHandle<HandlerType extends JSHandle = JSHandle>(
-    pageFunction: EvaluateHandleFn,
-    ...args: SerializableOrJSHandle[]
-  ): Promise<JSHandle>;
+  evaluateHandle<
+    Params extends unknown[],
+    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>,
+  >(
+    pageFunction: Func | string,
+    ...args: Params
+  ): Promise<HandleFor<Awaited<ReturnType<Func>>>>;
 }

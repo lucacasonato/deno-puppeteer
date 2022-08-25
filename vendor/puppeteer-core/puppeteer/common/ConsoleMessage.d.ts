@@ -60,10 +60,7 @@ export declare type ConsoleMessageType =
  * @public
  */
 export declare class ConsoleMessage {
-  private _type;
-  private _text;
-  private _args;
-  private _stackTraceLocations;
+  #private;
   /**
    * @public
    */

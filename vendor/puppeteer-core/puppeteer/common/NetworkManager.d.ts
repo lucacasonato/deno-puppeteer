@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
 import { ProtocolMapping } from "../../vendor/devtools-protocol/types/protocol-mapping.d.ts";
 import { EventEmitter } from "./EventEmitter.js";
-import { Frame } from "./FrameManager.js";
-import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
-import { HTTPRequest } from "./HTTPRequest.js";
-import { FetchRequestId, NetworkEventManager } from "./NetworkEventManager.js";
+import { Frame } from "./Frame.js";
 /**
  * @public
  */
@@ -66,22 +64,16 @@ interface FrameManager {
  * @internal
  */
 export declare class NetworkManager extends EventEmitter {
-  _client: CDPSession;
-  _ignoreHTTPSErrors: boolean;
-  _frameManager: FrameManager;
-  _networkEventManager: NetworkEventManager;
-  _extraHTTPHeaders: Record<string, string>;
-  _credentials?: Credentials;
-  _attemptedAuthentications: Set<string>;
-  _userRequestInterceptionEnabled: boolean;
-  _protocolRequestInterceptionEnabled: boolean;
-  _userCacheDisabled: boolean;
-  _emulatedNetworkConditions: InternalNetworkConditions;
+  #private;
   constructor(
     client: CDPSession,
     ignoreHTTPSErrors: boolean,
     frameManager: FrameManager,
   );
+  /**
+   * Initialize calls should avoid async dependencies between CDP calls as those
+   * might not resolve until after the target is resumed causing a deadlock.
+   */
   initialize(): Promise<void>;
   authenticate(credentials?: Credentials): Promise<void>;
   setExtraHTTPHeaders(extraHTTPHeaders: Record<string, string>): Promise<void>;
@@ -91,54 +83,11 @@ export declare class NetworkManager extends EventEmitter {
   emulateNetworkConditions(
     networkConditions: NetworkConditions | null,
   ): Promise<void>;
-  _updateNetworkConditions(): Promise<void>;
   setUserAgent(
     userAgent: string,
     userAgentMetadata?: Protocol.Emulation.UserAgentMetadata,
   ): Promise<void>;
   setCacheEnabled(enabled: boolean): Promise<void>;
   setRequestInterception(value: boolean): Promise<void>;
-  _updateProtocolRequestInterception(): Promise<void>;
-  _cacheDisabled(): boolean;
-  _updateProtocolCacheDisabled(): Promise<void>;
-  _onRequestWillBeSent(event: Protocol.Network.RequestWillBeSentEvent): void;
-  _onAuthRequired(event: Protocol.Fetch.AuthRequiredEvent): void;
-  /**
-   * CDP may send a Fetch.requestPaused without or before a
-   * Network.requestWillBeSent
-   *
-   * CDP may send multiple Fetch.requestPaused
-   * for the same Network.requestWillBeSent.
-   */
-  _onRequestPaused(event: Protocol.Fetch.RequestPausedEvent): void;
-  _patchRequestEventHeaders(
-    requestWillBeSentEvent: Protocol.Network.RequestWillBeSentEvent,
-    requestPausedEvent: Protocol.Fetch.RequestPausedEvent,
-  ): void;
-  _onRequest(
-    event: Protocol.Network.RequestWillBeSentEvent,
-    fetchRequestId?: FetchRequestId,
-  ): void;
-  _onRequestServedFromCache(
-    event: Protocol.Network.RequestServedFromCacheEvent,
-  ): void;
-  _handleRequestRedirect(
-    request: HTTPRequest,
-    responsePayload: Protocol.Network.Response,
-    extraInfo: Protocol.Network.ResponseReceivedExtraInfoEvent,
-  ): void;
-  _emitResponseEvent(
-    responseReceived: Protocol.Network.ResponseReceivedEvent,
-    extraInfo: Protocol.Network.ResponseReceivedExtraInfoEvent | null,
-  ): void;
-  _onResponseReceived(event: Protocol.Network.ResponseReceivedEvent): void;
-  _onResponseReceivedExtraInfo(
-    event: Protocol.Network.ResponseReceivedExtraInfoEvent,
-  ): void;
-  _forgetRequest(request: HTTPRequest, events: boolean): void;
-  _onLoadingFinished(event: Protocol.Network.LoadingFinishedEvent): void;
-  _emitLoadingFinished(event: Protocol.Network.LoadingFinishedEvent): void;
-  _onLoadingFailed(event: Protocol.Network.LoadingFailedEvent): void;
-  _emitLoadingFailed(event: Protocol.Network.LoadingFailedEvent): void;
 }
 export {};

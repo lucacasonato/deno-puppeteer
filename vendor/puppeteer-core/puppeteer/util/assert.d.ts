@@ -1,4 +1,3 @@
-/// <reference types="./EvalTypes.d.ts" />
 /**
  * Copyright 2020 Google Inc. All rights reserved.
  *
@@ -14,5 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export {};
-//# sourceMappingURL=EvalTypes.js.map
+/**
+ * Asserts that the given value is truthy.
+ * @param value - some conditional statement
+ * @param message - the error message to throw if the value is not truthy.
+ *
+ * @internal
+ */
+export declare const assert: (
+  value: unknown,
+  message?: string,
+) => asserts value;

@@ -21,7 +21,8 @@ import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
  * @remarks
  *
  * @example
- * ```js
+ *
+ * ```ts
  * const puppeteer = require('puppeteer');
  *
  * (async () => {
@@ -35,14 +36,11 @@ import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
  *   page.evaluate(() => alert('1'));
  * })();
  * ```
+ *
  * @public
  */
 export declare class Dialog {
-  private _client;
-  private _type;
-  private _message;
-  private _defaultValue;
-  private _handled;
+  #private;
   /**
    * @internal
    */
