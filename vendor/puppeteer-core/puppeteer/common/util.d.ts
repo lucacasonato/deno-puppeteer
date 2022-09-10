@@ -92,7 +92,7 @@ export declare function waitForEvent<T>(
 export declare function createJSHandle(
   context: ExecutionContext,
   remoteObject: Protocol.Runtime.RemoteObject,
-): JSHandle | ElementHandle<any>;
+): JSHandle | ElementHandle<Node>;
 /**
  * @internal
  */

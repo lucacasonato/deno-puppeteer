@@ -5182,7 +5182,7 @@ export namespace Protocol {
        */
       nodeId: DOM.NodeId;
       /**
-       * any pseudo classes to force when computing the element's style.
+       * Element pseudo classes to force when computing the element's style.
        */
       forcedPseudoClasses: string[];
     }
@@ -15802,7 +15802,7 @@ export namespace Protocol {
      */
     export interface GPUInfo {
       /**
-       * The graphics devices on the system. any 0 is the primary GPU.
+       * The graphics devices on the system. Element 0 is the primary GPU.
        */
       devices: GPUDevice[];
       /**

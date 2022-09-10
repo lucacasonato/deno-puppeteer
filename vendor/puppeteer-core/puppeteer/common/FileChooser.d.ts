@@ -43,7 +43,7 @@ export declare class FileChooser {
    * @internal
    */
   constructor(
-    element: ElementHandle<any>,
+    element: ElementHandle<HTMLInputElement>,
     event: Protocol.Page.FileChooserOpenedEvent,
   );
   /**

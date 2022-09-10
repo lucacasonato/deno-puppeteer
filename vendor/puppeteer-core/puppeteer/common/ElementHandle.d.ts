@@ -45,11 +45,11 @@ import { KeyInput } from "./USKeyboardLayout.js";
  * If you're using TypeScript, ElementHandle takes a generic argument that
  * denotes the type of element the handle is holding within. For example, if you
  * have a handle to a `<select>` element, you can type it as
- * `ElementHandle<HTMLSelectany>` and you get some nicer type checks.
+ * `ElementHandle<HTMLSelectElement>` and you get some nicer type checks.
  *
  * @public
  */
-export declare class ElementHandle<ElementType extends any = any>
+export declare class ElementHandle<ElementType extends Node = Element>
   extends JSHandle<ElementType> {
   #private;
   /**
@@ -173,7 +173,7 @@ export declare class ElementHandle<ElementType extends any = any>
    * If there are no such elements, the method will resolve to an empty array.
    * @param expression - Expression to {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/evaluate | evaluate}
    */
-  $x(expression: string): Promise<Array<ElementHandle<any>>>;
+  $x(expression: string): Promise<Array<ElementHandle<Node>>>;
   /**
    * Wait for an element matching the given selector to appear in the current
    * element.
@@ -276,7 +276,7 @@ export declare class ElementHandle<ElementType extends any = any>
     visible?: boolean;
     hidden?: boolean;
     timeout?: number;
-  }): Promise<ElementHandle<any> | null>;
+  }): Promise<ElementHandle<Node> | null>;
   asElement(): ElementHandle<ElementType> | null;
   /**
    * Resolves to the content frame for element handles referencing
@@ -292,44 +292,51 @@ export declare class ElementHandle<ElementType extends any = any>
    * uses {@link Page.mouse} to hover over the center of the element.
    * If the element is detached from DOM, the method throws an error.
    */
-  hover(this: ElementHandle<any>): Promise<void>;
+  hover(this: ElementHandle<Element>): Promise<void>;
   /**
    * This method scrolls element into view if needed, and then
    * uses {@link Page.mouse} to click in the center of the element.
    * If the element is detached from DOM, the method throws an error.
    */
-  click(this: ElementHandle<any>, options?: ClickOptions): Promise<void>;
+  click(this: ElementHandle<Element>, options?: ClickOptions): Promise<void>;
   /**
    * This method creates and captures a dragevent from the element.
    */
   drag(
-    this: ElementHandle<any>,
+    this: ElementHandle<Element>,
     target: Point,
   ): Promise<Protocol.Input.DragData>;
   /**
    * This method creates a `dragenter` event on the element.
    */
   dragEnter(
-    this: ElementHandle<any>,
+    this: ElementHandle<Element>,
     data?: Protocol.Input.DragData,
   ): Promise<void>;
   /**
    * This method creates a `dragover` event on the element.
    */
   dragOver(
-    this: ElementHandle<any>,
+    this: ElementHandle<Element>,
     data?: Protocol.Input.DragData,
   ): Promise<void>;
   /**
    * This method triggers a drop on the element.
    */
-  drop(this: ElementHandle<any>, data?: Protocol.Input.DragData): Promise<void>;
+  drop(
+    this: ElementHandle<Element>,
+    data?: Protocol.Input.DragData,
+  ): Promise<void>;
   /**
    * This method triggers a dragenter, dragover, and drop on the element.
    */
-  dragAndDrop(this: ElementHandle<any>, target: ElementHandle<any>, options?: {
-    delay: number;
-  }): Promise<void>;
+  dragAndDrop(
+    this: ElementHandle<Element>,
+    target: ElementHandle<Node>,
+    options?: {
+      delay: number;
+    },
+  ): Promise<void>;
   /**
    * Triggers a `change` and `input` event once all the provided options have been
    * selected. If there's no `<select>` element matching `selector`, the method
@@ -358,7 +365,7 @@ export declare class ElementHandle<ElementType extends any = any>
    * paths must be absolute.
    */
   uploadFile(
-    this: ElementHandle<any>,
+    this: ElementHandle<HTMLInputElement>,
     ...filePaths: string[]
   ): Promise<void>;
   /**
@@ -366,7 +373,7 @@ export declare class ElementHandle<ElementType extends any = any>
    * {@link Touchscreen.tap} to tap in the center of the element.
    * If the element is detached from DOM, the method throws an error.
    */
-  tap(this: ElementHandle<any>): Promise<void>;
+  tap(this: ElementHandle<Element>): Promise<void>;
   /**
    * Calls {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus | focus} on the element.
    */
@@ -432,13 +439,13 @@ export declare class ElementHandle<ElementType extends any = any>
    * If the element is detached from DOM, the method throws an error.
    */
   screenshot(
-    this: ElementHandle<any>,
+    this: ElementHandle<Element>,
     options?: ScreenshotOptions,
   ): Promise<string | Buffer>;
   /**
    * Resolves to true if the element is visible in the current viewport.
    */
-  isIntersectingViewport(this: ElementHandle<any>, options?: {
+  isIntersectingViewport(this: ElementHandle<Element>, options?: {
     threshold?: number;
   }): Promise<boolean>;
 }

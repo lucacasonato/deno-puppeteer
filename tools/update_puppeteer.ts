@@ -90,13 +90,6 @@ for (const fileName in files) {
           "'devtools-protocol/types/protocol-mapping.js'",
           "'../../vendor/devtools-protocol/types/protocol-mapping.d.ts'",
         )
-        .replaceAll(" Element ", " any ")
-        .replaceAll(" Element ", " any ")
-        .replaceAll(" Element[", " any[")
-        .replaceAll(" Element,", " any,")
-        .replaceAll("Element>", "any>")
-        .replaceAll("| Document", "")
-        .replaceAll("| NodeListOf<any>", "")
         .replaceAll("NodeJS.Timeout", "number"),
     );
   }
