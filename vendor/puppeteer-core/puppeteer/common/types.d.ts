@@ -22,7 +22,7 @@ export declare type Awaitable<T> = T | PromiseLike<T>;
 /**
  * @public
  */
-export declare type HandleFor<T> = T extends any ? ElementHandle<T>
+export declare type HandleFor<T> = T extends Node ? ElementHandle<T>
   : JSHandle<T>;
 /**
  * @public
@@ -48,6 +48,6 @@ export declare type EvaluateFunc<T extends unknown[]> = (
  * @public
  */
 export declare type NodeFor<Selector extends string> = Selector extends
-  keyof any ? any[Selector]
-  : Selector extends keyof any ? any[Selector]
-  : any;
+  keyof HTMLElementTagNameMap ? HTMLElementTagNameMap[Selector]
+  : Selector extends keyof SVGElementTagNameMap ? SVGElementTagNameMap[Selector]
+  : Element;

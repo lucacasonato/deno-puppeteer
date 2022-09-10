@@ -23,11 +23,11 @@ export interface CustomQueryHandler {
   /**
    * @returns A {@link Node} matching the given `selector` from {@link node}.
    */
-  queryOne?: (node: any, selector: string) => any | null;
+  queryOne?: (node: Node, selector: string) => Node | null;
   /**
    * @returns Some {@link Node}s matching the given `selector` from {@link node}.
    */
-  queryAll?: (node: any, selector: string) => any[];
+  queryAll?: (node: Node, selector: string) => Node[];
 }
 /**
  * @internal
@@ -39,18 +39,18 @@ export interface InternalQueryHandler {
    * Akin to {@link Window.prototype.querySelector}.
    */
   queryOne?: (
-    element: ElementHandle<any>,
+    element: ElementHandle<Node>,
     selector: string,
-  ) => Promise<ElementHandle<any> | null>;
+  ) => Promise<ElementHandle<Node> | null>;
   /**
    * Queries for multiple nodes given a selector and {@link ElementHandle}.
    *
    * Akin to {@link Window.prototype.querySelectorAll}.
    */
   queryAll?: (
-    element: ElementHandle<any>,
+    element: ElementHandle<Node>,
     selector: string,
-  ) => Promise<Array<ElementHandle<any>>>;
+  ) => Promise<Array<ElementHandle<Node>>>;
   /**
    * Queries for multiple nodes given a selector and {@link ElementHandle}.
    * Unlike {@link queryAll}, this returns a handle to a node array.
@@ -58,9 +58,9 @@ export interface InternalQueryHandler {
    * Akin to {@link Window.prototype.querySelectorAll}.
    */
   queryAllArray?: (
-    element: ElementHandle<any>,
+    element: ElementHandle<Node>,
     selector: string,
-  ) => Promise<JSHandle<any[]>>;
+  ) => Promise<JSHandle<Node[]>>;
   /**
    * Waits until a single node appears for a given selector and
    * {@link ElementHandle}.
@@ -71,7 +71,7 @@ export interface InternalQueryHandler {
     isolatedWorld: IsolatedWorld,
     selector: string,
     options: WaitForSelectorOptions,
-  ) => Promise<ElementHandle<any> | null>;
+  ) => Promise<ElementHandle<Node> | null>;
 }
 /**
  * Registers a {@link CustomQueryHandler | custom query handler}.

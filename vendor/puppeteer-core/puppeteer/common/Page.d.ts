@@ -915,7 +915,7 @@ export declare class Page extends EventEmitter {
    *
    * @param expression - Expression to evaluate
    */
-  $x(expression: string): Promise<Array<ElementHandle<any>>>;
+  $x(expression: string): Promise<Array<ElementHandle<Node>>>;
   /**
    * If no URLs are specified, this method returns cookies for the current page
    * URL. If URLs are specified, only cookies for those URLs are returned.
@@ -948,7 +948,7 @@ export declare class Page extends EventEmitter {
     content?: string;
     type?: string;
     id?: string;
-  }): Promise<ElementHandle<any>>;
+  }): Promise<ElementHandle<HTMLScriptElement>>;
   /**
    * Adds a `<link rel="stylesheet">` tag into the page with the desired URL or a
    * `<style type="text/css">` tag with the content.
@@ -959,7 +959,7 @@ export declare class Page extends EventEmitter {
     url?: string;
     path?: string;
     content?: string;
-  }): Promise<ElementHandle<any>>;
+  }): Promise<ElementHandle<Node>>;
   /**
    * The method adds a function called `name` on the page's `window` object.
    * When called, the function executes `puppeteerFunction` in node.js and
@@ -2115,7 +2115,7 @@ export declare class Page extends EventEmitter {
     visible?: boolean;
     hidden?: boolean;
     timeout?: number;
-  }): Promise<ElementHandle<any> | null>;
+  }): Promise<ElementHandle<Node> | null>;
   /**
    * Waits for a function to finish evaluating in the page's context.
    *

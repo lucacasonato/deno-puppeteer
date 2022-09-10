@@ -381,7 +381,7 @@ export declare class Frame {
    * This method evaluates the given XPath expression and returns the results.
    * @param expression - the XPath expression to evaluate.
    */
-  $x(expression: string): Promise<Array<ElementHandle<any>>>;
+  $x(expression: string): Promise<Array<ElementHandle<Node>>>;
   /**
    * Waits for an element matching the given selector to appear in the frame.
    *
@@ -440,7 +440,7 @@ export declare class Frame {
   waitForXPath(
     xpath: string,
     options?: WaitForSelectorOptions,
-  ): Promise<ElementHandle<any> | null>;
+  ): Promise<ElementHandle<Node> | null>;
   /**
    * @example
    * The `waitForFunction` can be used to observe viewport size change:
@@ -534,7 +534,7 @@ export declare class Frame {
    */
   addScriptTag(
     options: FrameAddScriptTagOptions,
-  ): Promise<ElementHandle<any>>;
+  ): Promise<ElementHandle<HTMLScriptElement>>;
   /**
    * Adds a `<link rel="stylesheet">` tag into the page with the desired url or
    * a `<style type="text/css">` tag with the content.
@@ -546,7 +546,7 @@ export declare class Frame {
    */
   addStyleTag(
     options: FrameAddStyleTagOptions,
-  ): Promise<ElementHandle<any>>;
+  ): Promise<ElementHandle<HTMLStyleElement | HTMLLinkElement>>;
   /**
    * Clicks the first element found that matches `selector`.
    *

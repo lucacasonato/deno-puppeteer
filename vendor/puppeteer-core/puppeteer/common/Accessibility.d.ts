@@ -100,7 +100,7 @@ export interface SnapshotOptions {
    * Root node to get the accessibility tree for
    * @defaultValue The root node of the entire page.
    */
-  root?: ElementHandle<any>;
+  root?: ElementHandle<Node>;
 }
 /**
  * The Accessibility class provides methods for inspecting Chromium's

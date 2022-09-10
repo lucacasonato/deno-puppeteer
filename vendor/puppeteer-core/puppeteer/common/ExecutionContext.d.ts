@@ -157,7 +157,7 @@ export declare class ExecutionContext {
    * Handles can also be passed as `args`. They resolve to their referenced object:
    *
    * ```ts
-   * const bodyHandle: ElementHandle<HTMLBodyany> =
+   * const bodyHandle: ElementHandle<HTMLBodyElement> =
    *   await context.evaluateHandle(() => {
    *     return document.body;
    *   });

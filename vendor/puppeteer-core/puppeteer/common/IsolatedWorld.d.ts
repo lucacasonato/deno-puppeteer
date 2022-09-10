@@ -53,7 +53,7 @@ export interface WaitForSelectorOptions {
   /**
    * @deprecated Do not use. Use the {@link ElementHandle.waitForSelector}
    */
-  root?: ElementHandle<any>;
+  root?: ElementHandle<Node>;
 }
 /**
  * @internal
@@ -123,8 +123,8 @@ export declare class IsolatedWorld {
   $$<Selector extends string>(
     selector: Selector,
   ): Promise<Array<ElementHandle<NodeFor<Selector>>>>;
-  document(): Promise<ElementHandle<any>>;
-  $x(expression: string): Promise<Array<ElementHandle<any>>>;
+  document(): Promise<ElementHandle<Document>>;
+  $x(expression: string): Promise<Array<ElementHandle<Node>>>;
   $eval<
     Selector extends string,
     Params extends unknown[],
@@ -172,7 +172,7 @@ export declare class IsolatedWorld {
     content?: string;
     id?: string;
     type?: string;
-  }): Promise<ElementHandle<any>>;
+  }): Promise<ElementHandle<HTMLScriptElement>>;
   /**
    * Adds a style tag into the current context.
    *
@@ -185,7 +185,7 @@ export declare class IsolatedWorld {
     url?: string;
     path?: string;
     content?: string;
-  }): Promise<ElementHandle<any>>;
+  }): Promise<ElementHandle<HTMLStyleElement | HTMLLinkElement>>;
   click(selector: string, options: {
     delay?: number;
     button?: MouseButton;
@@ -204,7 +204,7 @@ export declare class IsolatedWorld {
     selector: string,
     options: WaitForSelectorOptions,
     binding?: PageBinding,
-  ): Promise<ElementHandle<any> | null>;
+  ): Promise<ElementHandle<Node> | null>;
   waitForFunction(pageFunction: Function | string, options?: {
     polling?: string | number;
     timeout?: number;
@@ -212,8 +212,8 @@ export declare class IsolatedWorld {
   title(): Promise<string>;
   adoptBackendNode(
     backendNodeId?: Protocol.DOM.BackendNodeId,
-  ): Promise<JSHandle<any>>;
-  adoptHandle<T extends JSHandle<any>>(handle: T): Promise<T>;
+  ): Promise<JSHandle<Node>>;
+  adoptHandle<T extends JSHandle<Node>>(handle: T): Promise<T>;
 }
 /**
  * @internal
@@ -227,7 +227,7 @@ export interface WaitTaskOptions {
   timeout: number;
   binding?: PageBinding;
   args: unknown[];
-  root?: ElementHandle<any>;
+  root?: ElementHandle<Node>;
 }
 /**
  * @internal

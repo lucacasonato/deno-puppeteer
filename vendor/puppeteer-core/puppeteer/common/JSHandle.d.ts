@@ -160,7 +160,7 @@ export declare class JSHandle<T = unknown> {
    * @returns Either `null` or the handle itself if the handle is an
    * instance of {@link ElementHandle}.
    */
-  asElement(): ElementHandle<any> | null;
+  asElement(): ElementHandle<Node> | null;
   /**
    * Releases the object referenced by the handle for garbage collection.
    */
