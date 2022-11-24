@@ -505,6 +505,7 @@ async function installDMG(dmgPath: string, folderPath: string): Promise<void> {
   try {
     const proc = Deno.run({
       cmd: ["hdiutil", "attach", "-nobrowse", "-noautoopen", dmgPath],
+      stdout: "piped",
     });
     const stdout = new TextDecoder().decode(await proc.output());
     proc.close();
