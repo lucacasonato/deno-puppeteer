@@ -1,8 +1,6 @@
 ARG DENO_VERSION=1.28.2
 FROM denoland/deno:$DENO_VERSION
 
-ARG DEBIAN_FRONTEND=noninteractive
-
 # ↑ https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#chrome-headless-doesnt-launch-on-unix
 RUN apt-get -qq update \
     && apt-get -qq install -y --no-install-recommends \
