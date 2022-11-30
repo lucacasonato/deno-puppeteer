@@ -1,4 +1,4 @@
-FROM debian:buster-slim as base
+FROM debian:buster-slim
 
 ENV DENO_VERSION=1.25.0
 ARG DEBIAN_FRONTEND=noninteractive
@@ -74,8 +74,6 @@ RUN useradd --uid 1993 --user-group deno \
  && chown deno:deno /deno-dir/
 
 ENV DENO_DIR /deno-dir/
-
-FROM base 
 
 # --- PLACE CUSTOM COMMANDS BELOW --- #
 
