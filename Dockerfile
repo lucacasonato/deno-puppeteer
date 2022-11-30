@@ -1,10 +1,11 @@
-FROM debian:buster-slim
+FROM debian:buster-slim as base
 
 ENV DENO_VERSION=1.25.0
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get -qq update \
     && apt-get -qq install -y --no-install-recommends \
+    git \
     curl \
     ca-certificates \
     unzip \
@@ -73,6 +74,8 @@ RUN useradd --uid 1993 --user-group deno \
  && chown deno:deno /deno-dir/
 
 ENV DENO_DIR /deno-dir/
+
+FROM base 
 
 # --- PLACE CUSTOM COMMANDS BELOW --- #
 
