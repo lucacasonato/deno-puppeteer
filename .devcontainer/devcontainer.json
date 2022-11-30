@@ -12,5 +12,5 @@
         "extensions.ignoreRecommendations": true
     },
 
-    "postCreateCommand": "run -A --no-check --unstable ./examples/docker.js"
+    "postCreateCommand": "deno run -A --no-check --unstable ./examples/docker.js"
 }
