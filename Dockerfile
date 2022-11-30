@@ -1,6 +1,6 @@
 FROM debian:buster-slim
 
-ENV DENO_VERSION=1.25.0
+ARG DENO_VERSION=1.25.0
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get -qq update \

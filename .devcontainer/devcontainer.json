@@ -2,7 +2,10 @@
     "name": "deno-puppeteer",
 
     "build": {
-        "dockerfile": "../Dockerfile"
+        "dockerfile": "../Dockerfile",
+        "args": {
+            "DENO_VERSION" : "1.25.0"
+        }
     },
 
 
