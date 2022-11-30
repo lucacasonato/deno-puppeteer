@@ -1,0 +1,19 @@
+{
+    "name": "deno-puppeteer",
+
+    "build": {
+        "dockerfile": "../Dockerfile",
+        "args": {
+            "DENO_VERSION" : "1.25.0"
+        }
+    },
+
+
+    "extensions": ["denoland.vscode-deno"],
+
+    "settings": {
+        "extensions.ignoreRecommendations": true
+    },
+
+    "postCreateCommand": "deno run -A --no-check --unstable ./examples/docker.js"
+}

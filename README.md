@@ -152,7 +152,7 @@ Other than this, the documentation on https://pptr.dev generally applies.
 
 ### How to run in Docker?
 
-An example Dockerfile can be found in this repository. It will install all
-necessary dependencies, and shows how to run the ./examples/docker.js.
+A VS Code Devcontainer and an example Dockerfile can be found in this repository.
+It will install all necessary dependencies, and shows how to run the ./examples/docker.js.
 
 It is just meant as a jumping off point - customize it as you wish.
