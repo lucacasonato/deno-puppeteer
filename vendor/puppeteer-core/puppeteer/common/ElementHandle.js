@@ -662,7 +662,7 @@ export class ElementHandle extends JSHandle {
     // Locate all files and confirm that they exist.
     let path;
     try {
-      path = await import("path");
+      path = await import("node:path");
     } catch (error) {
       if (error instanceof TypeError) {
         throw new Error(
