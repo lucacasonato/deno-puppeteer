@@ -390,7 +390,7 @@ export class IsolatedWorld {
     if (path !== null) {
       let fs;
       try {
-        fs = (await import("fs")).promises;
+        fs = (await import("node:fs")).promises;
       } catch (error) {
         if (error instanceof TypeError) {
           throw new Error(
