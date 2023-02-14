@@ -43,6 +43,15 @@ PUPPETEER_PRODUCT=chrome deno run -A --unstable https://deno.land/x/puppeteer@16
 PUPPETEER_PRODUCT=firefox deno run -A --unstable https://deno.land/x/puppeteer@16.2.0/install.ts
 ```
 
+Alternately, if `puppeteer.launch` is called without specifying `executablePath`, then Puppeteer will be cached as well.
+
+If, for some reason, you need to uninstall the Puppeteer cache, run these commands:
+
+```shell
+PUPPETEER_PRODUCT=chrome deno run -A --unstable https://deno.land/x/puppeteer@9.0.1/uninstall.ts
+PUPPETEER_PRODUCT=firefox deno run -A --unstable https://deno.land/x/puppeteer@9.0.1/uninstall.ts
+```
+
 You can find all of the supported environment variables to customize
 installation
 [in the Puppeteer docs](https://pptr.dev/#?product=Puppeteer&version=v16.2.0&show=api-environment-variables).
