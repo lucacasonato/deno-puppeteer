@@ -14,38 +14,37 @@
  * limitations under the License.
  */
 /**
- *
  * Sets the viewport of the page.
  * @public
  */
 export interface Viewport {
   /**
-     * The page width in pixels.
-     */
+   * The page width in pixels.
+   */
   width: number;
   /**
-     * The page height in pixels.
-     */
+   * The page height in pixels.
+   */
   height: number;
   /**
-     * Specify device scale factor.
-     * See {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio | devicePixelRatio} for more info.
-     * @defaultValue 1
-     */
+   * Specify device scale factor.
+   * See {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio | devicePixelRatio} for more info.
+   * @defaultValue 1
+   */
   deviceScaleFactor?: number;
   /**
-     * Whether the `meta viewport` tag is taken into account.
-     * @defaultValue false
-     */
+   * Whether the `meta viewport` tag is taken into account.
+   * @defaultValue false
+   */
   isMobile?: boolean;
   /**
-     * Specifies if the viewport is in landscape mode.
-     * @defaultValue false
-     */
+   * Specifies if the viewport is in landscape mode.
+   * @defaultValue false
+   */
   isLandscape?: boolean;
   /**
-     * Specify if the viewport supports touch events.
-     * @defaultValue false
-     */
+   * Specify if the viewport supports touch events.
+   * @defaultValue false
+   */
   hasTouch?: boolean;
 }

@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { EventEmitter } from "./EventEmitter.js";
 import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
-import { CDPSession } from "./Connection.js";
-import { FrameManager } from "./FrameManager.js";
-import { HTTPRequest } from "./HTTPRequest.js";
+import { ProtocolMapping } from "../../vendor/devtools-protocol/types/protocol-mapping.d.ts";
+import { EventEmitter } from "./EventEmitter.js";
+import { Frame } from "./Frame.js";
 /**
  * @public
  */
@@ -52,61 +51,43 @@ export declare const NetworkManagerEmittedEvents: {
   readonly RequestFailed: symbol;
   readonly RequestFinished: symbol;
 };
+interface CDPSession extends EventEmitter {
+  send<T extends keyof ProtocolMapping.Commands>(
+    method: T,
+    ...paramArgs: ProtocolMapping.Commands[T]["paramsType"]
+  ): Promise<ProtocolMapping.Commands[T]["returnType"]>;
+}
+interface FrameManager {
+  frame(frameId: string): Frame | null;
+}
 /**
  * @internal
  */
 export declare class NetworkManager extends EventEmitter {
-  _client: CDPSession;
-  _ignoreHTTPSErrors: boolean;
-  _frameManager: FrameManager;
-  _requestIdToRequest: Map<string, HTTPRequest>;
-  _requestIdToRequestWillBeSentEvent: Map<
-    string,
-    Protocol.Network.RequestWillBeSentEvent
-  >;
-  _extraHTTPHeaders: Record<string, string>;
-  _credentials?: Credentials;
-  _attemptedAuthentications: Set<string>;
-  _userRequestInterceptionEnabled: boolean;
-  _userRequestInterceptionCacheSafe: boolean;
-  _protocolRequestInterceptionEnabled: boolean;
-  _userCacheDisabled: boolean;
-  _requestIdToInterceptionId: Map<string, string>;
-  _emulatedNetworkConditions: InternalNetworkConditions;
+  #private;
   constructor(
     client: CDPSession,
     ignoreHTTPSErrors: boolean,
     frameManager: FrameManager,
   );
+  /**
+   * Initialize calls should avoid async dependencies between CDP calls as those
+   * might not resolve until after the target is resumed causing a deadlock.
+   */
   initialize(): Promise<void>;
   authenticate(credentials?: Credentials): Promise<void>;
   setExtraHTTPHeaders(extraHTTPHeaders: Record<string, string>): Promise<void>;
   extraHTTPHeaders(): Record<string, string>;
+  numRequestsInProgress(): number;
   setOfflineMode(value: boolean): Promise<void>;
   emulateNetworkConditions(
     networkConditions: NetworkConditions | null,
   ): Promise<void>;
-  _updateNetworkConditions(): Promise<void>;
-  setUserAgent(userAgent: string): Promise<void>;
+  setUserAgent(
+    userAgent: string,
+    userAgentMetadata?: Protocol.Emulation.UserAgentMetadata,
+  ): Promise<void>;
   setCacheEnabled(enabled: boolean): Promise<void>;
-  setRequestInterception(value: boolean, cacheSafe?: boolean): Promise<void>;
-  _updateProtocolRequestInterception(): Promise<void>;
-  _updateProtocolCacheDisabled(): Promise<void>;
-  _onRequestWillBeSent(event: Protocol.Network.RequestWillBeSentEvent): void;
-  _onAuthRequired(event: Protocol.Fetch.AuthRequiredEvent): void;
-  _onRequestPaused(event: Protocol.Fetch.RequestPausedEvent): void;
-  _onRequest(
-    event: Protocol.Network.RequestWillBeSentEvent,
-    interceptionId?: string,
-  ): void;
-  _onRequestServedFromCache(
-    event: Protocol.Network.RequestServedFromCacheEvent,
-  ): void;
-  _handleRequestRedirect(
-    request: HTTPRequest,
-    responsePayload: Protocol.Network.Response,
-  ): void;
-  _onResponseReceived(event: Protocol.Network.ResponseReceivedEvent): void;
-  _onLoadingFinished(event: Protocol.Network.LoadingFinishedEvent): void;
-  _onLoadingFailed(event: Protocol.Network.LoadingFailedEvent): void;
+  setRequestInterception(value: boolean): Promise<void>;
 }
+export {};

@@ -14,7 +14,8 @@ export interface TracingOptions {
  * which can be opened in Chrome DevTools or {@link https://chromedevtools.github.io/timeline-viewer/ | timeline viewer}.
  *
  * @example
- * ```js
+ *
+ * ```ts
  * await page.tracing.start({path: 'trace.json'});
  * await page.goto('https://www.google.com');
  * await page.tracing.stop();
@@ -23,23 +24,22 @@ export interface TracingOptions {
  * @public
  */
 export declare class Tracing {
-  _client: CDPSession;
-  _recording: boolean;
-  _path: string;
+  #private;
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(client: CDPSession);
   /**
-     * Starts a trace for the current page.
-     * @remarks
-     * Only one trace can be active at a time per browser.
-     * @param options - Optional `TracingOptions`.
-     */
+   * Starts a trace for the current page.
+   * @remarks
+   * Only one trace can be active at a time per browser.
+   *
+   * @param options - Optional `TracingOptions`.
+   */
   start(options?: TracingOptions): Promise<void>;
   /**
-     * Stops a trace started with the `start` method.
-     * @returns Promise which resolves to buffer with trace data.
-     */
-  stop(): Promise<Uint8Array>;
+   * Stops a trace started with the `start` method.
+   * @returns Promise which resolves to buffer with trace data.
+   */
+  stop(): Promise<Buffer | undefined>;
 }

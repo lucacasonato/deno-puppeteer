@@ -21,7 +21,8 @@ import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
  * @remarks
  *
  * @example
- * ```js
+ *
+ * ```ts
  * const puppeteer = require('puppeteer');
  *
  * (async () => {
@@ -35,17 +36,14 @@ import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
  *   page.evaluate(() => alert('1'));
  * })();
  * ```
+ *
  * @public
  */
 export declare class Dialog {
-  private _client;
-  private _type;
-  private _message;
-  private _defaultValue;
-  private _handled;
+  #private;
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(
     client: CDPSession,
     type: Protocol.Page.DialogType,
@@ -53,27 +51,27 @@ export declare class Dialog {
     defaultValue?: string,
   );
   /**
-     * @returns The type of the dialog.
-     */
+   * @returns The type of the dialog.
+   */
   type(): Protocol.Page.DialogType;
   /**
-     * @returns The message displayed in the dialog.
-     */
+   * @returns The message displayed in the dialog.
+   */
   message(): string;
   /**
-     * @returns The default value of the prompt, or an empty string if the dialog
-     * is not a `prompt`.
-     */
+   * @returns The default value of the prompt, or an empty string if the dialog
+   * is not a `prompt`.
+   */
   defaultValue(): string;
   /**
-     * @param promptText - optional text that will be entered in the dialog
-     * prompt. Has no effect if the dialog's type is not `prompt`.
-     *
-     * @returns A promise that resolves when the dialog has been accepted.
-     */
+   * @param promptText - optional text that will be entered in the dialog
+   * prompt. Has no effect if the dialog's type is not `prompt`.
+   *
+   * @returns A promise that resolves when the dialog has been accepted.
+   */
   accept(promptText?: string): Promise<void>;
   /**
-     * @returns A promise which will resolve once the dialog has been dismissed
-     */
+   * @returns A promise which will resolve once the dialog has been dismissed
+   */
   dismiss(): Promise<void>;
 }

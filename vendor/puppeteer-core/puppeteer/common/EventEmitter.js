@@ -14,65 +14,65 @@ import mitt from "../../vendor/mitt/src/index.js";
  */
 export class EventEmitter {
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor() {
     this.eventsMap = new Map();
     this.emitter = mitt(this.eventsMap);
   }
   /**
-     * Bind an event listener to fire when an event occurs.
-     * @param event - the event type you'd like to listen to. Can be a string or symbol.
-     * @param handler  - the function to be called when the event occurs.
-     * @returns `this` to enable you to chain calls.
-     */
+   * Bind an event listener to fire when an event occurs.
+   * @param event - the event type you'd like to listen to. Can be a string or symbol.
+   * @param handler - the function to be called when the event occurs.
+   * @returns `this` to enable you to chain method calls.
+   */
   on(event, handler) {
     this.emitter.on(event, handler);
     return this;
   }
   /**
-     * Remove an event listener from firing.
-     * @param event - the event type you'd like to stop listening to.
-     * @param handler  - the function that should be removed.
-     * @returns `this` to enable you to chain calls.
-     */
+   * Remove an event listener from firing.
+   * @param event - the event type you'd like to stop listening to.
+   * @param handler - the function that should be removed.
+   * @returns `this` to enable you to chain method calls.
+   */
   off(event, handler) {
     this.emitter.off(event, handler);
     return this;
   }
   /**
-     * Remove an event listener.
-     * @deprecated please use `off` instead.
-     */
+   * Remove an event listener.
+   * @deprecated please use {@link EventEmitter.off} instead.
+   */
   removeListener(event, handler) {
     this.off(event, handler);
     return this;
   }
   /**
-     * Add an event listener.
-     * @deprecated please use `on` instead.
-     */
+   * Add an event listener.
+   * @deprecated please use {@link EventEmitter.on} instead.
+   */
   addListener(event, handler) {
     this.on(event, handler);
     return this;
   }
   /**
-     * Emit an event and call any associated listeners.
-     *
-     * @param event - the event you'd like to emit
-     * @param eventData - any data you'd like to emit with the event
-     * @returns `true` if there are any listeners, `false` if there are not.
-     */
+   * Emit an event and call any associated listeners.
+   *
+   * @param event - the event you'd like to emit
+   * @param eventData - any data you'd like to emit with the event
+   * @returns `true` if there are any listeners, `false` if there are not.
+   */
   emit(event, eventData) {
     this.emitter.emit(event, eventData);
     return this.eventListenersCount(event) > 0;
   }
   /**
-     * Like `on` but the listener will only be fired once and then it will be removed.
-     * @param event - the event you'd like to listen to
-     * @param handler - the handler function to run when the event occurs
-     * @returns `this` to enable you to chain calls.
-     */
+   * Like `on` but the listener will only be fired once and then it will be removed.
+   * @param event - the event you'd like to listen to
+   * @param handler - the handler function to run when the event occurs
+   * @returns `this` to enable you to chain method calls.
+   */
   once(event, handler) {
     const onceHandler = (eventData) => {
       handler(eventData);
@@ -81,20 +81,20 @@ export class EventEmitter {
     return this.on(event, onceHandler);
   }
   /**
-     * Gets the number of listeners for a given event.
-     *
-     * @param event - the event to get the listener count for
-     * @returns the number of listeners bound to the given event
-     */
+   * Gets the number of listeners for a given event.
+   *
+   * @param event - the event to get the listener count for
+   * @returns the number of listeners bound to the given event
+   */
   listenerCount(event) {
     return this.eventListenersCount(event);
   }
   /**
-     * Removes all listeners. If given an event argument, it will remove only
-     * listeners for that event.
-     * @param event - the event to remove listeners for.
-     * @returns `this` to enable you to chain calls.
-     */
+   * Removes all listeners. If given an event argument, it will remove only
+   * listeners for that event.
+   * @param event - the event to remove listeners for.
+   * @returns `this` to enable you to chain method calls.
+   */
   removeAllListeners(event) {
     if (event) {
       this.eventsMap.delete(event);
@@ -104,7 +104,10 @@ export class EventEmitter {
     return this;
   }
   eventListenersCount(event) {
-    return this.eventsMap.has(event) ? this.eventsMap.get(event).length : 0;
+    var _a;
+    return ((_a = this.eventsMap.get(event)) === null || _a === void 0
+      ? void 0
+      : _a.length) || 0;
   }
 }
 //# sourceMappingURL=EventEmitter.js.map

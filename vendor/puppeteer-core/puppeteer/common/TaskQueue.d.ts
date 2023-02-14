@@ -1,4 +1,3 @@
-/// <reference types="./EvalTypes.d.ts" />
 /**
  * Copyright 2020 Google Inc. All rights reserved.
  *
@@ -14,5 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export {};
-//# sourceMappingURL=EvalTypes.js.map
+/**
+ * @internal
+ */
+export declare class TaskQueue {
+  #private;
+  constructor();
+  postTask<T>(task: () => Promise<T>): Promise<T>;
+}

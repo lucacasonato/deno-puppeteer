@@ -22,7 +22,6 @@ export interface Emitter {
   emit<T = any>(type: EventType, event?: T): void;
   emit(type: "*", event?: any): void;
 }
-
 /**
  * Mitt: Tiny (~200b) functional event emitter / pubsub.
  * @name mitt

@@ -1,4 +1,4 @@
-/// <reference types="./helper.d.ts" />
+/// <reference types="./util.d.ts" />
 /**
  * Copyright 2017 Google Inc. All rights reserved.
  *
@@ -14,12 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TimeoutError } from "./Errors.js";
+import { assert } from "../util/assert.js";
 import { debug } from "./Debug.js";
-import { assert } from "./assert.js";
+import { ElementHandle } from "./ElementHandle.js";
+import { isErrorLike } from "../util/ErrorLike.js";
+import { TimeoutError } from "./Errors.js";
+import { JSHandle } from "./JSHandle.js";
 import { base64Decode, concatUint8Array } from "../../vendor/std.ts";
+/**
+ * @internal
+ */
 export const debugError = debug("puppeteer:error");
-function getExceptionMessage(exceptionDetails) {
+/**
+ * @internal
+ */
+export function getExceptionMessage(exceptionDetails) {
   if (exceptionDetails.exception) {
     return (exceptionDetails.exception.description ||
       exceptionDetails.exception.value);
@@ -38,7 +47,10 @@ function getExceptionMessage(exceptionDetails) {
   }
   return message;
 }
-function valueFromRemoteObject(remoteObject) {
+/**
+ * @internal
+ */
+export function valueFromRemoteObject(remoteObject) {
   assert(!remoteObject.objectId, "Cannot extract value when objectId is given");
   if (remoteObject.unserializableValue) {
     if (remoteObject.type === "bigint" && typeof BigInt !== "undefined") {
@@ -62,7 +74,10 @@ function valueFromRemoteObject(remoteObject) {
   }
   return remoteObject.value;
 }
-async function releaseObject(client, remoteObject) {
+/**
+ * @internal
+ */
+export async function releaseObject(client, remoteObject) {
   if (!remoteObject.objectId) {
     return;
   }
@@ -74,30 +89,47 @@ async function releaseObject(client, remoteObject) {
       debugError(error);
     });
 }
-function addEventListener(emitter, eventName, handler) {
+/**
+ * @internal
+ */
+export function addEventListener(emitter, eventName, handler) {
   emitter.on(eventName, handler);
   return { emitter, eventName, handler };
 }
-function removeEventListeners(listeners) {
+/**
+ * @internal
+ */
+export function removeEventListeners(listeners) {
   for (const listener of listeners) {
     listener.emitter.removeListener(listener.eventName, listener.handler);
   }
   listeners.length = 0;
 }
-function isString(obj) {
+/**
+ * @internal
+ */
+export const isString = (obj) => {
   return typeof obj === "string" || obj instanceof String;
-}
-function isNumber(obj) {
+};
+/**
+ * @internal
+ */
+export const isNumber = (obj) => {
   return typeof obj === "number" || obj instanceof Number;
-}
-async function waitForEvent(
+};
+/**
+ * @internal
+ */
+export async function waitForEvent(
   emitter,
   eventName,
   predicate,
   timeout,
   abortPromise,
 ) {
-  let eventTimeout, resolveCallback, rejectCallback;
+  let eventTimeout;
+  let resolveCallback;
+  let rejectCallback;
   const promise = new Promise((resolve, reject) => {
     resolveCallback = resolve;
     rejectCallback = reject;
@@ -126,12 +158,33 @@ async function waitForEvent(
     cleanup();
     throw error;
   });
-  if (result instanceof Error) {
+  if (isErrorLike(result)) {
     throw result;
   }
   return result;
 }
-function evaluationString(fun, ...args) {
+/**
+ * @internal
+ */
+export function createJSHandle(context, remoteObject) {
+  const frame = context.frame();
+  if (remoteObject.subtype === "node" && frame) {
+    const frameManager = frame._frameManager;
+    return new ElementHandle(
+      context,
+      context._client,
+      remoteObject,
+      frame,
+      frameManager.page(),
+      frameManager,
+    );
+  }
+  return new JSHandle(context, context._client, remoteObject);
+}
+/**
+ * @internal
+ */
+export function evaluationString(fun, ...args) {
   if (isString(fun)) {
     assert(args.length === 0, "Cannot evaluate a string with arguments");
     return fun;
@@ -144,7 +197,10 @@ function evaluationString(fun, ...args) {
   }
   return `(${fun})(${args.map(serializeArgument).join(",")})`;
 }
-function pageBindingInitString(type, name) {
+/**
+ * @internal
+ */
+export function pageBindingInitString(type, name) {
   function addPageBinding(type, bindingName) {
     /* Cast window to any here as we're about to add properties to it
          * via win[bindingName] which TypeScript doesn't like.
@@ -160,23 +216,29 @@ function pageBindingInitString(type, name) {
       }
       const seq = (me.lastSeq || 0) + 1;
       me.lastSeq = seq;
-      const promise = new Promise((resolve, reject) =>
-        callbacks.set(seq, { resolve, reject })
-      );
+      const promise = new Promise((resolve, reject) => {
+        return callbacks.set(seq, { resolve, reject });
+      });
       binding(JSON.stringify({ type, name: bindingName, seq, args }));
       return promise;
     };
   }
   return evaluationString(addPageBinding, type, name);
 }
-function pageBindingDeliverResultString(name, seq, result) {
+/**
+ * @internal
+ */
+export function pageBindingDeliverResultString(name, seq, result) {
   function deliverResult(name, seq, result) {
     window[name].callbacks.get(seq).resolve(result);
     window[name].callbacks.delete(seq);
   }
   return evaluationString(deliverResult, name, seq, result);
 }
-function pageBindingDeliverErrorString(name, seq, message, stack) {
+/**
+ * @internal
+ */
+export function pageBindingDeliverErrorString(name, seq, message, stack) {
   function deliverError(name, seq, message, stack) {
     const error = new Error(message);
     error.stack = stack;
@@ -185,14 +247,20 @@ function pageBindingDeliverErrorString(name, seq, message, stack) {
   }
   return evaluationString(deliverError, name, seq, message, stack);
 }
-function pageBindingDeliverErrorValueString(name, seq, value) {
+/**
+ * @internal
+ */
+export function pageBindingDeliverErrorValueString(name, seq, value) {
   function deliverErrorValue(name, seq, value) {
     window[name].callbacks.get(seq).reject(value);
     window[name].callbacks.delete(seq);
   }
   return evaluationString(deliverErrorValue, name, seq, value);
 }
-function makePredicateString(predicate, predicateQueryHandler) {
+/**
+ * @internal
+ */
+export function makePredicateString(predicate, predicateQueryHandler) {
   function checkWaitForOptions(node, waitForVisible, waitForHidden) {
     if (!node) {
       return waitForHidden;
@@ -214,25 +282,29 @@ function makePredicateString(predicate, predicateQueryHandler) {
       return !!(rect.top || rect.bottom || rect.width || rect.height);
     }
   }
-  const predicateQueryHandlerDef = predicateQueryHandler
-    ? `const predicateQueryHandler = ${predicateQueryHandler};`
-    : "";
   return `
     (() => {
-      ${predicateQueryHandlerDef}
+      const predicateQueryHandler = ${predicateQueryHandler};
       const checkWaitForOptions = ${checkWaitForOptions};
       return (${predicate})(...args)
     })() `;
 }
-async function waitWithTimeout(promise, taskName, timeout) {
+/**
+ * @internal
+ */
+export async function waitWithTimeout(promise, taskName, timeout) {
   let reject;
   const timeoutError = new TimeoutError(
     `waiting for ${taskName} failed: timeout ${timeout}ms exceeded`,
   );
-  const timeoutPromise = new Promise((resolve, x) => (reject = x));
+  const timeoutPromise = new Promise((_res, rej) => {
+    return (reject = rej);
+  });
   let timeoutTimer = null;
   if (timeout) {
-    timeoutTimer = setTimeout(() => reject(timeoutError), timeout);
+    timeoutTimer = setTimeout(() => {
+      return reject(timeoutError);
+    }, timeout);
   }
   try {
     return await Promise.race([promise, timeoutPromise]);
@@ -242,51 +314,48 @@ async function waitWithTimeout(promise, taskName, timeout) {
     }
   }
 }
-async function readProtocolStream(client, handle, path) {
-  let eof = false;
-  let fileHandle;
+/**
+ * @internal
+ */
+export async function getReadableStreamAsUint8Array(readableStream, path) {
   if (path) {
-    fileHandle = await Deno.open(path, { create: true, write: true });
+    const file = await Deno.open(path, { create: true, write: true });
+    await readableStream.pipeTo(file.writable);
+    return null;
   }
-  const arrs = [];
-  while (!eof) {
-    const response = await client.send("IO.read", { handle });
-    eof = response.eof;
-    const arr = response.base64Encoded
-      ? base64Decode(response.data)
-      : new TextEncoder().encode(response.data);
-    arrs.push(arr);
-    if (path) {
-      await Deno.writeAll(fileHandle, arr);
-    }
+
+  const chunks = [];
+  const reader = readableStream.getReader();
+  for await (const chunk of reader) {
+    chunks.push(chunk);
   }
-  if (fileHandle) {
-    fileHandle.close();
-  }
-  await client.send("IO.close", { handle });
-  let resultArr = null;
-  try {
-    resultArr = concatUint8Array(...arrs);
-  } finally {
-    return resultArr;
-  }
+  await reader.cancel();
+  return concatUint8Array(chunks);
 }
-export const helper = {
-  evaluationString,
-  pageBindingInitString,
-  pageBindingDeliverResultString,
-  pageBindingDeliverErrorString,
-  pageBindingDeliverErrorValueString,
-  makePredicateString,
-  readProtocolStream,
-  waitWithTimeout,
-  waitForEvent,
-  isString,
-  isNumber,
-  addEventListener,
-  removeEventListeners,
-  valueFromRemoteObject,
-  getExceptionMessage,
-  releaseObject,
-};
-//# sourceMappingURL=helper.js.map
+/**
+ * @internal
+ */
+export async function getReadableStreamFromProtocolStream(client, handle) {
+  let closed = false;
+  return new ReadableStream({
+    async pull(controller) {
+      const response = await client.send("IO.read", { handle, size: 65536 });
+      const data = response.base64Encoded
+        ? base64Decode(response.data)
+        : new TextEncoder().encode(response.data);
+      controller.enqueue(data);
+      if (response.eof && !closed) {
+        closed = true;
+        await client.send("IO.close", { handle });
+        controller.close();
+      }
+    },
+    async cancel() {
+      if (!closed) {
+        closed = true;
+        await client.send("IO.close", { handle });
+      }
+    },
+  });
+}
+//# sourceMappingURL=util.js.map

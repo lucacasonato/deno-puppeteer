@@ -14,39 +14,39 @@
  * limitations under the License.
  */
 import { CDPSession } from "./Connection.js";
-import { ElementHandle } from "./JSHandle.js";
+import { ElementHandle } from "./ElementHandle.js";
 /**
  * Represents a Node and the properties of it that are relevant to Accessibility.
  * @public
  */
 export interface SerializedAXNode {
   /**
-     * The {@link https://www.w3.org/TR/wai-aria/#usage_intro | role} of the node.
-     */
+   * The {@link https://www.w3.org/TR/wai-aria/#usage_intro | role} of the node.
+   */
   role: string;
   /**
-     * A human readable name for the node.
-     */
+   * A human readable name for the node.
+   */
   name?: string;
   /**
-     * The current value of the node.
-     */
+   * The current value of the node.
+   */
   value?: string | number;
   /**
-     * An additional human readable description of the node.
-     */
+   * An additional human readable description of the node.
+   */
   description?: string;
   /**
-     * Any keyboard shortcuts associated with this node.
-     */
+   * Any keyboard shortcuts associated with this node.
+   */
   keyshortcuts?: string;
   /**
-     * A human readable alternative to the role.
-     */
+   * A human readable alternative to the role.
+   */
   roledescription?: string;
   /**
-     * A description of the current value.
-     */
+   * A description of the current value.
+   */
   valuetext?: string;
   disabled?: boolean;
   expanded?: boolean;
@@ -54,37 +54,37 @@ export interface SerializedAXNode {
   modal?: boolean;
   multiline?: boolean;
   /**
-     * Whether more than one child can be selected.
-     */
+   * Whether more than one child can be selected.
+   */
   multiselectable?: boolean;
   readonly?: boolean;
   required?: boolean;
   selected?: boolean;
   /**
-     * Whether the checkbox is checked, or in a
-     * {@link https://www.w3.org/TR/wai-aria-practices/examples/checkbox/checkbox-2/checkbox-2.html | mixed state}.
-     */
+   * Whether the checkbox is checked, or in a
+   * {@link https://www.w3.org/TR/wai-aria-practices/examples/checkbox/checkbox-2/checkbox-2.html | mixed state}.
+   */
   checked?: boolean | "mixed";
   /**
-     * Whether the node is checked or in a mixed state.
-     */
+   * Whether the node is checked or in a mixed state.
+   */
   pressed?: boolean | "mixed";
   /**
-     * The level of a heading.
-     */
+   * The level of a heading.
+   */
   level?: number;
   valuemin?: number;
   valuemax?: number;
   autocomplete?: string;
   haspopup?: string;
   /**
-     * Whether and in what way this node's value is invalid.
-     */
+   * Whether and in what way this node's value is invalid.
+   */
   invalid?: string;
   orientation?: string;
   /**
-     * Children of this node, if there are any.
-     */
+   * Children of this node, if there are any.
+   */
   children?: SerializedAXNode[];
 }
 /**
@@ -92,15 +92,15 @@ export interface SerializedAXNode {
  */
 export interface SnapshotOptions {
   /**
-     * Prune uninteresting nodes from the tree.
-     * @defaultValue true
-     */
+   * Prune uninteresting nodes from the tree.
+   * @defaultValue true
+   */
   interestingOnly?: boolean;
   /**
-     * Root node to get the accessibility tree for
-     * @defaultValue The root node of the entire page.
-     */
-  root?: ElementHandle;
+   * Root node to get the accessibility tree for
+   * @defaultValue The root node of the entire page.
+   */
+  root?: ElementHandle<any>;
 }
 /**
  * The Accessibility class provides methods for inspecting Chromium's
@@ -125,51 +125,51 @@ export interface SnapshotOptions {
  * @public
  */
 export declare class Accessibility {
-  private _client;
+  #private;
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(client: CDPSession);
   /**
-     * Captures the current state of the accessibility tree.
-     * The returned object represents the root accessible node of the page.
-     *
-     * @remarks
-     *
-     * **NOTE** The Chromium accessibility tree contains nodes that go unused on
-     * most platforms and by most screen readers. Puppeteer will discard them as
-     * well for an easier to process tree, unless `interestingOnly` is set to
-     * `false`.
-     *
-     * @example
-     * An example of dumping the entire accessibility tree:
-     * ```js
-     * const snapshot = await page.accessibility.snapshot();
-     * console.log(snapshot);
-     * ```
-     *
-     * @example
-     * An example of logging the focused node's name:
-     * ```js
-     * const snapshot = await page.accessibility.snapshot();
-     * const node = findFocusedNode(snapshot);
-     * console.log(node && node.name);
-     *
-     * function findFocusedNode(node) {
-     *   if (node.focused)
-     *     return node;
-     *   for (const child of node.children || []) {
-     *     const foundNode = findFocusedNode(child);
-     *     return foundNode;
-     *   }
-     *   return null;
-     * }
-     * ```
-     *
-     * @returns An AXNode object representing the snapshot.
-     *
-     */
-  snapshot(options?: SnapshotOptions): Promise<SerializedAXNode>;
+   * Captures the current state of the accessibility tree.
+   * The returned object represents the root accessible node of the page.
+   *
+   * @remarks
+   *
+   * **NOTE** The Chromium accessibility tree contains nodes that go unused on
+   * most platforms and by most screen readers. Puppeteer will discard them as
+   * well for an easier to process tree, unless `interestingOnly` is set to
+   * `false`.
+   *
+   * @example
+   * An example of dumping the entire accessibility tree:
+   *
+   * ```ts
+   * const snapshot = await page.accessibility.snapshot();
+   * console.log(snapshot);
+   * ```
+   *
+   * @example
+   * An example of logging the focused node's name:
+   *
+   * ```ts
+   * const snapshot = await page.accessibility.snapshot();
+   * const node = findFocusedNode(snapshot);
+   * console.log(node && node.name);
+   *
+   * function findFocusedNode(node) {
+   *   if (node.focused) return node;
+   *   for (const child of node.children || []) {
+   *     const foundNode = findFocusedNode(child);
+   *     return foundNode;
+   *   }
+   *   return null;
+   * }
+   * ```
+   *
+   * @returns An AXNode object representing the snapshot.
+   */
+  snapshot(options?: SnapshotOptions): Promise<SerializedAXNode | null>;
   private serializeTree;
   private collectInterestingNodes;
 }

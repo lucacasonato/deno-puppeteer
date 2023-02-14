@@ -2,6 +2,7 @@ import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
 import { ProtocolMapping } from "../../vendor/devtools-protocol/types/protocol-mapping.d.ts";
 import { ConnectionTransport } from "./ConnectionTransport.js";
 import { EventEmitter } from "./EventEmitter.js";
+import { ProtocolError } from "./Errors.js";
 /**
  * @public
  */
@@ -10,9 +11,9 @@ export { ConnectionTransport, ProtocolMapping };
  * @public
  */
 export interface ConnectionCallback {
-  resolve: Function;
-  reject: Function;
-  error: Error;
+  resolve(args: unknown): void;
+  reject(args: unknown): void;
+  error: ProtocolError;
   method: string;
 }
 /**
@@ -24,36 +25,54 @@ export declare const ConnectionEmittedEvents: {
   readonly Disconnected: symbol;
 };
 /**
- * @internal
+ * @public
  */
 export declare class Connection extends EventEmitter {
-  _url: string;
-  _transport: ConnectionTransport;
-  _delay: number;
-  _lastId: number;
-  _sessions: Map<string, CDPSession>;
-  _closed: boolean;
-  _callbacks: Map<number, ConnectionCallback>;
+  #private;
   constructor(url: string, transport: ConnectionTransport, delay?: number);
-  static fromSession(session: CDPSession): Connection;
+  static fromSession(session: CDPSession): Connection | undefined;
   /**
-     * @param sessionId - The session id
-     * @returns The current CDP session if it exists
-     */
+   * @internal
+   */
+  get _closed(): boolean;
+  /**
+   * @internal
+   */
+  get _sessions(): Map<string, CDPSession>;
+  /**
+   * @param sessionId - The session id
+   * @returns The current CDP session if it exists
+   */
   session(sessionId: string): CDPSession | null;
   url(): string;
   send<T extends keyof ProtocolMapping.Commands>(
     method: T,
     ...paramArgs: ProtocolMapping.Commands[T]["paramsType"]
   ): Promise<ProtocolMapping.Commands[T]["returnType"]>;
-  _rawSend(message: Record<string, unknown>): number;
-  _onMessage(message: string): Promise<void>;
-  _onClose(): void;
-  dispose(): Promise<void>;
   /**
-     * @param targetInfo - The target info
-     * @returns The CDP session that is created
-     */
+   * @internal
+   */
+  _rawSend(message: Record<string, unknown>): number;
+  /**
+   * @internal
+   */
+  protected onMessage(message: string): Promise<void>;
+  dispose(): void;
+  /**
+   * @internal
+   */
+  isAutoAttached(targetId: string): boolean;
+  /**
+   * @internal
+   */
+  _createSession(
+    targetInfo: Protocol.Target.TargetInfo,
+    isAutoAttachEmulated?: boolean,
+  ): Promise<CDPSession>;
+  /**
+   * @param targetInfo - The target info
+   * @returns The CDP session that is created
+   */
   createSession(targetInfo: Protocol.Target.TargetInfo): Promise<CDPSession>;
 }
 /**
@@ -66,6 +85,7 @@ export interface CDPSessionOnMessageObject {
   error: {
     message: string;
     data: any;
+    code: number;
   };
   result?: any;
 }
@@ -86,49 +106,51 @@ export declare const CDPSessionEmittedEvents: {
  * events can be subscribed to with `CDPSession.on` method.
  *
  * Useful links: {@link https://chromedevtools.github.io/devtools-protocol/ | DevTools Protocol Viewer}
- * and {@link https://github.com/aslushnikov/getting-started-with-cdp/blob/master/README.md | Getting Started with DevTools Protocol}.
+ * and {@link https://github.com/aslushnikov/getting-started-with-cdp/blob/HEAD/README.md | Getting Started with DevTools Protocol}.
  *
  * @example
- * ```js
+ *
+ * ```ts
  * const client = await page.target().createCDPSession();
  * await client.send('Animation.enable');
- * client.on('Animation.animationCreated', () => console.log('Animation created!'));
+ * client.on('Animation.animationCreated', () =>
+ *   console.log('Animation created!')
+ * );
  * const response = await client.send('Animation.getPlaybackRate');
  * console.log('playback rate is ' + response.playbackRate);
  * await client.send('Animation.setPlaybackRate', {
- *   playbackRate: response.playbackRate / 2
+ *   playbackRate: response.playbackRate / 2,
  * });
  * ```
  *
  * @public
  */
 export declare class CDPSession extends EventEmitter {
+  #private;
   /**
-     * @internal
-     */
-  _connection: Connection;
-  private _sessionId;
-  private _targetType;
-  private _callbacks;
-  /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(connection: Connection, targetType: string, sessionId: string);
+  connection(): Connection | undefined;
   send<T extends keyof ProtocolMapping.Commands>(
     method: T,
     ...paramArgs: ProtocolMapping.Commands[T]["paramsType"]
   ): Promise<ProtocolMapping.Commands[T]["returnType"]>;
   /**
-     * @internal
-     */
+   * @internal
+   */
   _onMessage(object: CDPSessionOnMessageObject): void;
   /**
-     * Detaches the cdpSession from the target. Once detached, the cdpSession object
-     * won't emit any events and can't be used to send messages.
-     */
+   * Detaches the cdpSession from the target. Once detached, the cdpSession object
+   * won't emit any events and can't be used to send messages.
+   */
   detach(): Promise<void>;
   /**
-     * @internal
-     */
+   * @internal
+   */
   _onClosed(): void;
+  /**
+   * Returns the session's id.
+   */
+  id(): string;
 }

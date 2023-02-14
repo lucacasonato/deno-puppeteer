@@ -1,3 +1,4 @@
+/// <reference types="./assert.d.ts" />
 /**
  * Copyright 2020 Google Inc. All rights reserved.
  *
@@ -15,7 +16,14 @@
  */
 /**
  * Asserts that the given value is truthy.
- * @param value
+ * @param value - some conditional statement
  * @param message - the error message to throw if the value is not truthy.
+ *
+ * @internal
  */
-export declare const assert: (value: unknown, message?: string) => void;
+export const assert = (value, message) => {
+  if (!value) {
+    throw new Error(message);
+  }
+};
+//# sourceMappingURL=assert.js.map

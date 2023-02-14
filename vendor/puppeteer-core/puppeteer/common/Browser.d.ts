@@ -13,15 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Target } from "./Target.js";
-import { EventEmitter } from "./EventEmitter.js";
+import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
 import { Connection } from "./Connection.js";
+import { EventEmitter } from "./EventEmitter.js";
 import { Page } from "./Page.js";
 import { Viewport } from "./PuppeteerViewport.js";
+import { Target } from "./Target.js";
+import { TargetManager } from "./TargetManager.js";
+/**
+ * BrowserContext options.
+ *
+ * @public
+ */
+export interface BrowserContextOptions {
+  /**
+   * Proxy server with optional port to use for all requests.
+   * Username and password can be set in `Page.authenticate`.
+   */
+  proxyServer?: string;
+  /**
+   * Bypass the proxy for the given semi-colon-separated list of hosts.
+   */
+  proxyBypassList?: string[];
+}
 /**
  * @internal
  */
 export declare type BrowserCloseCallback = () => Promise<void> | void;
+/**
+ * @public
+ */
+export declare type TargetFilterCallback = (
+  target: Protocol.Target.TargetInfo,
+) => boolean;
+/**
+ * @internal
+ */
+export declare type IsPageTargetCallback = (
+  target: Protocol.Target.TargetInfo,
+) => boolean;
 /**
  * @public
  */
@@ -40,6 +70,7 @@ export declare type Permission =
   | "clipboard-read"
   | "clipboard-write"
   | "payment-handler"
+  | "persistent-storage"
   | "idle-detection"
   | "midi-sysex";
 /**
@@ -47,9 +78,9 @@ export declare type Permission =
  */
 export interface WaitForTargetOptions {
   /**
-     * Maximum wait time in milliseconds. Pass `0` to disable the timeout.
-     * @defaultValue 30 seconds.
-     */
+   * Maximum wait time in milliseconds. Pass `0` to disable the timeout.
+   * @defaultValue 30 seconds.
+   */
   timeout?: number;
 }
 /**
@@ -59,42 +90,42 @@ export interface WaitForTargetOptions {
  */
 export declare const enum BrowserEmittedEvents {
   /**
-     * Emitted when Puppeteer gets disconnected from the Chromium instance. This
-     * might happen because of one of the following:
-     *
-     * - Chromium is closed or crashed
-     *
-     * - The {@link Browser.disconnect | browser.disconnect } method was called.
-     */
+   * Emitted when Puppeteer gets disconnected from the Chromium instance. This
+   * might happen because of one of the following:
+   *
+   * - Chromium is closed or crashed
+   *
+   * - The {@link Browser.disconnect | browser.disconnect } method was called.
+   */
   Disconnected = "disconnected",
   /**
-     * Emitted when the url of a target changes. Contains a {@link Target} instance.
-     *
-     * @remarks
-     *
-     * Note that this includes target changes in incognito browser contexts.
-     */
+   * Emitted when the url of a target changes. Contains a {@link Target} instance.
+   *
+   * @remarks
+   *
+   * Note that this includes target changes in incognito browser contexts.
+   */
   TargetChanged = "targetchanged",
   /**
-     * Emitted when a target is created, for example when a new page is opened by
-     * {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/open | window.open}
-     * or by {@link Browser.newPage | browser.newPage}
-     *
-     * Contains a {@link Target} instance.
-     *
-     * @remarks
-     *
-     * Note that this includes target creations in incognito browser contexts.
-     */
+   * Emitted when a target is created, for example when a new page is opened by
+   * {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/open | window.open}
+   * or by {@link Browser.newPage | browser.newPage}
+   *
+   * Contains a {@link Target} instance.
+   *
+   * @remarks
+   *
+   * Note that this includes target creations in incognito browser contexts.
+   */
   TargetCreated = "targetcreated",
   /**
-     * Emitted when a target is destroyed, for example when a page is closed.
-     * Contains a {@link Target} instance.
-     *
-     * @remarks
-     *
-     * Note that this includes target destructions in incognito browser contexts.
-     */
+   * Emitted when a target is destroyed, for example when a page is closed.
+   * Contains a {@link Target} instance.
+   *
+   * @remarks
+   *
+   * Note that this includes target destructions in incognito browser contexts.
+   */
   TargetDestroyed = "targetdestroyed",
 }
 /**
@@ -107,9 +138,9 @@ export declare const enum BrowserEmittedEvents {
  * emit various events which are documented in the {@link BrowserEmittedEvents} enum.
  *
  * @example
- *
  * An example of using a {@link Browser} to create a {@link Page}:
- * ```js
+ *
+ * ```ts
  * const puppeteer = require('puppeteer');
  *
  * (async () => {
@@ -121,9 +152,9 @@ export declare const enum BrowserEmittedEvents {
  * ```
  *
  * @example
- *
  * An example of disconnecting from and reconnecting to a {@link Browser}:
- * ```js
+ *
+ * ```ts
  * const puppeteer = require('puppeteer');
  *
  * (async () => {
@@ -143,199 +174,215 @@ export declare const enum BrowserEmittedEvents {
  * @public
  */
 export declare class Browser extends EventEmitter {
+  #private;
   /**
-     * @internal
-     */
-  static create(
+   * @internal
+   */
+  static _create(
+    product: "firefox" | "chrome" | undefined,
     connection: Connection,
     contextIds: string[],
     ignoreHTTPSErrors: boolean,
     defaultViewport?: Viewport | null,
     process?: Deno.Process,
     closeCallback?: BrowserCloseCallback,
+    targetFilterCallback?: TargetFilterCallback,
+    isPageTargetCallback?: IsPageTargetCallback,
   ): Promise<Browser>;
-  private _ignoreHTTPSErrors;
-  private _defaultViewport?;
-  private _process?;
-  private _connection;
-  private _closeCallback;
-  private _defaultContext;
-  private _contexts;
   /**
-     * @internal
-     * Used in Target.ts directly so cannot be marked private.
-     */
-  _targets: Map<string, Target>;
+   * @internal
+   */
+  get _targets(): Map<string, Target>;
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(
+    product: "chrome" | "firefox" | undefined,
     connection: Connection,
     contextIds: string[],
     ignoreHTTPSErrors: boolean,
     defaultViewport?: Viewport | null,
     process?: Deno.Process,
     closeCallback?: BrowserCloseCallback,
+    targetFilterCallback?: TargetFilterCallback,
+    isPageTargetCallback?: IsPageTargetCallback,
   );
   /**
-     * The spawned browser process. Returns `null` if the browser instance was created with
-     * {@link Puppeteer.connect}.
-     */
+   * @internal
+   */
+  _attach(): Promise<void>;
+  /**
+   * @internal
+   */
+  _detach(): void;
+  /**
+   * The spawned browser process. Returns `null` if the browser instance was created with
+   * {@link Puppeteer.connect}.
+   */
   process(): Deno.Process | null;
   /**
-     * Creates a new incognito browser context. This won't share cookies/cache with other
-     * browser contexts.
-     *
-     * @example
-     * ```js
-     * (async () => {
-     *  const browser = await puppeteer.launch();
-     *   // Create a new incognito browser context.
-     *   const context = await browser.createIncognitoBrowserContext();
-     *   // Create a new page in a pristine context.
-     *   const page = await context.newPage();
-     *   // Do stuff
-     *   await page.goto('https://example.com');
-     * })();
-     * ```
-     */
-  createIncognitoBrowserContext(): Promise<BrowserContext>;
+   * @internal
+   */
+  _targetManager(): TargetManager;
   /**
-     * Returns an array of all open browser contexts. In a newly created browser, this will
-     * return a single instance of {@link BrowserContext}.
-     */
+   * @internal
+   */
+  _getIsPageTargetCallback(): IsPageTargetCallback | undefined;
+  /**
+   * Creates a new incognito browser context. This won't share cookies/cache with other
+   * browser contexts.
+   *
+   * @example
+   *
+   * ```ts
+   * (async () => {
+   *   const browser = await puppeteer.launch();
+   *   // Create a new incognito browser context.
+   *   const context = await browser.createIncognitoBrowserContext();
+   *   // Create a new page in a pristine context.
+   *   const page = await context.newPage();
+   *   // Do stuff
+   *   await page.goto('https://example.com');
+   * })();
+   * ```
+   */
+  createIncognitoBrowserContext(
+    options?: BrowserContextOptions,
+  ): Promise<BrowserContext>;
+  /**
+   * Returns an array of all open browser contexts. In a newly created browser, this will
+   * return a single instance of {@link BrowserContext}.
+   */
   browserContexts(): BrowserContext[];
   /**
-     * Returns the default browser context. The default browser context cannot be closed.
-     */
+   * Returns the default browser context. The default browser context cannot be closed.
+   */
   defaultBrowserContext(): BrowserContext;
   /**
-     * @internal
-     * Used by BrowserContext directly so cannot be marked private.
-     */
+   * @internal
+   */
   _disposeContext(contextId?: string): Promise<void>;
-  private _targetCreated;
-  private _targetDestroyed;
-  private _targetInfoChanged;
   /**
-     * The browser websocket endpoint which can be used as an argument to
-     * {@link Puppeteer.connect}.
-     *
-     * @returns The Browser websocket url.
-     *
-     * @remarks
-     *
-     * The format is `ws://${host}:${port}/devtools/browser/<id>`.
-     *
-     * You can find the `webSocketDebuggerUrl` from `http://${host}:${port}/json/version`.
-     * Learn more about the
-     * {@link https://chromedevtools.github.io/devtools-protocol | devtools protocol} and
-     * the {@link
-     * https://chromedevtools.github.io/devtools-protocol/#how-do-i-access-the-browser-target
-     * | browser endpoint}.
-     */
+   * The browser websocket endpoint which can be used as an argument to
+   * {@link Puppeteer.connect}.
+   *
+   * @returns The Browser websocket url.
+   *
+   * @remarks
+   *
+   * The format is `ws://${host}:${port}/devtools/browser/<id>`.
+   *
+   * You can find the `webSocketDebuggerUrl` from `http://${host}:${port}/json/version`.
+   * Learn more about the
+   * {@link https://chromedevtools.github.io/devtools-protocol | devtools protocol} and
+   * the {@link
+   * https://chromedevtools.github.io/devtools-protocol/#how-do-i-access-the-browser-target
+   * | browser endpoint}.
+   */
   wsEndpoint(): string;
   /**
-     * Creates a {@link Page} in the default browser context.
-     */
+   * Promise which resolves to a new {@link Page} object. The Page is created in
+   * a default browser context.
+   */
   newPage(): Promise<Page>;
   /**
-     * @internal
-     * Used by BrowserContext directly so cannot be marked private.
-     */
+   * @internal
+   */
   _createPageInContext(contextId?: string): Promise<Page>;
   /**
-     * All active targets inside the Browser. In case of multiple browser contexts, returns
-     * an array with all the targets in all browser contexts.
-     */
+   * All active targets inside the Browser. In case of multiple browser contexts, returns
+   * an array with all the targets in all browser contexts.
+   */
   targets(): Target[];
   /**
-     * The target associated with the browser.
-     */
+   * The target associated with the browser.
+   */
   target(): Target;
   /**
-     * Searches for a target in all browser contexts.
-     *
-     * @param predicate - A function to be run for every target.
-     * @returns The first target found that matches the `predicate` function.
-     *
-     * @example
-     *
-     * An example of finding a target for a page opened via `window.open`:
-     * ```js
-     * await page.evaluate(() => window.open('https://www.example.com/'));
-     * const newWindowTarget = await browser.waitForTarget(target => target.url() === 'https://www.example.com/');
-     * ```
-     */
+   * Searches for a target in all browser contexts.
+   *
+   * @param predicate - A function to be run for every target.
+   * @returns The first target found that matches the `predicate` function.
+   *
+   * @example
+   *
+   * An example of finding a target for a page opened via `window.open`:
+   *
+   * ```ts
+   * await page.evaluate(() => window.open('https://www.example.com/'));
+   * const newWindowTarget = await browser.waitForTarget(
+   *   target => target.url() === 'https://www.example.com/'
+   * );
+   * ```
+   */
   waitForTarget(
-    predicate: (x: Target) => boolean,
+    predicate: (x: Target) => boolean | Promise<boolean>,
     options?: WaitForTargetOptions,
   ): Promise<Target>;
   /**
-     * An array of all open pages inside the Browser.
-     *
-     * @remarks
-     *
-     * In case of multiple browser contexts, returns an array with all the pages in all
-     * browser contexts. Non-visible pages, such as `"background_page"`, will not be listed
-     * here. You can find them using {@link Target.page}.
-     */
+   * An array of all open pages inside the Browser.
+   *
+   * @remarks
+   *
+   * In case of multiple browser contexts, returns an array with all the pages in all
+   * browser contexts. Non-visible pages, such as `"background_page"`, will not be listed
+   * here. You can find them using {@link Target.page}.
+   */
   pages(): Promise<Page[]>;
   /**
-     * A string representing the browser name and version.
-     *
-     * @remarks
-     *
-     * For headless Chromium, this is similar to `HeadlessChrome/61.0.3153.0`. For
-     * non-headless, this is similar to `Chrome/61.0.3153.0`.
-     *
-     * The format of browser.version() might change with future releases of Chromium.
-     */
+   * A string representing the browser name and version.
+   *
+   * @remarks
+   *
+   * For headless Chromium, this is similar to `HeadlessChrome/61.0.3153.0`. For
+   * non-headless, this is similar to `Chrome/61.0.3153.0`.
+   *
+   * The format of browser.version() might change with future releases of Chromium.
+   */
   version(): Promise<string>;
   /**
-     * The browser's original user agent. Pages can override the browser user agent with
-     * {@link Page.setUserAgent}.
-     */
+   * The browser's original user agent. Pages can override the browser user agent with
+   * {@link Page.setUserAgent}.
+   */
   userAgent(): Promise<string>;
   /**
-     * Closes Chromium and all of its pages (if any were opened). The {@link Browser} object
-     * itself is considered to be disposed and cannot be used anymore.
-     */
+   * Closes Chromium and all of its pages (if any were opened). The {@link Browser} object
+   * itself is considered to be disposed and cannot be used anymore.
+   */
   close(): Promise<void>;
   /**
-     * Disconnects Puppeteer from the browser, but leaves the Chromium process running.
-     * After calling `disconnect`, the {@link Browser} object is considered disposed and
-     * cannot be used anymore.
-     */
-  disconnect(): Promise<void>;
+   * Disconnects Puppeteer from the browser, but leaves the Chromium process running.
+   * After calling `disconnect`, the {@link Browser} object is considered disposed and
+   * cannot be used anymore.
+   */
+  disconnect(): void;
   /**
-     * Indicates that the browser is connected.
-     */
+   * Indicates that the browser is connected.
+   */
   isConnected(): boolean;
-  private _getVersion;
 }
 /**
  * @public
  */
 export declare const enum BrowserContextEmittedEvents {
   /**
-     * Emitted when the url of a target inside the browser context changes.
-     * Contains a {@link Target} instance.
-     */
+   * Emitted when the url of a target inside the browser context changes.
+   * Contains a {@link Target} instance.
+   */
   TargetChanged = "targetchanged",
   /**
-     * Emitted when a target is created within the browser context, for example
-     * when a new page is opened by
-     * {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/open | window.open}
-     * or by {@link BrowserContext.newPage | browserContext.newPage}
-     *
-     * Contains a {@link Target} instance.
-     */
+   * Emitted when a target is created within the browser context, for example
+   * when a new page is opened by
+   * {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/open | window.open}
+   * or by {@link BrowserContext.newPage | browserContext.newPage}
+   *
+   * Contains a {@link Target} instance.
+   */
   TargetCreated = "targetcreated",
   /**
-     * Emitted when a target is destroyed within the browser context, for example
-     * when a page is closed. Contains a {@link Target} instance.
-     */
+   * Emitted when a target is destroyed within the browser context, for example
+   * when a page is closed. Contains a {@link Target} instance.
+   */
   TargetDestroyed = "targetdestroyed",
 }
 /**
@@ -358,7 +405,8 @@ export declare const enum BrowserContextEmittedEvents {
  * method. "Incognito" browser contexts don't write any browsing data to disk.
  *
  * @example
- * ```js
+ *
+ * ```ts
  * // Create a new incognito browser context
  * const context = await browser.createIncognitoBrowserContext();
  * // Create a new page inside context.
@@ -368,94 +416,103 @@ export declare const enum BrowserContextEmittedEvents {
  * // Dispose context once it's no longer needed.
  * await context.close();
  * ```
+ *
  * @public
  */
 export declare class BrowserContext extends EventEmitter {
-  private _connection;
-  private _browser;
-  private _id?;
+  #private;
   /**
-     * @internal
-     */
+   * @internal
+   */
   constructor(connection: Connection, browser: Browser, contextId?: string);
   /**
-     * An array of all active targets inside the browser context.
-     */
+   * An array of all active targets inside the browser context.
+   */
   targets(): Target[];
   /**
-     * This searches for a target in this specific browser context.
-     *
-     * @example
-     * An example of finding a target for a page opened via `window.open`:
-     * ```js
-     * await page.evaluate(() => window.open('https://www.example.com/'));
-     * const newWindowTarget = await browserContext.waitForTarget(target => target.url() === 'https://www.example.com/');
-     * ```
-     *
-     * @param predicate - A function to be run for every target
-     * @param options - An object of options. Accepts a timout,
-     * which is the maximum wait time in milliseconds.
-     * Pass `0` to disable the timeout. Defaults to 30 seconds.
-     * @returns Promise which resolves to the first target found
-     * that matches the `predicate` function.
-     */
-  waitForTarget(predicate: (x: Target) => boolean, options?: {
-    timeout?: number;
-  }): Promise<Target>;
+   * This searches for a target in this specific browser context.
+   *
+   * @example
+   * An example of finding a target for a page opened via `window.open`:
+   *
+   * ```ts
+   * await page.evaluate(() => window.open('https://www.example.com/'));
+   * const newWindowTarget = await browserContext.waitForTarget(
+   *   target => target.url() === 'https://www.example.com/'
+   * );
+   * ```
+   *
+   * @param predicate - A function to be run for every target
+   * @param options - An object of options. Accepts a timout,
+   * which is the maximum wait time in milliseconds.
+   * Pass `0` to disable the timeout. Defaults to 30 seconds.
+   * @returns Promise which resolves to the first target found
+   * that matches the `predicate` function.
+   */
+  waitForTarget(
+    predicate: (x: Target) => boolean | Promise<boolean>,
+    options?: {
+      timeout?: number;
+    },
+  ): Promise<Target>;
   /**
-     * An array of all pages inside the browser context.
-     *
-     * @returns Promise which resolves to an array of all open pages.
-     * Non visible pages, such as `"background_page"`, will not be listed here.
-     * You can find them using {@link Target.page | the target page}.
-     */
+   * An array of all pages inside the browser context.
+   *
+   * @returns Promise which resolves to an array of all open pages.
+   * Non visible pages, such as `"background_page"`, will not be listed here.
+   * You can find them using {@link Target.page | the target page}.
+   */
   pages(): Promise<Page[]>;
   /**
-     * Returns whether BrowserContext is incognito.
-     * The default browser context is the only non-incognito browser context.
-     *
-     * @remarks
-     * The default browser context cannot be closed.
-     */
+   * Returns whether BrowserContext is incognito.
+   * The default browser context is the only non-incognito browser context.
+   *
+   * @remarks
+   * The default browser context cannot be closed.
+   */
   isIncognito(): boolean;
   /**
-     * @example
-     * ```js
-     * const context = browser.defaultBrowserContext();
-     * await context.overridePermissions('https://html5demos.com', ['geolocation']);
-     * ```
-     *
-     * @param origin - The origin to grant permissions to, e.g. "https://example.com".
-     * @param permissions - An array of permissions to grant.
-     * All permissions that are not listed here will be automatically denied.
-     */
+   * @example
+   *
+   * ```ts
+   * const context = browser.defaultBrowserContext();
+   * await context.overridePermissions('https://html5demos.com', [
+   *   'geolocation',
+   * ]);
+   * ```
+   *
+   * @param origin - The origin to grant permissions to, e.g. "https://example.com".
+   * @param permissions - An array of permissions to grant.
+   * All permissions that are not listed here will be automatically denied.
+   */
   overridePermissions(origin: string, permissions: Permission[]): Promise<void>;
   /**
-     * Clears all permission overrides for the browser context.
-     *
-     * @example
-     * ```js
-     * const context = browser.defaultBrowserContext();
-     * context.overridePermissions('https://example.com', ['clipboard-read']);
-     * // do stuff ..
-     * context.clearPermissionOverrides();
-     * ```
-     */
+   * Clears all permission overrides for the browser context.
+   *
+   * @example
+   *
+   * ```ts
+   * const context = browser.defaultBrowserContext();
+   * context.overridePermissions('https://example.com', ['clipboard-read']);
+   * // do stuff ..
+   * context.clearPermissionOverrides();
+   * ```
+   */
   clearPermissionOverrides(): Promise<void>;
   /**
-     * Creates a new page in the browser context.
-     */
+   * Creates a new page in the browser context.
+   */
   newPage(): Promise<Page>;
   /**
-     * The browser this browser context belongs to.
-     */
+   * The browser this browser context belongs to.
+   */
   browser(): Browser;
   /**
-     * Closes the browser context. All the targets that belong to the browser context
-     * will be closed.
-     *
-     * @remarks
-     * Only incognito browser contexts can be closed.
-     */
+   * Closes the browser context. All the targets that belong to the browser context
+   * will be closed.
+   *
+   * @remarks
+   * Only incognito browser contexts can be closed.
+   */
   close(): Promise<void>;
 }

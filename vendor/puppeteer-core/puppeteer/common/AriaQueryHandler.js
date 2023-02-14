@@ -14,34 +14,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "../util/assert.js";
 async function queryAXTree(client, element, accessibleName, role) {
   const { nodes } = await client.send("Accessibility.queryAXTree", {
-    objectId: element._remoteObject.objectId,
+    objectId: element.remoteObject().objectId,
     accessibleName,
     role,
   });
-  const filteredNodes = nodes.filter((node) => node.role.value !== "text");
+  const filteredNodes = nodes.filter((node) => {
+    return !node.role || node.role.value !== "StaticText";
+  });
   return filteredNodes;
 }
+const normalizeValue = (value) => {
+  return value.replace(/ +/g, " ").trim();
+};
+const knownAttributes = new Set(["name", "role"]);
+const attributeRegexp =
+  /\[\s*(?<attribute>\w+)\s*=\s*(?<quote>"|')(?<value>\\.|.*?(?=\k<quote>))\k<quote>\s*\]/g;
+function isKnownAttribute(attribute) {
+  return knownAttributes.has(attribute);
+}
+/**
+ * The selectors consist of an accessible name to query for and optionally
+ * further aria attributes on the form `[<attribute>=<value>]`.
+ * Currently, we only support the `name` and `role` attribute.
+ * The following examples showcase how the syntax works wrt. querying:
+ *
+ * - 'title[role="heading"]' queries for elements with name 'title' and role 'heading'.
+ * - '[role="img"]' queries for elements with role 'img' and any name.
+ * - 'label' queries for elements with name 'label' and any role.
+ * - '[name=""][role="button"]' queries for elements with no name and role 'button'.
+ */
 function parseAriaSelector(selector) {
-  const normalize = (value) => value.replace(/ +/g, " ").trim();
-  const knownAttributes = new Set(["name", "role"]);
   const queryOptions = {};
-  const attributeRegexp =
-    /\[\s*(?<attribute>\w+)\s*=\s*"(?<value>\\.|[^"\\]*)"\s*\]/g;
   const defaultName = selector.replace(
     attributeRegexp,
-    (_, attribute, value) => {
+    (_, attribute, _quote, value) => {
       attribute = attribute.trim();
-      if (!knownAttributes.has(attribute)) {
-        throw new Error(`Unknown aria attribute "${attribute}" in selector`);
-      }
-      queryOptions[attribute] = normalize(value);
+      assert(
+        isKnownAttribute(attribute),
+        `Unknown aria attribute "${attribute}" in selector`,
+      );
+      queryOptions[attribute] = normalizeValue(value);
       return "";
     },
   );
   if (defaultName && !queryOptions.name) {
-    queryOptions.name = normalize(defaultName);
+    queryOptions.name = normalizeValue(defaultName);
   }
   return queryOptions;
 }
@@ -49,42 +69,44 @@ const queryOne = async (element, selector) => {
   const exeCtx = element.executionContext();
   const { name, role } = parseAriaSelector(selector);
   const res = await queryAXTree(exeCtx._client, element, name, role);
-  if (res.length < 1) {
+  if (!res[0] || !res[0].backendDOMNodeId) {
     return null;
   }
-  return exeCtx._adoptBackendNodeId(res[0].backendDOMNodeId);
+  return (await exeCtx._world.adoptBackendNode(res[0].backendDOMNodeId));
 };
-const waitFor = async (domWorld, selector, options) => {
+const waitFor = async (isolatedWorld, selector, options) => {
   const binding = {
     name: "ariaQuerySelector",
     pptrFunction: async (selector) => {
-      const document = await domWorld._document();
-      const element = await queryOne(document, selector);
+      const root = options.root || (await isolatedWorld.document());
+      const element = await queryOne(root, selector);
       return element;
     },
   };
-  return domWorld.waitForSelectorInPage(
-    (_, selector) => globalThis.ariaQuerySelector(selector),
+  return (await isolatedWorld._waitForSelectorInPage(
+    (_, selector) => {
+      return globalThis.ariaQuerySelector(selector);
+    },
     selector,
     options,
     binding,
-  );
+  ));
 };
 const queryAll = async (element, selector) => {
   const exeCtx = element.executionContext();
   const { name, role } = parseAriaSelector(selector);
   const res = await queryAXTree(exeCtx._client, element, name, role);
-  return Promise.all(
-    res.map((axNode) => exeCtx._adoptBackendNodeId(axNode.backendDOMNodeId)),
-  );
+  const world = exeCtx._world;
+  return Promise.all(res.map((axNode) => {
+    return world.adoptBackendNode(axNode.backendDOMNodeId);
+  }));
 };
 const queryAllArray = async (element, selector) => {
   const elementHandles = await queryAll(element, selector);
   const exeCtx = element.executionContext();
-  const jsHandle = exeCtx.evaluateHandle(
-    (...elements) => elements,
-    ...elementHandles,
-  );
+  const jsHandle = exeCtx.evaluateHandle((...elements) => {
+    return elements;
+  }, ...elementHandles);
   return jsHandle;
 };
 /**

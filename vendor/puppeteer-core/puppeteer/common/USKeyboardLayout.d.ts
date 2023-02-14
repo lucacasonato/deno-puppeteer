@@ -291,4 +291,4 @@ export declare type KeyInput =
 /**
  * @internal
  */
-export declare const keyDefinitions: Readonly<Record<KeyInput, KeyDefinition>>;
+export declare const _keyDefinitions: Readonly<Record<KeyInput, KeyDefinition>>;

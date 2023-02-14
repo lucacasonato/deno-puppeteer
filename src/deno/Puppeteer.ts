@@ -77,7 +77,7 @@ export class PuppeteerDeno extends Puppeteer {
    */
   constructor(settings: { preferredRevision: string; productName?: Product }) {
     const { preferredRevision, productName } = settings;
-    super();
+    super({ isPuppeteerCore: false });
     this.__productName = productName;
     this._preferredRevision = preferredRevision;
   }
@@ -91,7 +91,6 @@ export class PuppeteerDeno extends Puppeteer {
    * @returns Promise which resolves to browser instance.
    */
   connect(options: ConnectOptions): Promise<Browser> {
-    if (options.product) this._productName = options.product;
     return super.connect(options);
   }
 

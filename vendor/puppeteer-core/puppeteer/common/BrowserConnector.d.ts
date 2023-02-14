@@ -13,8 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {
+  Browser,
+  IsPageTargetCallback,
+  TargetFilterCallback,
+} from "./Browser.js";
 import { ConnectionTransport } from "./ConnectionTransport.js";
-import { Browser } from "./Browser.js";
 import { Viewport } from "./PuppeteerViewport.js";
 /**
  * Generic browser options that can be passed when launching any browser or when
@@ -23,29 +27,38 @@ import { Viewport } from "./PuppeteerViewport.js";
  */
 export interface BrowserConnectOptions {
   /**
-     * Whether to ignore HTTPS errors during navigation.
-     * @defaultValue false
-     */
+   * Whether to ignore HTTPS errors during navigation.
+   * @defaultValue false
+   */
   ignoreHTTPSErrors?: boolean;
   /**
-     * Sets the viewport for each page.
-     */
+   * Sets the viewport for each page.
+   */
   defaultViewport?: Viewport | null;
   /**
-     * Slows down Puppeteer operations by the specified amount of milliseconds to
-     * aid debugging.
-     */
+   * Slows down Puppeteer operations by the specified amount of milliseconds to
+   * aid debugging.
+   */
   slowMo?: number;
+  /**
+   * Callback to decide if Puppeteer should connect to a given target or not.
+   */
+  targetFilter?: TargetFilterCallback;
+  /**
+   * @internal
+   */
+  _isPageTarget?: IsPageTargetCallback;
 }
 /**
  * Users should never call this directly; it's called when calling
  * `puppeteer.connect`.
+ *
  * @internal
  */
-export declare const connectToBrowser: (
+export declare function _connectToBrowser(
   options: BrowserConnectOptions & {
     browserWSEndpoint?: string;
     browserURL?: string;
     transport?: ConnectionTransport;
   },
-) => Promise<Browser>;
+): Promise<Browser>;

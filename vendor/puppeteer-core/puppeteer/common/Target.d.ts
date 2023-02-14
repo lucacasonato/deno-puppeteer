@@ -16,74 +16,90 @@
 import { Page } from "./Page.js";
 import { WebWorker } from "./WebWorker.js";
 import { CDPSession } from "./Connection.js";
-import { Browser, BrowserContext } from "./Browser.js";
+import { Browser, BrowserContext, IsPageTargetCallback } from "./Browser.js";
 import { Viewport } from "./PuppeteerViewport.js";
 import { Protocol } from "../../vendor/devtools-protocol/types/protocol.d.ts";
+import { TaskQueue } from "./TaskQueue.js";
+import { TargetManager } from "./TargetManager.js";
 /**
  * @public
  */
 export declare class Target {
-  private _targetInfo;
-  private _browserContext;
-  private _sessionFactory;
-  private _ignoreHTTPSErrors;
-  private _defaultViewport?;
-  private _pagePromise?;
-  private _workerPromise?;
+  #private;
   /**
-     * @internal
-     */
+   * @internal
+   */
   _initializedPromise: Promise<boolean>;
   /**
-     * @internal
-     */
+   * @internal
+   */
   _initializedCallback: (x: boolean) => void;
   /**
-     * @internal
-     */
+   * @internal
+   */
   _isClosedPromise: Promise<void>;
   /**
-     * @internal
-     */
+   * @internal
+   */
   _closedCallback: () => void;
   /**
-     * @internal
-     */
+   * @internal
+   */
   _isInitialized: boolean;
   /**
-     * @internal
-     */
+   * @internal
+   */
   _targetId: string;
   /**
-     * @internal
-     */
+   * @internal
+   */
+  _isPageTargetCallback: IsPageTargetCallback;
+  /**
+   * @internal
+   */
   constructor(
     targetInfo: Protocol.Target.TargetInfo,
+    session: CDPSession | undefined,
     browserContext: BrowserContext,
-    sessionFactory: () => Promise<CDPSession>,
+    targetManager: TargetManager,
+    sessionFactory: (isAutoAttachEmulated: boolean) => Promise<CDPSession>,
     ignoreHTTPSErrors: boolean,
     defaultViewport: Viewport | null,
+    screenshotTaskQueue: TaskQueue,
+    isPageTargetCallback: IsPageTargetCallback,
   );
   /**
-     * Creates a Chrome Devtools Protocol session attached to the target.
-     */
+   * @internal
+   */
+  _session(): CDPSession | undefined;
+  /**
+   * Creates a Chrome Devtools Protocol session attached to the target.
+   */
   createCDPSession(): Promise<CDPSession>;
   /**
-     * If the target is not of type `"page"` or `"background_page"`, returns `null`.
-     */
+   * @internal
+   */
+  _targetManager(): TargetManager;
+  /**
+   * @internal
+   */
+  _getTargetInfo(): Protocol.Target.TargetInfo;
+  /**
+   * If the target is not of type `"page"` or `"background_page"`, returns `null`.
+   */
   page(): Promise<Page | null>;
   /**
-     * If the target is not of type `"service_worker"` or `"shared_worker"`, returns `null`.
-     */
+   * If the target is not of type `"service_worker"` or `"shared_worker"`, returns `null`.
+   */
   worker(): Promise<WebWorker | null>;
   url(): string;
   /**
-     * Identifies what kind of target this is.
-     *
-     * @remarks
-     *
-     * See {@link https://developer.chrome.com/extensions/background_pages | docs} for more info about background pages.
-     */
+   * Identifies what kind of target this is.
+   *
+   * @remarks
+   *
+   * See {@link https://developer.chrome.com/extensions/background_pages | docs} for more info about background pages.
+   */
   type():
     | "page"
     | "background_page"
@@ -93,16 +109,19 @@ export declare class Target {
     | "browser"
     | "webview";
   /**
-     * Get the browser the target belongs to.
-     */
+   * Get the browser the target belongs to.
+   */
   browser(): Browser;
+  /**
+   * Get the browser context the target belongs to.
+   */
   browserContext(): BrowserContext;
   /**
-     * Get the target that opened this target. Top-level targets return `null`.
-     */
-  opener(): Target | null;
+   * Get the target that opened this target. Top-level targets return `null`.
+   */
+  opener(): Target | undefined;
   /**
-     * @internal
-     */
+   * @internal
+   */
   _targetInfoChanged(targetInfo: Protocol.Target.TargetInfo): void;
 }
