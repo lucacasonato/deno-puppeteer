@@ -1,3 +1,4 @@
+import { encode } from "https://deno.land/std/encoding/base64.ts";
 /// <reference types="./HTTPRequest.d.ts" />
 var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) ||
   function (receiver, state, value, kind, f) {
@@ -712,8 +713,9 @@ _HTTPRequest_client = new WeakMap(),
   _HTTPRequest_continue = async function _HTTPRequest_continue(overrides = {}) {
     const { url, method, postData, headers } = overrides;
     __classPrivateFieldSet(this, _HTTPRequest_interceptionHandled, true, "f");
+    const encoder = new TextEncoder();
     const postDataBinaryBase64 = postData
-      ? Buffer.from(postData).toString("base64")
+      ? encode(encoder.encode(postData))
       : undefined;
     if (this._interceptionId === undefined) {
       throw new Error(
