@@ -1,4 +1,4 @@
-import _JSZip from "https://esm.sh/jszip@3.5.0";
+import _JSZip from "https://esm.sh/v128/jszip@3.5.0";
 import { ensureDir } from "https://deno.land/std@0.93.0/fs/ensure_dir.ts";
 import { walk, WalkOptions } from "https://deno.land/std@0.93.0/fs/walk.ts";
 import { dirname, join, SEP } from "https://deno.land/std@0.93.0/path/mod.ts";
