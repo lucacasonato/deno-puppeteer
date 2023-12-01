@@ -65,6 +65,7 @@ var _HTTPRequest_instances,
   _HTTPRequest_abort;
 import { assert } from "../util/assert.js";
 import { debugError, isString } from "./util.js";
+import { Buffer } from "node:buffer";
 /**
  * The default cooperative request interception resolution priority
  *
